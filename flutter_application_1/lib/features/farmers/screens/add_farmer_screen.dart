@@ -5,7 +5,8 @@ import '../../../core/routes/app_router.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
-import '../data/farmer_repository.dart';
+import '../../../models/farmer.dart';
+import '../../../services/farmer_service.dart';
 
 class AddFarmerScreen extends StatefulWidget {
   const AddFarmerScreen({super.key});
@@ -19,6 +20,7 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _villageController = TextEditingController();
+  final FarmerService _farmerService = FarmerService();
   String? _center;
 
   @override
@@ -29,21 +31,36 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Generate an ID for the farmer
+    final newId = 'FMR-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
-    final farmer = FarmerRepository.instance.add(
-      name: _nameController.text,
-      phone: _phoneController.text,
-      village: _villageController.text,
-      center: _center!,
+    final farmer = Farmer(
+      farmerId: newId,
+      name: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+      village: _villageController.text.trim(),
+      centerId: _center!,
+      status: 'active',
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${farmer.name} added as ${farmer.id}')),
-    );
-    // Replace this screen with the details page. Back then returns to the list.
-    context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
+    try {
+      await _farmerService.createFarmer(farmer);
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${farmer.name} added as ${farmer.farmerId}')),
+      );
+      // Replace this screen with the details page. Back then returns to the list.
+      context.pushReplacement(AppRoutes.farmerDetails(farmer.farmerId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding farmer: $e')),
+      );
+    }
   }
 
   @override
@@ -85,7 +102,7 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                     labelText: 'Collection Center',
                     prefixIcon: Icon(Icons.store_outlined),
                   ),
-                  items: FarmerRepository.centers
+                  items: ['CENTER001', 'CENTER002', 'CENTER003']
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
                   onChanged: (value) => _center = value,

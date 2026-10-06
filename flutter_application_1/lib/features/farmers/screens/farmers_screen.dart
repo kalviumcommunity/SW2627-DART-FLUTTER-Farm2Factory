@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/loading_widget.dart';
-import '../data/farmer_repository.dart';
+import '../../../models/farmer.dart';
+import '../../../services/farmer_service.dart';
 import '../widgets/farmer_card.dart';
 
 class FarmersScreen extends StatefulWidget {
@@ -15,18 +16,30 @@ class FarmersScreen extends StatefulWidget {
 }
 
 class _FarmersScreenState extends State<FarmersScreen> {
-  final _repo = FarmerRepository.instance;
+  final FarmerService _farmerService = FarmerService();
   final _searchController = TextEditingController();
   String _query = '';
   bool _loading = true;
+  List<Farmer> _allFarmers = [];
 
   @override
   void initState() {
     super.initState();
-    // Pretend we are loading from a server, to show LoadingWidget.
-    Future.delayed(const Duration(milliseconds: 600), () {
+    _loadFarmers();
+  }
+
+  Future<void> _loadFarmers() async {
+    try {
+      final farmers = await _farmerService.getFarmers();
+      if (mounted) {
+        setState(() {
+          _allFarmers = farmers;
+          _loading = false;
+        });
+      }
+    } catch (e) {
       if (mounted) setState(() => _loading = false);
-    });
+    }
   }
 
   @override
@@ -59,14 +72,19 @@ class _FarmersScreenState extends State<FarmersScreen> {
           Expanded(
             child: _loading
                 ? const LoadingWidget(message: 'Loading farmers...')
-                // ListenableBuilder redraws when the repository calls notifyListeners()
-                : ListenableBuilder(
-                    listenable: _repo,
-                    builder: (context, _) {
-                      final results = _repo.search(_query);
+                : Builder(
+                    builder: (context) {
+                      final results = _allFarmers.where((f) {
+                        final q = _query.toLowerCase();
+                        return f.name.toLowerCase().contains(q) ||
+                            f.farmerId.toLowerCase().contains(q) ||
+                            f.village.toLowerCase().contains(q);
+                      }).toList();
+
                       if (results.isEmpty) {
                         return const Center(child: Text('No farmers found'));
                       }
+                      
                       return ListView.builder(
                         padding: const EdgeInsets.only(bottom: 88),
                         itemCount: results.length,
@@ -75,7 +93,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                           return FarmerCard(
                             farmer: farmer,
                             onTap: () => context
-                                .push(AppRoutes.farmerDetails(farmer.id)),
+                                .push(AppRoutes.farmerDetails(farmer.farmerId)),
                           );
                         },
                       );
