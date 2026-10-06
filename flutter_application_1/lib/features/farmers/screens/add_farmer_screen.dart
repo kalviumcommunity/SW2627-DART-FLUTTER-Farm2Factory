@@ -19,7 +19,9 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _villageController = TextEditingController();
+
   String? _center;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -29,27 +31,56 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final farmer = FarmerRepository.instance.add(
-      name: _nameController.text,
-      phone: _phoneController.text,
-      village: _villageController.text,
-      center: _center!,
-    );
+    setState(() {
+      _saving = true;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${farmer.name} added as ${farmer.id}')),
-    );
-    // Replace this screen with the details page. Back then returns to the list.
-    context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
+    try {
+      final farmer = await FarmerRepository.instance.add(
+        name: _nameController.text,
+        phone: _phoneController.text,
+        village: _villageController.text,
+        center: _center!,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${farmer.name} added as ${farmer.id}'),
+        ),
+      );
+
+      // Replace this screen with the details page.
+      context.pushReplacement(
+        AppRoutes.farmerDetails(farmer.id),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add farmer: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Farmer')),
+      appBar: AppBar(
+        title: const Text('Add Farmer'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -61,9 +92,12 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   controller: _nameController,
                   label: 'Name',
                   prefixIcon: Icons.person_outline,
-                  validator: (v) => Validators.required(v, field: 'Name'),
+                  validator: (v) =>
+                      Validators.required(v, field: 'Name'),
                 ),
+
                 const SizedBox(height: 16),
+
                 CustomTextField(
                   controller: _phoneController,
                   label: 'Phone',
@@ -72,28 +106,51 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   maxLength: 10,
                   validator: Validators.phone,
                 ),
+
                 const SizedBox(height: 16),
+
                 CustomTextField(
                   controller: _villageController,
                   label: 'Village',
                   prefixIcon: Icons.location_on_outlined,
-                  validator: (v) => Validators.required(v, field: 'Village'),
+                  validator: (v) =>
+                      Validators.required(v, field: 'Village'),
                 ),
+
                 const SizedBox(height: 16),
+
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Collection Center',
                     prefixIcon: Icon(Icons.store_outlined),
                   ),
                   items: FarmerRepository.centers
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .map(
+                        (center) => DropdownMenuItem(
+                          value: center,
+                          child: Text(center),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (value) => _center = value,
-                  validator: (v) =>
-                      Validators.required(v, field: 'Collection center'),
+                  onChanged: _saving
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _center = value;
+                          });
+                        },
+                  validator: (value) => Validators.required(
+                    value,
+                    field: 'Collection center',
+                  ),
                 ),
+
                 const SizedBox(height: 24),
-                CustomButton(label: 'Save Farmer', onPressed: _save),
+
+                CustomButton(
+                  label: _saving ? 'Saving...' : 'Save Farmer',
+                  onPressed: _saving ? null : _save,
+                ),
               ],
             ),
           ),
