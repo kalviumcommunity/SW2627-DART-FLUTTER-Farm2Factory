@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/farmer.dart';
+import '../../../models/farmer.dart';
 
 /// One row in the farmer list.
 class FarmerCard extends StatelessWidget {
@@ -17,7 +17,7 @@ class FarmerCard extends StatelessWidget {
         onTap: onTap,
         leading: CircleAvatar(child: Text(farmer.name[0].toUpperCase())),
         title: Text(farmer.name),
-        subtitle: Text('${farmer.id}  •  ${farmer.village}'),
+        subtitle: Text('${farmer.farmerId}  -  ${farmer.village}'),
         trailing: const Icon(Icons.chevron_right),
       ),
     );
