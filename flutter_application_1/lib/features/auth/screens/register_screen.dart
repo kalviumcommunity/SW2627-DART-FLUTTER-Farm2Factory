@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _error = null;
     });
     final phone = _phoneController.text.trim();
-    final error = await AuthRepository.instance.register(
+    final error = await AuthRepository.instance.registerFarmer(
       name: _nameController.text,
       phone: phone,
       password: _passwordController.text,

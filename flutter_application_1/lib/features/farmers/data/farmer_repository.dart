@@ -2,16 +2,24 @@ import 'package:flutter/foundation.dart';
 
 import '../models/farmer.dart';
 
-/// DEMO data store (in memory). Later this class will talk to Cloud Firestore;
-/// the screens will not need to change because they only call these methods.
+/// Data store for registered farmers.
 class FarmerRepository extends ChangeNotifier {
   FarmerRepository._();
   static final FarmerRepository instance = FarmerRepository._();
+
+  static const List<String> centerTabs = [
+    'All',
+    'Jaipur',
+    'Ajmer',
+    'Sikar',
+    'Tonk',
+  ];
 
   static const List<String> centers = [
     'Jaipur Center',
     'Ajmer Center',
     'Sikar Center',
+    'Tonk Center',
   ];
 
   final List<Farmer> _farmers = [
@@ -36,18 +44,52 @@ class FarmerRepository extends ChangeNotifier {
       village: 'Sikar',
       center: 'Sikar Center',
     ),
+    const Farmer(
+      id: 'F004',
+      name: 'Mohan Singh',
+      phone: '9812345678',
+      village: 'Jaipur',
+      center: 'Jaipur Center',
+    ),
+    const Farmer(
+      id: 'F005',
+      name: 'Priya Sharma',
+      phone: '9765432109',
+      village: 'Ajmer',
+      center: 'Ajmer Center',
+    ),
+    const Farmer(
+      id: 'F006',
+      name: 'Anil Meena',
+      phone: '9654321098',
+      village: 'Sikar',
+      center: 'Sikar Center',
+    ),
+    const Farmer(
+      id: 'F007',
+      name: 'Kavita Yadav',
+      phone: '9543210987',
+      village: 'Jaipur',
+      center: 'Jaipur Center',
+    ),
   ];
 
   List<Farmer> get farmers => List.unmodifiable(_farmers);
 
-  /// Matches name, id or village (case-insensitive).
-  List<Farmer> search(String query) {
+  /// Filters by center and search query.
+  List<Farmer> filterAndSearch({String query = '', String selectedCenter = 'All'}) {
     final q = query.trim().toLowerCase();
-    if (q.isEmpty) return farmers;
     return _farmers.where((f) {
-      return f.name.toLowerCase().contains(q) ||
+      final matchesQuery = q.isEmpty ||
+          f.name.toLowerCase().contains(q) ||
           f.id.toLowerCase().contains(q) ||
           f.village.toLowerCase().contains(q);
+
+      final matchesCenter = selectedCenter == 'All' ||
+          f.center.toLowerCase().contains(selectedCenter.toLowerCase()) ||
+          f.village.toLowerCase().contains(selectedCenter.toLowerCase());
+
+      return matchesQuery && matchesCenter;
     }).toList();
   }
 
@@ -63,6 +105,8 @@ class FarmerRepository extends ChangeNotifier {
     required String phone,
     required String village,
     required String center,
+    String? aadhaarNumber,
+    String collectorId = 'C-BHN-001',
   }) {
     final id = 'F${(_farmers.length + 1).toString().padLeft(3, '0')}';
     final farmer = Farmer(
@@ -71,9 +115,12 @@ class FarmerRepository extends ChangeNotifier {
       phone: phone.trim(),
       village: village.trim(),
       center: center,
+      aadhaarNumber: aadhaarNumber?.trim(),
+      collectorId: collectorId,
     );
     _farmers.add(farmer);
-    notifyListeners(); // tells the list screen to redraw
+    notifyListeners();
     return farmer;
   }
 }
+

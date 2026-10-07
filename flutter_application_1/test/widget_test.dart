@@ -10,6 +10,6 @@ void main() {
 
     await tester.pump(const Duration(seconds: 3)); // wait out the splash timer
     await tester.pumpAndSettle();
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Welcome Back'), findsOneWidget);
   });
 }

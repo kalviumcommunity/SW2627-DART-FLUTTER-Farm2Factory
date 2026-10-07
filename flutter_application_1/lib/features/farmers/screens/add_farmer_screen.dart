@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
 import '../data/farmer_repository.dart';
 
 class AddFarmerScreen extends StatefulWidget {
@@ -19,81 +18,266 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _villageController = TextEditingController();
-  String? _center;
+  final _aadhaarController = TextEditingController();
+  String? _center = 'Jaipur Center';
+  bool _saving = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
     _villageController.dispose();
+    _aadhaarController.dispose();
     super.dispose();
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _saving = true);
+
     final farmer = FarmerRepository.instance.add(
       name: _nameController.text,
       phone: _phoneController.text,
       village: _villageController.text,
       center: _center!,
+      aadhaarNumber: _aadhaarController.text.isNotEmpty
+          ? _aadhaarController.text
+          : null,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${farmer.name} added as ${farmer.id}')),
+      SnackBar(
+        content: Text('Farmer ${farmer.name} registered as ${farmer.id}!'),
+        backgroundColor: AppTheme.brandGreen,
+      ),
     );
-    // Replace this screen with the details page. Back then returns to the list.
+
     context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Farmer')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Add Farmer',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CustomTextField(
+                // Top Banner Card: "Register New Farmer"
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardMint,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                        color: AppTheme.brandGreen.withOpacity(0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandGreen.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_add_alt_1,
+                          color: AppTheme.brandGreen,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Register New Farmer',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Add farmer details to your collection center',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Full Name
+                TextFormField(
                   controller: _nameController,
-                  label: 'Name',
-                  prefixIcon: Icons.person_outline,
-                  validator: (v) => Validators.required(v, field: 'Name'),
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: 'Full Name',
+                    hintText: 'Enter farmer full name',
+                    prefixIcon: Icon(Icons.person_outline,
+                        color: Colors.grey.shade600, size: 20),
+                  ),
+                  validator: (v) => Validators.required(v, field: 'Full name'),
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
+
+                // Phone Number
+                TextFormField(
                   controller: _phoneController,
-                  label: 'Phone',
-                  prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   maxLength: 10,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',
+                    hintText: '10-digit mobile number',
+                    prefixIcon: Icon(Icons.phone_outlined,
+                        color: Colors.grey.shade600, size: 20),
+                    counterText: '',
+                  ),
                   validator: Validators.phone,
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
+
+                // Village
+                TextFormField(
                   controller: _villageController,
-                  label: 'Village',
-                  prefixIcon: Icons.location_on_outlined,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: 'Village',
+                    hintText: 'Village or locality name',
+                    prefixIcon: Icon(Icons.location_on_outlined,
+                        color: Colors.grey.shade600, size: 20),
+                  ),
                   validator: (v) => Validators.required(v, field: 'Village'),
                 ),
                 const SizedBox(height: 16),
+
+                // Collection Center Dropdown
                 DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
+                  initialValue: _center,
+                  decoration: InputDecoration(
                     labelText: 'Collection Center',
-                    prefixIcon: Icon(Icons.store_outlined),
+                    prefixIcon: Icon(Icons.store_outlined,
+                        color: Colors.grey.shade600, size: 20),
                   ),
                   items: FarmerRepository.centers
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (value) => _center = value,
+                  onChanged: (val) => setState(() => _center = val),
                   validator: (v) =>
-                      Validators.required(v, field: 'Collection center'),
+                      Validators.required(v, field: 'Collection Center'),
                 ),
-                const SizedBox(height: 24),
-                CustomButton(label: 'Save Farmer', onPressed: _save),
+                const SizedBox(height: 16),
+
+                // Aadhaar Number (Optional)
+                TextFormField(
+                  controller: _aadhaarController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 12,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    labelText: 'Aadhaar Number (Optional)',
+                    hintText: '12-digit Aadhaar number',
+                    prefixIcon: Icon(Icons.badge_outlined,
+                        color: Colors.grey.shade600, size: 20),
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Save Farmer Vibrant Gradient Button matching Screen 4
+                Container(
+                  width: double.infinity,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.orangeGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF8C00).withOpacity(0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: _saving ? null : _save,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const SizedBox(width: 32),
+                            _saving
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Save Farmer',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
               ],
             ),
           ),

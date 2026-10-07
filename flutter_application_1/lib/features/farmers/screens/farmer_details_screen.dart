@@ -46,6 +46,13 @@ class FarmerDetailsScreen extends StatelessWidget {
                         _InfoRow(label: 'Village', value: farmer.village),
                         _InfoRow(
                             label: 'Collection Center', value: farmer.center),
+                        _InfoRow(
+                            label: 'Connected Collector',
+                            value: farmer.collectorId),
+                        if (farmer.aadhaarNumber != null)
+                          _InfoRow(
+                              label: 'Aadhaar Number',
+                              value: farmer.aadhaarNumber!),
                         _InfoRow(label: 'Status', value: farmer.status),
                       ],
                     ),
