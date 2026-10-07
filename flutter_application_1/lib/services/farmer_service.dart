@@ -7,7 +7,7 @@ class FarmerService {
   CollectionReference get _farmers => _firestore.collection('farmers');
 
   Future<void> createFarmer(Farmer farmer) async {
-    await _farmers.doc(farmer.farmerId).set({
+    await _farmers.doc(farmer.id).set({
       ...farmer.toMap(),
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -25,8 +25,8 @@ class FarmerService {
         .toList();
   }
 
-  Future<Farmer?> getFarmerById(String farmerId) async {
-    final doc = await _farmers.doc(farmerId).get();
+  Future<Farmer?> getFarmerById(String id) async {
+    final doc = await _farmers.doc(id).get();
     if (!doc.exists) return null;
     return Farmer.fromMap(
       doc.id,
@@ -37,8 +37,9 @@ class FarmerService {
   Future<void> updateFarmer(
     Farmer farmer,
   ) async {
-    await _farmers.doc(farmer.farmerId).update(
+    await _farmers.doc(farmer.id).update(
       farmer.toMap(),
     );
   }
 }
+

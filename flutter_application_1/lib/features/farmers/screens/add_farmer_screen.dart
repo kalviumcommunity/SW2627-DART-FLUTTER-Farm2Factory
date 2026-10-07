@@ -38,12 +38,12 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
     final newId = 'FMR-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
     final farmer = Farmer(
-      farmerId: newId,
+      id: newId,
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       village: _villageController.text.trim(),
-      centerId: _center!,
-      status: 'active',
+      center: _center!,
+      status: 'Active',
     );
 
     try {
@@ -51,10 +51,10 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
       
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${farmer.name} added as ${farmer.farmerId}')),
+        SnackBar(content: Text('${farmer.name} added as ${farmer.id}')),
       );
       // Replace this screen with the details page. Back then returns to the list.
-      context.pushReplacement(AppRoutes.farmerDetails(farmer.farmerId));
+      context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

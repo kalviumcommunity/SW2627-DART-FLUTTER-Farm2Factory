@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/auth_service.dart';
+import '../../../services/user_service.dart';
 
 class AppUser {
   final String name;
@@ -7,61 +10,80 @@ class AppUser {
   const AppUser({required this.name, required this.phone});
 }
 
-class _Account {
-  final String name;
-  final String password;
-
-  const _Account({required this.name, required this.password});
-}
-
-/// DEMO login (in memory, lost when the app restarts).
-/// Later, Firebase Auth replaces this class: it stores passwords safely.
-/// Never save a real password in plain text on the phone.
-///
-/// Demo account you can always use:  9999999999  /  123456
 class AuthRepository extends ChangeNotifier {
-  AuthRepository._();
+  AuthRepository._() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _currentUser = AppUser(
+          name: user.displayName ?? 'User', 
+          phone: user.email?.replaceAll('@dairy.com', '') ?? ''
+        );
+      } else {
+        _currentUser = null;
+      }
+      notifyListeners();
+    });
+  }
   static final AuthRepository instance = AuthRepository._();
 
-  final Map<String, _Account> _accounts = {
-    '9999999999': const _Account(name: 'Demo Admin', password: '123456'),
-  };
+  final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
   AppUser? _currentUser;
   AppUser? get currentUser => _currentUser;
 
-  /// Returns null when it worked, otherwise an error message to show.
   Future<String?> register({
     required String name,
     required String phone,
     required String password,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800)); // fake network
-    if (_accounts.containsKey(phone)) {
-      return 'This mobile number is already registered. Please log in.';
+    try {
+      final email = '$phone@dairy.com';
+      final credential = await _authService.registerUser(
+        email: email,
+        password: password,
+      );
+      
+      if (credential.user != null) {
+        await _userService.createUserProfile(
+          uid: credential.user!.uid,
+          name: name.trim(),
+          email: email,
+          role: 'farmer',
+        );
+      }
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        return 'This mobile number is already registered. Please log in.';
+      }
+      return e.message ?? 'Registration failed';
+    } catch (e) {
+      return e.toString();
     }
-    _accounts[phone] = _Account(name: name.trim(), password: password);
-    return null;
   }
 
-  /// Returns null when it worked, otherwise an error message to show.
   Future<String?> login({
     required String phone,
     required String password,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800)); // fake network
-    final account = _accounts[phone];
-    // One message for both cases, so nobody can guess which numbers exist.
-    if (account == null || account.password != password) {
+    try {
+      final email = '$phone@dairy.com';
+      await _authService.loginUser(
+        email: email,
+        password: password,
+      );
+      return null;
+    } on FirebaseAuthException {
       return 'Wrong mobile number or password';
+    } catch (_) {
+      return 'An error occurred';
     }
-    _currentUser = AppUser(name: account.name, phone: phone);
-    notifyListeners();
-    return null;
   }
 
-  void logout() {
-    _currentUser = null;
-    notifyListeners();
+  Future<void> logout() async {
+    await _authService.logoutUser();
   }
 }
+
+

@@ -77,7 +77,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                       final results = _allFarmers.where((f) {
                         final q = _query.toLowerCase();
                         return f.name.toLowerCase().contains(q) ||
-                            f.farmerId.toLowerCase().contains(q) ||
+                            f.id.toLowerCase().contains(q) ||
                             f.village.toLowerCase().contains(q);
                       }).toList();
 
@@ -93,7 +93,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                           return FarmerCard(
                             farmer: farmer,
                             onTap: () => context
-                                .push(AppRoutes.farmerDetails(farmer.farmerId)),
+                                .push(AppRoutes.farmerDetails(farmer.id)),
                           );
                         },
                       );
@@ -105,3 +105,4 @@ class _FarmersScreenState extends State<FarmersScreen> {
     );
   }
 }
+
