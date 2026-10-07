@@ -52,10 +52,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _InfoRow(label: 'Name', value: farmer.name),
-                      _InfoRow(label: 'Farmer ID', value: farmer.farmerId),
+                      _InfoRow(label: 'Farmer ID', value: farmer.id),
                       _InfoRow(label: 'Phone', value: farmer.phone),
                       _InfoRow(label: 'Village', value: farmer.village),
-                      _InfoRow(label: 'Collection Center', value: farmer.centerId),
+                      _InfoRow(label: 'Collection Center', value: farmer.center),
                       _InfoRow(label: 'Status', value: farmer.status),
                     ],
                   ),

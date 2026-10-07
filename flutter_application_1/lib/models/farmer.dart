@@ -1,31 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Farmer {
-  final String farmerId;
+  final String id;
   final String name;
   final String phone;
   final String village;
-  final String centerId;
+  final String center;
   final String status;
   final DateTime? createdAt;
 
-  Farmer({
-    required this.farmerId,
+  const Farmer({
+    required this.id,
     required this.name,
     required this.phone,
     required this.village,
-    required this.centerId,
-    required this.status,
+    required this.center,
+    this.status = 'Active',
     this.createdAt,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'farmerId': farmerId,
+      'id': id,
       'name': name,
       'phone': phone,
       'village': village,
-      'centerId': centerId,
+      'center': center,
       'status': status,
       'createdAt': createdAt,
     };
@@ -36,15 +36,16 @@ class Farmer {
     Map<String, dynamic> map,
   ) {
     return Farmer(
-      farmerId: id,
+      id: id,
       name: map['name'] ?? '',
       phone: map['phone'] ?? '',
       village: map['village'] ?? '',
-      centerId: map['centerId'] ?? '',
-      status: map['status'] ?? 'active',
+      center: map['center'] ?? '',
+      status: map['status'] ?? 'Active',
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] as Timestamp).toDate()
           : null,
     );
   }
 }
+

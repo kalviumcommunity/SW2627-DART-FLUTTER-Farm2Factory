@@ -17,7 +17,7 @@ class FarmerCard extends StatelessWidget {
         onTap: onTap,
         leading: CircleAvatar(child: Text(farmer.name[0].toUpperCase())),
         title: Text(farmer.name),
-        subtitle: Text('${farmer.farmerId}  -  ${farmer.village}'),
+        subtitle: Text('${farmer.id}  -  ${farmer.village}'),
         trailing: const Icon(Icons.chevron_right),
       ),
     );
