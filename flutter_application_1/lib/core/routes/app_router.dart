@@ -1,10 +1,7 @@
 import 'package:go_router/go_router.dart';
 
-<<<<<<< HEAD
-=======
 import '../../features/admin/screens/collector_details_screen.dart';
 import '../../features/admin/screens/collectors_screen.dart';
->>>>>>> origin/main
 import '../../features/admin/screens/dairy_admin_dashboard_screen.dart';
 import '../../features/admin/screens/dairy_payments_screen.dart';
 import '../../features/admin/screens/dispatch_screen.dart';
@@ -39,8 +36,6 @@ class AppRoutes {
   static const milkEntries = '/milk-entries';
   static const reports = '/reports';
   static const payments = '/payments';
-<<<<<<< HEAD
-=======
 
   // Dairy Operations Portal routes
   static const dairyCollectors = '/dairy/collectors';
@@ -51,7 +46,6 @@ class AppRoutes {
   static const dairyPayments = '/dairy/payments';
   static const dairyReports = '/dairy/reports';
   static const dairyLocations = '/dairy/locations';
->>>>>>> origin/main
 }
 
 class AppRouter {

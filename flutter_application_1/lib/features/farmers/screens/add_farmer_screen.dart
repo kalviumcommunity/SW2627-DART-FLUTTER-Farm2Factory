@@ -59,11 +59,7 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
-      backgroundColor: Colors.white,
-=======
       backgroundColor: AppTheme.scaffoldBg,
->>>>>>> origin/main
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
@@ -296,9 +292,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                     ),
                   ),
                 ),
-<<<<<<< HEAD
-                const SizedBox(height: 40),
-=======
                 const SizedBox(height: 20),
                 Center(
                   child: ClipRRect(
@@ -313,7 +306,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
->>>>>>> origin/main
               ],
             ),
           ),
