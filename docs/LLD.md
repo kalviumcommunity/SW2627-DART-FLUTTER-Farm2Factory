@@ -2,475 +2,624 @@
 
 | | |
 |---|---|
-| Version | 0.1 (draft) |
+| Version | 0.2 (draft) |
+| Stack | Dart, Flutter, Firebase Auth, Cloud Firestore, Firebase Storage, Emulator / Device |
 | Related | `PRD.md`, `HLD.md` |
 
-The LLD gives implementation detail: schema, rules, algorithms, module structure and tests. Start with the MVP tables; the rest can wait for later phases.
+Implementation detail: Firestore structure, security rules, rate math, offline handling, Flutter modules, tests. Build the MVP parts first.
 
 ---
 
 ## 1. Conventions
 
-- IDs: `uuid` primary keys (generated on device for offline records).
-- Times: `timestamptz` in UTC; displayed in local time (IST).
-- Money: `numeric(12,2)`. Quantity: `numeric(8,1)`. Fat/SNF: `numeric(4,2)`.
-- Tables: snake_case, plural. Columns: snake_case.
-- Every business table has `created_at`, and `dairy_id` for access control.
-- Business data is never hard-deleted.
+- **Money in paise** (integer): Rs 42.50 is `4250`.
+- **Quantity in tenths of a litre** (integer): 12.5 L is `125`.
+- **Fat and SNF times 100** (integer): 4.2 % is `420`.
+- Integers avoid floating-point rounding errors in bills.
+- Dates for queries are strings `yyyy-MM-dd` in India time (`collectedOn`). Timestamps are Firestore `Timestamp`.
+- Field names are camelCase. Collection names are camelCase.
+- Every business document carries `dairyId` (or sits under `dairies/{dairyId}`).
+- Business documents are never deleted.
 
-Human-readable codes:
-- Farmer: `F-<center>-<number>` (example `F-BHN-0123`)
-- Collector: `C-<center>-<number>`
-- Lot: `LOT-<yyyymmdd>-<shift>-<tanker>`
-
----
-
-## 2. Database schema (MVP first)
-
-```sql
--- ENUMS
-create type user_role as enum ('admin','supervisor','collector','qc','farmer');
-create type shift_type as enum ('AM','PM');
-create type sync_status as enum ('pending','synced','failed');
-
--- ORGANISATION
-create table dairies (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  created_at timestamptz not null default now()
-);
-
-create table centers (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  code text not null,
-  name text not null,
-  village text, district text, state text,
-  lat numeric(9,6), lng numeric(9,6),
-  unique (dairy_id, code)
-);
-
--- USERS (linked to Supabase auth.users)
-create table profiles (
-  id uuid primary key references auth.users(id),
-  dairy_id uuid not null references dairies(id),
-  role user_role not null,
-  full_name text not null,
-  phone text,
-  language text not null default 'hi',
-  is_active boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
-create table farmers (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  center_id uuid not null references centers(id),
-  profile_id uuid unique references profiles(id),
-  farmer_code text not null,
-  village text,
-  animal_type text,                 -- cow / buffalo / mixed
-  is_active boolean not null default true,
-  created_at timestamptz not null default now(),
-  unique (dairy_id, farmer_code)
-);
-
-create table collectors (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  center_id uuid references centers(id),
-  profile_id uuid unique not null references profiles(id),
-  collector_code text not null,
-  vehicle_no text,
-  unique (dairy_id, collector_code)
-);
-
--- RATES
-create table rate_charts (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  name text not null,
-  method text not null check (method in ('chart','formula')),
-  fat_rate numeric(8,3),            -- formula method: price per fat point
-  snf_rate numeric(8,3),            -- formula method: price per SNF point
-  effective_from date not null,
-  created_by uuid references profiles(id),
-  created_at timestamptz not null default now()
-);
-
-create table rate_chart_rows (
-  id uuid primary key default gen_random_uuid(),
-  chart_id uuid not null references rate_charts(id) on delete cascade,
-  fat_min numeric(4,2) not null, fat_max numeric(4,2) not null,
-  snf_min numeric(4,2) not null, snf_max numeric(4,2) not null,
-  rate_per_litre numeric(8,2) not null,
-  check (fat_min <= fat_max and snf_min <= snf_max)
-);
-
--- COLLECTIONS (current state)
-create table collections (
-  id uuid primary key,                          -- generated on device
-  dairy_id uuid not null references dairies(id),
-  center_id uuid not null references centers(id),
-  farmer_id uuid not null references farmers(id),
-  collector_id uuid not null references collectors(id),
-  collected_on date not null,
-  shift shift_type not null,
-  quantity_l numeric(8,1) not null check (quantity_l > 0),
-  fat numeric(4,2) not null check (fat between 0 and 15),
-  snf numeric(4,2) not null check (snf between 0 and 15),
-  rate_chart_id uuid not null references rate_charts(id),
-  rate_per_litre numeric(8,2) not null,         -- snapshot
-  amount numeric(12,2) not null,                -- snapshot
-  version int not null default 1,
-  device_time timestamptz not null,
-  server_time timestamptz not null default now(),
-  lot_id uuid,                                  -- set when assigned to a lot
-  unique (farmer_id, collected_on, shift)       -- one entry per farmer per shift
-);
-create index on collections (farmer_id, collected_on desc);
-create index on collections (center_id, collected_on desc);
-
--- AUDIT OF CORRECTIONS (append only)
-create table collection_edits (
-  id uuid primary key default gen_random_uuid(),
-  collection_id uuid not null references collections(id),
-  version_from int not null, version_to int not null,
-  old_values jsonb not null, new_values jsonb not null,
-  reason text not null,
-  edited_by uuid not null references profiles(id),
-  edited_at timestamptz not null default now()
-);
-
--- NOTIFICATIONS
-create table notifications (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references profiles(id),
-  type text not null,                           -- entry_corrected, payout, warning
-  title text not null, body text not null,
-  payload jsonb,
-  read_at timestamptz,
-  created_at timestamptz not null default now()
-);
-```
-
-### Phase 2 tables (Next and Later)
-
-```sql
-create table tankers (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  vehicle_no text not null, driver_name text
-);
-
-create table lots (
-  id uuid primary key default gen_random_uuid(),
-  dairy_id uuid not null references dairies(id),
-  lot_code text not null unique,
-  tanker_id uuid references tankers(id),
-  received_on date not null, shift shift_type not null,
-  total_litres numeric(10,1),
-  status text not null default 'received'       -- received / accepted / rejected
-);
-alter table collections add foreign key (lot_id) references lots(id);
-
-create table qc_tests (
-  id uuid primary key default gen_random_uuid(),
-  lot_id uuid not null references lots(id),
-  fat numeric(4,2), snf numeric(4,2),
-  adulteration_found boolean not null default false,
-  grade text check (grade in ('A','B','C','Rejected')),
-  tested_by uuid not null references profiles(id),
-  tested_at timestamptz not null default now(),
-  notes text
-);
-
-create table payouts (
-  id uuid primary key default gen_random_uuid(),
-  farmer_id uuid not null references farmers(id),
-  period_from date not null, period_to date not null,
-  total_litres numeric(10,1) not null,
-  total_amount numeric(12,2) not null,
-  status text not null default 'unpaid',        -- unpaid / paid
-  mode text, paid_at timestamptz, reference text,
-  unique (farmer_id, period_from, period_to)
-);
-
-create table disputes (
-  id uuid primary key default gen_random_uuid(),
-  collection_id uuid not null references collections(id),
-  raised_by uuid not null references profiles(id),
-  reason text not null,
-  status text not null default 'open',          -- open / resolved / rejected
-  resolution_note text, resolved_by uuid references profiles(id),
-  created_at timestamptz not null default now(), resolved_at timestamptz
-);
-
-create table audit_log (
-  id bigint generated always as identity primary key,
-  actor uuid, action text not null, entity text not null, entity_id text,
-  details jsonb, at timestamptz not null default now()
-);
-```
+Codes:
+- Farmer `F-<center>-<number>` (example `F-BHN-0123`), collector `C-<center>-<number>`, lot `LOT-<yyyymmdd>-<shift>-<tanker>`.
 
 ---
 
-## 3. Access control (Row Level Security)
+## 2. Firestore structure
 
-```sql
-alter table collections enable row level security;
-
--- helper functions
-create function auth_role() returns user_role language sql stable as
-  $$ select role from profiles where id = auth.uid() $$;
-create function auth_dairy() returns uuid language sql stable as
-  $$ select dairy_id from profiles where id = auth.uid() $$;
-
--- farmer reads only own rows
-create policy farmer_read on collections for select
-  using (auth_role() = 'farmer' and farmer_id in
-         (select id from farmers where profile_id = auth.uid()));
-
--- collector reads and inserts for own center
-create policy collector_read on collections for select
-  using (auth_role() = 'collector' and center_id in
-         (select center_id from collectors where profile_id = auth.uid()));
-create policy collector_insert on collections for insert
-  with check (auth_role() = 'collector' and center_id in
-         (select center_id from collectors where profile_id = auth.uid()));
-
--- supervisor/admin read whole dairy
-create policy mgmt_read on collections for select
-  using (auth_role() in ('supervisor','admin') and dairy_id = auth_dairy());
-
--- NO update or delete policies: changes only through correct_collection()
+```
+users/{uid}
+dairies/{dairyId}
+  centers/{centerId}
+  rateCharts/{chartId}
+  collections/{entryId}                 entryId = <farmerCode>_<yyyyMMdd>_<AM|PM>
+    edits/{version}                     history of corrections (append only)
+  tankers/{tankerId}
+  lots/{lotId}
+  qcTests/{testId}
+  payouts/{payoutId}                    payoutId = <farmerUid>_<fromYyyyMMdd>_<toYyyyMMdd>
+  disputes/{disputeId}
+users/{uid}/notifications/{notificationId}
 ```
 
-Apply the same pattern to every table (farmers, lots, qc_tests, payouts and so on). Write a test for each policy.
+### 2.1 Example documents
 
----
+**users/{uid}** (the uid is the Firebase Auth uid)
+```json
+{
+  "dairyId": "dairy1",
+  "role": "farmer",                 // admin | supervisor | collector | qc | farmer
+  "code": "F-BHN-0123",
+  "name": "Ram Singh",
+  "phone": "98xxxxxx12",
+  "centerId": "BHN",
+  "village": "Bhainsa",
+  "animalType": "buffalo",
+  "vehicleNo": null,                // collectors only
+  "language": "hi",
+  "active": true,
+  "createdAt": "<serverTimestamp>"
+}
+```
 
-## 4. Server functions (RPC)
+**dairies/{d}/centers/{centerId}**
+```json
+{ "code": "BHN", "name": "Bhainsa Center", "village": "Bhainsa", "district": "...", "state": "...", "lat": 26.9, "lng": 75.8 }
+```
 
-| Function | Input | Rules |
+**dairies/{d}/rateCharts/{chartId}** (immutable once created; a rate change is a new chart)
+```json
+{
+  "name": "Standard 2026",
+  "method": "chart",                       // chart | formula
+  "effectiveFrom": "2026-10-01",
+  "rows": [
+    { "fatMin": 350, "fatMax": 399, "snfMin": 800, "snfMax": 849, "ratePaise": 3600 },
+    { "fatMin": 400, "fatMax": 449, "snfMin": 800, "snfMax": 849, "ratePaise": 4000 }
+  ],
+  "fatRatePaisePerPoint": null,            // formula method
+  "snfRatePaisePerPoint": null,
+  "createdBy": "<uid>", "createdAt": "<serverTimestamp>"
+}
+```
+
+**dairies/{d}/collections/{entryId}**
+```json
+{
+  "farmerId": "<farmer uid>", "farmerCode": "F-BHN-0123",
+  "centerId": "BHN", "collectorId": "<collector uid>",
+  "collectedOn": "2026-10-03", "shift": "AM",
+  "quantityL10": 125, "fat100": 420, "snf100": 835,
+  "rateChartId": "chart1", "ratePaise": 4000, "amountPaise": 50000,
+  "version": 1,
+  "deviceTime": "<Timestamp from phone>",
+  "serverTime": "<serverTimestamp>",
+  "updatedAt": null, "updatedBy": null,
+  "lotId": null
+}
+```
+
+**dairies/{d}/collections/{entryId}/edits/{version}**
+```json
+{
+  "versionFrom": 1, "versionTo": 2,
+  "old": { "quantityL10": 120, "fat100": 410, "snf100": 835, "ratePaise": 3900, "amountPaise": 46800 },
+  "new": { "quantityL10": 125, "fat100": 420, "snf100": 835, "ratePaise": 4000, "amountPaise": 50000 },
+  "reason": "Wrong reading entered",
+  "editedBy": "<uid>", "editedAt": "<serverTimestamp>"
+}
+```
+
+**users/{uid}/notifications/{id}**
+```json
+{ "type": "entry_corrected", "title": "Entry changed", "body": "03 Oct AM: 120 L to 125 L", "entryId": "...", "createdAt": "<serverTimestamp>", "readAt": null }
+```
+
+### 2.2 Later-phase documents
+
+```
+tankers/{id}   { vehicleNo, driverName }
+lots/{id}      { lotCode, tankerId, receivedOn, shift, totalL10, status: received|accepted|rejected }
+qcTests/{id}   { lotId, fat100, snf100, adulterationFound, grade: A|B|C|Rejected, testedBy, testedAt, notes, photoPath }
+payouts/{id}   { farmerId, periodFrom, periodTo, totalL10, totalPaise, status: unpaid|paid, mode, paidAt, reference, billPath }
+disputes/{id}  { entryId, raisedBy, reason, status: open|resolved|rejected, resolutionNote, resolvedBy, createdAt, resolvedAt }
+```
+
+### 2.3 Indexes (`firestore.indexes.json`)
+
+| Collection | Fields | Used for |
 |---|---|---|
-| `create_user(role, name, phone, center_id)` | admin/collector call | Creates auth user + profile + farmer/collector row; returns code and temporary PIN |
-| `upsert_collection(payload)` | collector | Validates ranges; recomputes rate and amount server-side; idempotent by `id`; rejects duplicate farmer+date+shift with a clear error |
-| `correct_collection(id, new_qty, new_fat, new_snf, reason, expected_version)` | collector (same day) / supervisor | Checks `version = expected_version`, writes `collection_edits`, updates row, increments version, creates notification |
-| `get_changes(since timestamptz)` | any | Returns rows changed after cursor (filtered by RLS) |
-| `generate_bill(farmer_id or center_id, from, to)` | admin | Sums stored amounts; creates payout rows; returns PDF link |
-| `reject_lot(lot_id, reason)` | supervisor/qc | Sets lot status, returns affected farmers |
-| `trace_lot(lot_id)` | supervisor | Lot to collections to farmers and collectors |
+| collections | `farmerId` asc, `collectedOn` desc | Farmer's records |
+| collections | `centerId` asc, `collectedOn` desc | Collector's and center's records |
+| collections | `centerId` asc, `collectedOn` asc, `shift` asc | Daily center report |
+| collections | `lotId` asc | Lot trace |
+| payouts | `farmerId` asc, `periodTo` desc | Payment history |
 
 ---
 
-## 5. Rate calculation algorithm
+## 3. Security Rules
+
+### 3.1 Firestore (`firestore.rules`)
 
 ```
-function calculateRate(chart, fat, snf):
-    if chart.method == 'chart':
-        row = chart.rows.first(r => fat >= r.fat_min && fat <= r.fat_max
-                                 && snf >= r.snf_min && snf <= r.snf_max)
-        if row == null: throw RateNotFound(fat, snf)
-        return row.rate_per_litre
-    else:  // formula
-        return round(fat * chart.fat_rate + snf * chart.snf_rate, 2)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
-amount = round(quantity_l * rate_per_litre, 2)
+    function signedIn() { return request.auth != null; }
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function role() { return me().role; }
+    function sameDairy(d) { return signedIn() && me().dairyId == d && me().active == true; }
+    function isStaffReader() { return role() in ['admin', 'supervisor', 'qc']; }
+
+    // USERS
+    match /users/{uid} {
+      allow read: if signedIn() && (
+        uid == request.auth.uid
+        || (role() in ['admin', 'supervisor'] && resource.data.dairyId == me().dairyId)
+        || (role() == 'collector' && resource.data.role == 'farmer'
+            && resource.data.centerId == me().centerId));
+      allow create: if signedIn() && request.resource.data.dairyId == me().dairyId && (
+        role() == 'admin'
+        || (role() == 'collector' && request.resource.data.role == 'farmer'
+            && request.resource.data.centerId == me().centerId));
+      allow update: if signedIn() && role() == 'admin'
+        && resource.data.dairyId == me().dairyId;
+      allow delete: if false;
+
+      match /notifications/{nid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow update: if signedIn() && uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+        allow create: if signedIn() && role() in ['admin', 'supervisor', 'collector'];
+        allow delete: if false;
+      }
+    }
+
+    match /dairies/{d} {
+      allow read: if sameDairy(d);
+
+      match /centers/{c} {
+        allow read: if sameDairy(d);
+        allow write: if sameDairy(d) && role() == 'admin';
+      }
+
+      // RATE CHARTS: created once, never edited
+      match /rateCharts/{chartId} {
+        allow read: if sameDairy(d);
+        allow create: if sameDairy(d) && role() == 'admin';
+        allow update, delete: if false;
+      }
+
+      // COLLECTION ENTRIES
+      match /collections/{entryId} {
+        allow read: if sameDairy(d) && (
+          (role() == 'farmer' && resource.data.farmerId == request.auth.uid)
+          || (role() == 'collector' && resource.data.centerId == me().centerId)
+          || isStaffReader());
+
+        allow create: if sameDairy(d) && role() == 'collector'
+          && request.resource.data.collectorId == request.auth.uid
+          && request.resource.data.centerId == me().centerId
+          && request.resource.data.version == 1
+          && request.resource.data.quantityL10 is int
+          && request.resource.data.quantityL10 >= 5 && request.resource.data.quantityL10 <= 2000
+          && request.resource.data.fat100 is int
+          && request.resource.data.fat100 >= 100 && request.resource.data.fat100 <= 1200
+          && request.resource.data.snf100 is int
+          && request.resource.data.snf100 >= 500 && request.resource.data.snf100 <= 1200
+          && request.resource.data.ratePaise is int && request.resource.data.ratePaise > 0
+          && request.resource.data.amountPaise is int && request.resource.data.amountPaise > 0
+          && request.resource.data.serverTime == request.time;
+
+        // Correction: version + 1, only value fields change,
+        // and a matching edits/<version> document must be written in the same batch.
+        allow update: if sameDairy(d) && role() in ['collector', 'supervisor']
+          && request.resource.data.version == resource.data.version + 1
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+               ['quantityL10','fat100','snf100','rateChartId','ratePaise','amountPaise',
+                'version','updatedAt','updatedBy'])
+          && request.resource.data.updatedBy == request.auth.uid
+          && existsAfter(/databases/$(database)/documents/dairies/$(d)/collections/$(entryId)/edits/$(string(request.resource.data.version)));
+
+        // Lot assignment by staff (separate small rule, lotId only)
+        allow update: if sameDairy(d) && role() in ['supervisor', 'qc', 'admin']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lotId']);
+
+        allow delete: if false;
+
+        match /edits/{version} {
+          allow read: if sameDairy(d) && (
+            isStaffReader() || role() == 'collector'
+            || (role() == 'farmer' && get(/databases/$(database)/documents/dairies/$(d)/collections/$(entryId)).data.farmerId == request.auth.uid));
+          allow create: if sameDairy(d) && role() in ['collector', 'supervisor']
+            && request.resource.data.editedBy == request.auth.uid
+            && request.resource.data.reason is string && request.resource.data.reason.size() >= 3;
+          allow update, delete: if false;
+        }
+      }
+
+      match /lots/{id}      { allow read: if sameDairy(d); allow write: if sameDairy(d) && role() in ['supervisor','qc','admin']; }
+      match /tankers/{id}   { allow read: if sameDairy(d); allow write: if sameDairy(d) && role() == 'admin'; }
+      match /qcTests/{id}   { allow read: if sameDairy(d) && isStaffReader();
+                              allow create: if sameDairy(d) && role() in ['qc','supervisor'];
+                              allow update, delete: if false; }
+      match /payouts/{id}   { allow read: if sameDairy(d) && (isStaffReader()
+                                || (role() == 'farmer' && resource.data.farmerId == request.auth.uid));
+                              allow write: if sameDairy(d) && role() in ['admin','supervisor']; }
+      match /disputes/{id}  { allow read, create: if sameDairy(d);
+                              allow update: if sameDairy(d) && role() in ['supervisor','admin'];
+                              allow delete: if false; }
+    }
+  }
+}
 ```
 
-Rules:
-- Pick the chart with the latest `effective_from <= collected_on` for the dairy.
-- The client calculates for display; the **server recalculates** and its value is stored.
-- Round half up to 2 decimals. Use a decimal type, not floating point, in Dart (`decimal` package) and Postgres (`numeric`).
-- Validate charts at save time: no overlapping ranges, no gaps.
+Notes:
+- The simplified farmer `read` rules work with queries only if the query filters by `farmerId` (or `centerId`), so always include that filter.
+- The two `update` rules are alternatives; Firestore allows the write if either one passes.
+- Rules cannot calculate `amountPaise` reliably; the device calculates it (section 5). Add Cloud Functions later if server recalculation is needed.
+- Each rule that calls `get()` counts as an extra read. It is acceptable at this scale.
 
-Validation limits (configurable per dairy): quantity 0.5 to 200 L; fat 1.0 to 12.0; SNF 5.0 to 12.0.
+### 3.2 Storage (`storage.rules`)
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function me() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
+
+    // Bills: dairies/<dairyId>/bills/<farmerUid>/<period>.pdf
+    match /dairies/{d}/bills/{farmerUid}/{file} {
+      allow read: if request.auth != null && me().dairyId == d
+        && (request.auth.uid == farmerUid || me().role in ['admin','supervisor']);
+      allow write: if request.auth != null && me().dairyId == d && me().role in ['admin','supervisor'];
+    }
+    // Exports and QC photos
+    match /dairies/{d}/exports/{file=**} {
+      allow read, write: if request.auth != null && me().dairyId == d && me().role in ['admin','supervisor'];
+    }
+    match /dairies/{d}/qc/{lotId}/{file} {
+      allow read: if request.auth != null && me().dairyId == d;
+      allow write: if request.auth != null && me().dairyId == d && me().role in ['qc','supervisor']
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
 
 ---
 
-## 6. Sync design (client)
+## 4. Authentication details
 
-### Local tables (Drift)
-
-```
-local_collections   (same columns as collections + sync_status, last_error, tries)
-outbox              (id, entity, entity_id, action, payload_json, created_at, tries, last_error)
-cache_farmers       (id, code, name, village, center_id)
-cache_rate_charts   (chart + rows)
-sync_state          (key, value)         -- last_cursor
-```
-
-### Push algorithm
-
-```
-on connectivity restored OR every 60 s while online:
-    items = outbox ORDER BY created_at LIMIT 50
-    for item in items:
-        try:
-            call rpc(item.action, item.payload)       // idempotent
-            mark local row synced; delete outbox item
-        catch NetworkError:  stop loop            // try later
-        catch ValidationError(e):
-            mark item failed, store e; notify user to fix
-        catch ConflictError (version mismatch):
-            pull latest row; mark item needs-review
-    use exponential backoff: 5s, 15s, 60s, 5m
-```
-
-### Pull algorithm
-
-```
-cursor = sync_state.last_cursor
-rows = rpc get_changes(cursor)
-upsert into local tables in one transaction
-sync_state.last_cursor = max(rows.server_time)
-```
-
-Rules:
-- Save local write and outbox row in **one transaction**.
-- Never delete an outbox item before a confirmed server response.
-- Show pending count in the UI. Show failed items with a "retry" and "export" action.
-
----
-
-## 7. Flutter module structure
-
-```
-app/lib/
-├─ main.dart
-├─ app.dart                      MaterialApp, theme, router, l10n
-├─ core/
-│  ├─ config/                    env, constants
-│  ├─ theme/                     light, dark, text scale
-│  ├─ l10n/                      app_en.arb, app_hi.arb
-│  ├─ utils/                     decimal helpers, date helpers, validators
-│  └─ widgets/                   shared buttons, empty states, sync banner
-├─ data/
-│  ├─ local/                     drift database, DAOs, tables
-│  ├─ remote/                    supabase client, RPC wrappers
-│  ├─ repositories/              collection_repo, farmer_repo, rate_repo, ...
-│  └─ sync/                      outbox_service, sync_engine, connectivity
-├─ domain/
-│  ├─ models/                    Collection, Farmer, RateChart, ...
-│  └─ services/                  rate_calculator, validators
-└─ features/
-   ├─ auth/                      login screen, auth controller, role router
-   ├─ collector/                 home, add_entry, farmers_list, entries, sync_status
-   ├─ farmer/                    home, records, payments, profile
-   ├─ admin/                     dashboard, collectors, farmers, rate_chart, reports
-   ├─ qc/                        lots, add_test
-   └─ notifications/             inbox
-```
-
-Rules:
-- Screens never call Supabase directly; they call repositories through Riverpod providers.
-- Repositories read and write the **local** database first; the sync engine handles the server.
-- Keep `rate_calculator` pure and unit-tested.
-
-### Key interfaces (sketch)
+- **Login:** the user types an ID (for example `F-BHN-0123`) and PIN. The app converts the ID to an internal email like `f-bhn-0123@farm2factory.app` and calls `signInWithEmailAndPassword`. The user never sees the email.
+- **PIN length:** Firebase Auth requires at least 6 characters, so farmers use a 6-digit PIN. Staff use 8 or more characters.
+- **Role routing:** after login, the app reads `users/{uid}` and sends the user to the collector, farmer, admin or QC home.
+- **Creating accounts** (admin or collector): calling `createUserWithEmailAndPassword` on the main Firebase app would log the creator out. Use a **second Firebase app instance**:
 
 ```dart
-abstract class CollectionRepository {
-  Future<void> addEntry(NewCollection input);          // local save + outbox
-  Future<void> correctEntry(String id, Correction c);  // online or queued
-  Stream<List<Collection>> watchForFarmer(String farmerId, DateRange range);
-  Stream<List<Collection>> watchToday(String centerId);
-  Stream<int> watchPendingCount();
+Future<String> createAuthUser(String email, String pin) async {
+  final secondary = await Firebase.initializeApp(
+    name: 'secondary', options: Firebase.app().options);
+  final auth = FirebaseAuth.instanceFor(app: secondary);
+  final cred = await auth.createUserWithEmailAndPassword(email: email, password: pin);
+  await auth.signOut();
+  return cred.user!.uid;           // then the main app writes users/{uid}
 }
+```
+- Then the main app (logged in as the creator) writes `users/{uid}`. Rules allow this because the creator is admin or the farmer's collector.
+- **PIN reset by admin** is not possible from the client with this stack (resetting another user's password needs the Admin SDK). MVP workaround: Firebase password reset email to the internal address is useless for farmers, so the admin recreates the account with a new ID suffix, or use phone OTP login later. Record this as an open issue; Cloud Functions solve it.
+- **Deactivating a user:** set `active: false` in `users/{uid}`. Rules require `active == true`.
 
+---
+
+## 5. Rate calculation (integer math)
+
+```dart
 class RateCalculator {
-  RateResult calculate(RateChart chart, Decimal fat, Decimal snf, Decimal qty);
+  /// Returns rate in paise per litre.
+  int ratePaise(RateChart chart, int fat100, int snf100) {
+    if (chart.method == 'chart') {
+      final row = chart.rows.firstWhere(
+        (r) => fat100 >= r.fatMin && fat100 <= r.fatMax &&
+               snf100 >= r.snfMin && snf100 <= r.snfMax,
+        orElse: () => throw RateNotFound(fat100, snf100));
+      return row.ratePaise;
+    }
+    // formula: paise per fat point and per SNF point (1.00 = 100)
+    final raw = fat100 * chart.fatRatePaisePerPoint + snf100 * chart.snfRatePaisePerPoint;
+    return (raw + 50) ~/ 100;                       // round half up
+  }
+
+  /// quantityL10 is litres x 10, so divide by 10 with rounding.
+  int amountPaise(int quantityL10, int ratePaise) =>
+      (quantityL10 * ratePaise + 5) ~/ 10;
+}
+```
+
+Rules:
+- Pick the chart with the latest `effectiveFrom <= collectedOn`.
+- Validate a new chart before saving: no overlapping ranges, no gaps in the ranges the dairy uses.
+- The entry stores `rateChartId`, `ratePaise` and `amountPaise` (a snapshot), so later chart changes never alter old entries.
+- Display values: divide by 10 (litres), 100 (fat, SNF, rupees).
+- Validation limits (configurable per dairy): quantity 0.5 to 200 L; fat 1.0 to 12.0; SNF 5.0 to 12.0. The rules use the same limits.
+
+---
+
+## 6. Offline implementation
+
+### 6.1 Settings (at app start)
+```dart
+FirebaseFirestore.instance.settings = const Settings(
+  persistenceEnabled: true,
+  cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+);
+```
+
+### 6.2 Create an entry (do not await while offline)
+```dart
+Future<void> addEntry(NewEntry e) {
+  final id = '${e.farmerCode}_${e.collectedOn.replaceAll('-', '')}_${e.shift}';
+  final ref = _db.doc('dairies/$dairyId/collections/$id');
+  final data = {
+    'farmerId': e.farmerUid, 'farmerCode': e.farmerCode,
+    'centerId': centerId, 'collectorId': uid,
+    'collectedOn': e.collectedOn, 'shift': e.shift,
+    'quantityL10': e.quantityL10, 'fat100': e.fat100, 'snf100': e.snf100,
+    'rateChartId': chart.id, 'ratePaise': rate, 'amountPaise': amount,
+    'version': 1,
+    'deviceTime': Timestamp.now(),
+    'serverTime': FieldValue.serverTimestamp(),
+    'updatedAt': null, 'updatedBy': null, 'lotId': null,
+  };
+  // Do NOT await: completes only after the server confirms.
+  ref.set(data).catchError((err) => _reportRejected(id, err));
+  return Future.value();   // UI continues immediately
+}
+```
+
+A repeated set on an existing ID is treated as an update and is rejected by the rules (version must increase), which prevents duplicates and overwrites.
+
+### 6.3 Pending-sync indicator
+```dart
+Stream<QuerySnapshot> todayEntries() => _db
+    .collection('dairies/$dairyId/collections')
+    .where('centerId', isEqualTo: centerId)
+    .where('collectedOn', isEqualTo: today)
+    .snapshots(includeMetadataChanges: true);
+
+// pending count = docs where doc.metadata.hasPendingWrites == true
+```
+
+### 6.4 Master data sync ("Sync now")
+- While online, read `users` (farmers of the center) and `rateCharts` with `Source.server` so they are stored in the cache.
+- Store the last sync time locally and show it on the collector home screen.
+- Offline farmer search uses `GetOptions(source: Source.cache)`.
+
+### 6.5 Correction (online only)
+```dart
+Future<void> correctEntry(Entry old, Correction c) async {
+  // 1. fresh version from the server
+  final snap = await entryRef.get(const GetOptions(source: Source.server));
+  final v = snap['version'] as int;
+  if (v != old.version) throw StaleVersion(snap.data()!);
+
+  final batch = _db.batch();
+  batch.update(entryRef, {
+    'quantityL10': c.quantityL10, 'fat100': c.fat100, 'snf100': c.snf100,
+    'rateChartId': chart.id, 'ratePaise': c.ratePaise, 'amountPaise': c.amountPaise,
+    'version': v + 1,
+    'updatedAt': FieldValue.serverTimestamp(), 'updatedBy': uid,
+  });
+  batch.set(entryRef.collection('edits').doc('${v + 1}'), {
+    'versionFrom': v, 'versionTo': v + 1,
+    'old': old.values, 'new': c.values, 'reason': c.reason,
+    'editedBy': uid, 'editedAt': FieldValue.serverTimestamp(),
+  });
+  batch.set(_db.collection('users/${old.farmerId}/notifications').doc(), {
+    'type': 'entry_corrected', 'title': 'Entry changed',
+    'body': '${old.dateLabel} ${old.shift}: ${old.litres} L to ${c.litres} L',
+    'entryId': old.id, 'createdAt': FieldValue.serverTimestamp(), 'readAt': null,
+  });
+  await batch.commit();
+}
+```
+
+### 6.6 Close shift (reconciliation)
+- Online only. The app counts entries and sums litres from its local list, then runs a server query (`count()` and `sum()` aggregate queries, or a plain query with `Source.server`) for the same center, date and shift.
+- If they differ, show the missing entries and keep them for retry.
+- Save the result in `dairies/{d}/shiftClosures/{center}_{date}_{shift}` (optional, create-only).
+
+### 6.7 Failure cases
+| Case | Behaviour |
+|---|---|
+| Rule rejects a queued create (duplicate or invalid) | `catchError` reports it; entry shows "failed". It is kept in a local failed list for the collector to review |
+| App killed before sync | Pending write remains in the cache and is sent next time online |
+| Cache cleared or app uninstalled with pending writes | Entries are lost: warn collectors to sync before reinstalling, and use Close shift daily |
+| Token expired offline | Writes are sent after the token refreshes when online |
+
+---
+
+## 7. Queries (designed around the screens)
+
+| Screen | Query |
+|---|---|
+| Farmer, today | `collections` where `farmerId == uid` and `collectedOn == today` |
+| Farmer, 10 days / month | same, `collectedOn >= from` and `<= to`, order desc, limit 80 |
+| Collector, today | `collections` where `centerId == c` and `collectedOn == today` |
+| Daily center report | `centerId == c`, `collectedOn == day`, order by `shift` |
+| Month bill for one farmer | `farmerId == f`, date range; sum `amountPaise` and `quantityL10` in the app |
+| Dashboard (admin) | one-day range per center; use aggregate `sum()`/`average()` queries where supported |
+| Lot trace | `collections` where `lotId == lot` |
+| Payment history | `payouts` where `farmerId == f`, order by `periodTo` desc, limit 6 |
+
+Never read whole collections. Always add a date range and a limit.
+
+---
+
+## 8. Storage layout
+
+```
+dairies/{dairyId}/bills/{farmerUid}/{yyyy-MM or from_to}.pdf
+dairies/{dairyId}/exports/{yyyy-MM}/{center}_report.xlsx
+dairies/{dairyId}/qc/{lotId}/{photo}.jpg
+users/{uid}/avatar.jpg (optional)
+```
+
+Bill PDF contents: farmer name and code, period, date rows (shift, litres, fat, SNF, rate, amount), totals, average fat/SNF, generation time.
+
+---
+
+## 9. Flutter module structure
+
+```
+flutter_application_1/        (rename to farm2factory)
+├─ lib/
+│  ├─ main.dart               Firebase init, Firestore settings, runApp
+│  ├─ app.dart                theme, router, localization
+│  ├─ firebase_options.dart   generated by flutterfire configure
+│  ├─ core/
+│  │  ├─ theme/  l10n/ (app_en.arb, app_hi.arb)  utils/ (date, money, formatters)  widgets/
+│  ├─ data/
+│  │  ├─ firebase/            firestore paths, converters, auth client, secondary-app helper
+│  │  └─ repositories/        auth_repo, user_repo, rate_repo, collection_repo,
+│  │                          notification_repo, lot_repo, bill_repo
+│  ├─ domain/
+│  │  ├─ models/              AppUser, Center, RateChart, Entry, Edit, Lot, Payout
+│  │  └─ services/            rate_calculator.dart, validators.dart
+│  └─ features/
+│     ├─ auth/                login, role router
+│     ├─ collector/           home, add_entry, farmers_list, entries, sync_status, close_shift
+│     ├─ farmer/              home, records, payments, notifications
+│     ├─ admin/               dashboard, users, rate_chart, reports
+│     └─ qc/                  lots, add_test
+├─ test/                      unit and widget tests
+├─ firebase.json  firestore.rules  firestore.indexes.json  storage.rules
+└─ rules-tests/               Node tests for rules (emulator)
+```
+
+Rules for the code:
+- Screens use repositories through Riverpod providers; they never import Firebase directly.
+- `RateCalculator` and validators are pure Dart and unit-tested.
+- Firestore paths live in one file.
+
+Repository interfaces (sketch):
+```dart
+abstract class CollectionRepository {
+  Future<void> addEntry(NewEntry input);                       // offline-capable
+  Future<void> correctEntry(Entry old, Correction c);          // online only
+  Stream<List<Entry>> watchFarmer(String farmerUid, String from, String to);
+  Stream<List<Entry>> watchCenterDay(String centerId, String day);
+  Stream<int> watchPendingCount(String centerId, String day);
 }
 ```
 
 ---
 
-## 8. Screens (MVP)
+## 10. Screens (MVP)
 
 | Role | Screen | Key elements |
 |---|---|---|
 | All | Login | ID, PIN, language toggle |
-| Collector | Home | Today's AM/PM totals, Add Entry, Farmers List, Pending Sync |
+| Collector | Home | Today's AM/PM totals, Add Entry, Farmers List, Pending Sync, Sync now, Close shift |
 | Collector | Add Entry | Farmer search, quantity, fat, SNF, live rate and amount, Save |
-| Collector | Entries | Today's list, tap to correct (reason required) |
-| Farmer | Home | Farmer ID card, tabs Today / 10 Days / Month, totals |
-| Farmer | Records | Table: date, quantity, fat, rate, amount, time |
+| Collector | Entries | Today's list with pending marks; tap to correct (online) |
+| Farmer | Home | Farmer card, tabs Today / 10 Days / Month, totals |
+| Farmer | Records | Table: date, shift, quantity, fat, rate, amount, entry time |
 | Farmer | Notifications | Entry-corrected alerts |
-| Admin | Rate chart | Add chart, rows, effective date, validation errors |
-| Admin | Users | Create collector or farmer, reset PIN |
+| Admin | Rate chart | Add chart, rows, effective date, overlap check |
+| Admin | Users | Create collector or farmer |
 
 ---
 
-## 9. State machines
+## 11. State machines
 
-**Collection entry**
-`created (local, pending)` -> `synced` -> `corrected (version n)` -> ... (no delete).
-Failed sync: `pending` -> `failed` -> (fix) -> `pending`.
-
-**Lot**
-`received` -> `accepted` | `rejected`.
-
-**Payout**
-`unpaid` -> `paid` (with mode, reference, time).
-
-**Dispute**
-`open` -> `resolved` | `rejected`.
+- **Entry:** `created (pending write)` to `synced` to `corrected (version n)`. No delete. Rejected: `failed` to reviewed by the collector.
+- **Lot:** `received` to `accepted` or `rejected`.
+- **Payout:** `unpaid` to `paid` (mode, reference, date).
+- **Dispute:** `open` to `resolved` or `rejected`.
 
 ---
 
-## 10. Error handling
+## 12. Error handling
 
 | Case | Behaviour |
 |---|---|
-| No internet | Save locally; show pending banner |
-| Duplicate farmer + shift + date | Warn; open the existing entry for correction |
-| Value out of range | Ask for confirmation; log the override |
-| No rate for fat/SNF | Block save; message "Rate chart missing for this reading" |
+| No internet | Save to cache; show "waiting to sync" |
+| Duplicate farmer, date and shift | Warn before saving ("already recorded"); open the existing entry for correction |
+| Value out of range | Confirm with the collector; rules still enforce hard limits |
+| No rate for fat/SNF | Block save: "Rate chart missing for this reading" |
 | Stale version on correction | Show latest values; ask to redo |
-| Token expired offline | Keep local data; ask to log in when online; do not lose outbox |
-| Phone clock wrong | Store device_time and server_time; flag gap above 10 minutes |
-| App crash mid-save | Local transaction ensures all-or-nothing |
+| Permission denied | Show a plain message, log locally |
+| Phone clock wrong | Compare `deviceTime` and `serverTime`; flag a gap over 10 minutes |
+| Sync failure after long time | Collector sees pending count; "Close shift" shows differences |
 
 ---
 
-## 11. Testing plan
+## 13. Testing plan
 
 | Level | What | Tools |
 |---|---|---|
-| Unit | Rate calculator, validators, decimal rounding | `flutter_test` |
-| Unit | Outbox and sync logic with fake remote | `mocktail` |
-| Database | RLS policies: farmer cannot read others; collector cannot read other centers; no update or delete | SQL tests (pgTAP) |
-| Widget | Add Entry form, farmer list | `flutter_test` |
-| Integration | Airplane-mode shift, then sync, no duplicates | `integration_test` |
+| Unit | Rate calculator, rounding, validators | `flutter_test` |
+| Rules | Farmer cannot read others; collector limited to center; no deletes; create-only; correction needs `edits` doc; duplicates rejected | Firebase Emulator + `@firebase/rules-unit-testing` |
+| Widget | Add Entry form, farmer records | `flutter_test` |
+| Integration | Airplane-mode shift then sync; correction flow | `integration_test` with emulators |
 | Device | Low-end Android phone, slow network | Manual |
 | UAT | Real operator and supervisor at pilot | Checklist |
 
-**Acceptance test examples**
-- Collector records 50 entries offline, goes online: 50 entries on server, zero duplicates.
-- Farmer A logs in: query for Farmer B's rows returns nothing.
-- Correct an entry: edit log row exists, version is 2, farmer gets a notification.
-- Change rate chart effective tomorrow: today's entries keep old rates.
+Acceptance examples:
+- Collector records 50 entries in airplane mode; after reconnecting there are 50 on the server, zero duplicates, and Close shift matches.
+- Farmer A cannot read Farmer B's entries (query returns permission denied).
+- Correct an entry: version is 2, `edits/2` exists, the farmer has a notification.
+- New rate chart effective tomorrow: today's entries keep their old rates.
 
 ---
 
-## 12. Reports
+## 14. Local setup commands
 
-- **Daily center report:** litres per shift, average fat/SNF, entry count.
-- **10-day / monthly bill per farmer:** date rows, totals, average fat/SNF, amount. PDF with farmer code and period.
-- **Excel export:** same data as flat rows.
-- Generated on device for single farmers; by server function for bulk.
+```bash
+# install tools once
+npm install -g firebase-tools
+dart pub global activate flutterfire_cli
+
+# in the project folder
+firebase login
+firebase init firestore storage emulators      # choose Auth, Firestore, Storage emulators
+flutterfire configure                          # pick your Firebase project and platforms
+flutter pub add firebase_core firebase_auth cloud_firestore firebase_storage \
+  flutter_riverpod go_router intl pdf printing excel connectivity_plus
+
+# run emulators, then the app
+firebase emulators:start
+flutter run
+```
+
+Point the app at the emulators in debug mode (Android emulator uses `10.0.2.2` for the host machine):
+```dart
+if (kDebugMode) {
+  FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
+  await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
+  await FirebaseStorage.instance.useStorageEmulator('10.0.2.2', 9199);
+}
+```
+(Use your computer's LAN IP instead of `10.0.2.2` on a real phone.)
 
 ---
 
-## 13. Build order (maps to roadmap)
+## 15. Build order
 
-1. Schema + RLS + seed data for one dairy, one center, three farmers.
-2. Auth and role router.
-3. Rate chart screen and `RateCalculator` with unit tests.
-4. Local DB, Add Entry (offline), outbox, sync engine.
-5. Farmer records screen and pull sync.
-6. Correction flow and notification.
-7. Admin dashboard, bills, exports.
-8. QC, lots, trace.
-9. Pilot hardening: logging, crash reporting, backups.
+1. Firebase project, `flutterfire configure`, emulator suite running.
+2. Auth with ID-to-email login and role router; first admin created by hand in the emulator.
+3. Rules for `users`, plus rules tests.
+4. Rate chart screen and `RateCalculator` with unit tests.
+5. Add Entry with offline cache, pending indicator, "Sync now".
+6. Farmer records screen.
+7. Correction flow, `edits` history and notifications.
+8. Close shift reconciliation.
+9. Admin screens, bills (PDF to Storage), Excel export.
+10. QC, lots and trace.
+11. Pilot hardening: crash reporting, budget alerts, backups (scheduled Firestore export if on a paid plan).

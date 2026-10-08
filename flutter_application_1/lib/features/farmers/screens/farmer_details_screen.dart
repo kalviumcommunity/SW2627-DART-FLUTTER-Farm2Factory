@@ -2,69 +2,81 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/error_message.dart';
-import '../../../models/farmer.dart';
-import '../../../services/farmer_service.dart';
+import '../data/farmer_repository.dart';
 
 class FarmerDetailsScreen extends StatelessWidget {
   final String farmerId;
-  final FarmerService _farmerService = FarmerService();
 
-  FarmerDetailsScreen({super.key, required this.farmerId});
+  const FarmerDetailsScreen({super.key, required this.farmerId});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Farmer Details')),
-      body: FutureBuilder<Farmer?>(
-        future: _farmerService.getFarmerById(farmerId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    final farmer = FarmerRepository.instance.getById(farmerId);
 
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-            return ErrorMessage(
+    return Scaffold(
+      backgroundColor: AppTheme.scaffoldBg,
+      appBar: AppBar(
+        backgroundColor: AppTheme.scaffoldBg,
+        title: const Text('Farmer Details'),
+      ),
+      body: farmer == null
+          ? ErrorMessage(
               message: 'Farmer not found',
               retryLabel: 'Back to farmers',
               onRetry: () => context.go(AppRoutes.farmers),
-            );
-          }
-
-          final farmer = snapshot.data!;
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 40,
-                  child: Text(
-                    farmer.name[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 32),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.brandGreen, width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 38,
+                      backgroundColor: AppTheme.cardMint,
+                      child: Text(
+                        farmer.name.isNotEmpty ? farmer.name[0].toUpperCase() : 'F',
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.brandGreen,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    children: [
-                      _InfoRow(label: 'Name', value: farmer.name),
-                      _InfoRow(label: 'Farmer ID', value: farmer.id),
-                      _InfoRow(label: 'Phone', value: farmer.phone),
-                      _InfoRow(label: 'Village', value: farmer.village),
-                      _InfoRow(label: 'Collection Center', value: farmer.center),
-                      _InfoRow(label: 'Status', value: farmer.status),
-                    ],
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        _InfoRow(label: 'Name', value: farmer.name),
+                        _InfoRow(label: 'Farmer ID', value: farmer.id),
+                        _InfoRow(label: 'Phone', value: farmer.phone),
+                        _InfoRow(label: 'Village', value: farmer.village),
+                        _InfoRow(
+                            label: 'Collection Center', value: farmer.center),
+                        _InfoRow(
+                            label: 'Connected Collector',
+                            value: farmer.collectorId),
+                        if (farmer.aadhaarNumber != null)
+                          _InfoRow(
+                              label: 'Aadhaar Number',
+                              value: farmer.aadhaarNumber!),
+                        _InfoRow(label: 'Status', value: farmer.status),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
     );
   }
 }
