@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/farmer.dart';
+import '../../../models/farmer.dart';
 
 /// Reusable farmer card used in the farmer list.
 class FarmerCard extends StatelessWidget {
@@ -32,6 +32,7 @@ class FarmerCard extends StatelessWidget {
         ),
 
         title: Text(farmer.name),
+<<<<<<< HEAD
 
         subtitle: Text(
           'ID: ${farmer.id}\n'
@@ -56,6 +57,10 @@ class FarmerCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
+=======
+        subtitle: Text('${farmer.id}  -  ${farmer.village}'),
+        trailing: const Icon(Icons.chevron_right),
+>>>>>>> origin/main
       ),
     );
   }

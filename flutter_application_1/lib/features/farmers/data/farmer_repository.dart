@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/farmer.dart';
 
+/// Data store for registered farmers.
 class FarmerRepository extends ChangeNotifier {
   FarmerRepository._();
 
@@ -10,23 +11,31 @@ class FarmerRepository extends ChangeNotifier {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>> get _farmers =>
+  CollectionReference<Map<String, dynamic>> get _farmersCollection =>
       _firestore.collection('farmers');
+
+  static const List<String> centerTabs = [
+    'All',
+    'Jaipur',
+    'Ajmer',
+    'Sikar',
+    'Tonk',
+  ];
 
   static const List<String> centers = [
     'Jaipur Center',
     'Ajmer Center',
     'Sikar Center',
+    'Tonk Center',
   ];
 
-  // Local cache used by the existing UI.
-  final List<Farmer> _farmersCache = [];
+  final List<Farmer> _farmers = [];
 
-  List<Farmer> get farmers => List.unmodifiable(_farmersCache);
+  List<Farmer> get farmers => List.unmodifiable(_farmers);
 
   /// Load all farmers from Firestore.
   Future<List<Farmer>> getFarmers() async {
-    final snapshot = await _farmers.get();
+    final snapshot = await _farmersCollection.get();
 
     final farmers = snapshot.docs.map((doc) {
       final data = doc.data();
@@ -37,17 +46,37 @@ class FarmerRepository extends ChangeNotifier {
         phone: data['phone'] ?? '',
         village: data['village'] ?? '',
         center: data['center'] ?? '',
+        aadhaarNumber: data['aadhaarNumber'],
+        collectorId: data['collectorId'] ?? 'C-BHN-001',
         status: data['status'] ?? 'Active',
       );
     }).toList();
 
-    _farmersCache
+    _farmers
       ..clear()
       ..addAll(farmers);
 
     notifyListeners();
 
     return farmers;
+  }
+
+  /// Filters by center and search query.
+  List<Farmer> filterAndSearch({String query = '', String selectedCenter = 'All'}) {
+    final q = query.trim().toLowerCase();
+
+    return _farmers.where((f) {
+      final matchesQuery = q.isEmpty ||
+          f.name.toLowerCase().contains(q) ||
+          f.id.toLowerCase().contains(q) ||
+          f.village.toLowerCase().contains(q);
+
+      final matchesCenter = selectedCenter == 'All' ||
+          f.center.toLowerCase().contains(selectedCenter.toLowerCase()) ||
+          f.village.toLowerCase().contains(selectedCenter.toLowerCase());
+
+      return matchesQuery && matchesCenter;
+    }).toList();
   }
 
   /// Create a new farmer in Firestore.
@@ -57,10 +86,10 @@ class FarmerRepository extends ChangeNotifier {
     required String village,
     required String center,
     String status = 'Active',
+    String? aadhaarNumber,
+    String collectorId = 'C-BHN-001',
   }) async {
-    // Generate the next farmer ID.
-    final snapshot = await _farmers.get();
-
+    final snapshot = await _farmersCollection.get();
     final id = 'F${(snapshot.docs.length + 1).toString().padLeft(3, '0')}';
 
     final farmer = Farmer(
@@ -70,21 +99,25 @@ class FarmerRepository extends ChangeNotifier {
       village: village.trim(),
       center: center,
       status: status,
+      aadhaarNumber: aadhaarNumber?.trim().isEmpty ?? true
+          ? null
+          : aadhaarNumber!.trim(),
+      collectorId: collectorId,
     );
 
-    await _farmers.doc(id).set({
+    await _farmersCollection.doc(id).set({
       'id': farmer.id,
       'name': farmer.name,
       'phone': farmer.phone,
       'village': farmer.village,
       'center': farmer.center,
+      'aadhaarNumber': farmer.aadhaarNumber,
+      'collectorId': farmer.collectorId,
       'status': farmer.status,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    // Keep local cache updated.
-    _farmersCache.add(farmer);
-
+    _farmers.add(farmer);
     notifyListeners();
 
     return farmer;
@@ -92,7 +125,7 @@ class FarmerRepository extends ChangeNotifier {
 
   /// Get one farmer from Firestore by ID.
   Future<Farmer?> getFarmerById(String id) async {
-    final doc = await _farmers.doc(id).get();
+    final doc = await _farmersCollection.doc(id).get();
 
     if (!doc.exists) {
       return null;
@@ -110,16 +143,16 @@ class FarmerRepository extends ChangeNotifier {
       phone: data['phone'] ?? '',
       village: data['village'] ?? '',
       center: data['center'] ?? '',
+      aadhaarNumber: data['aadhaarNumber'],
+      collectorId: data['collectorId'] ?? 'C-BHN-001',
       status: data['status'] ?? 'Active',
     );
 
-    // Update cache.
-    final index = _farmersCache.indexWhere((f) => f.id == farmer.id);
-
+    final index = _farmers.indexWhere((f) => f.id == farmer.id);
     if (index >= 0) {
-      _farmersCache[index] = farmer;
+      _farmers[index] = farmer;
     } else {
-      _farmersCache.add(farmer);
+      _farmers.add(farmer);
     }
 
     notifyListeners();
@@ -135,16 +168,12 @@ class FarmerRepository extends ChangeNotifier {
       return farmers;
     }
 
-    return _farmersCache.where((farmer) {
+    return _farmers.where((farmer) {
       return farmer.name.toLowerCase().contains(q) ||
           farmer.id.toLowerCase().contains(q) ||
           farmer.village.toLowerCase().contains(q);
     }).toList();
   }
-
-  // ---------------------------------------------------------------------------
-  // Compatibility methods for the existing screens.
-  // ---------------------------------------------------------------------------
 
   /// Existing AddFarmerScreen calls this method.
   Future<Farmer> add({
@@ -152,21 +181,22 @@ class FarmerRepository extends ChangeNotifier {
     required String phone,
     required String village,
     required String center,
+    String? aadhaarNumber,
+    String collectorId = 'C-BHN-001',
   }) {
     return createFarmer(
       name: name,
       phone: phone,
       village: village,
       center: center,
+      aadhaarNumber: aadhaarNumber,
+      collectorId: collectorId,
     );
   }
 
   /// Existing FarmerDetailsScreen expects a synchronous method.
-  ///
-  /// It reads from the local cache. The cache is populated by getFarmers()
-  /// when the farmer list is loaded.
   Farmer? getById(String id) {
-    for (final farmer in _farmersCache) {
+    for (final farmer in _farmers) {
       if (farmer.id == id) {
         return farmer;
       }

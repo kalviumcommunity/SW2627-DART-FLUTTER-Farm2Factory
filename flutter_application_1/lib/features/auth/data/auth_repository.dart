@@ -1,61 +1,143 @@
 import 'package:flutter/foundation.dart';
 
+enum UserRole { farmer, collector, admin }
+
 class AppUser {
+  final String id;
   final String name;
   final String phone;
+  final UserRole role;
+  final String center;
+  final String? collectorId;
 
-  const AppUser({required this.name, required this.phone});
+  const AppUser({
+    required this.id,
+    required this.name,
+    required this.phone,
+    required this.role,
+    this.center = 'Central Valley Collection Center',
+    this.collectorId,
+  });
 }
 
 class _Account {
+  final String id;
   final String name;
+  final String identifier; // phone or username
   final String password;
+  final UserRole role;
+  final String center;
+  final String? collectorId;
 
-  const _Account({required this.name, required this.password});
+  const _Account({
+    required this.id,
+    required this.name,
+    required this.identifier,
+    required this.password,
+    required this.role,
+    this.center = 'Central Valley Collection Center',
+    this.collectorId,
+  });
 }
 
-/// DEMO login (in memory, lost when the app restarts).
-/// Later, Firebase Auth replaces this class: it stores passwords safely.
-/// Never save a real password in plain text on the phone.
-///
-/// Demo account you can always use:  9999999999  /  123456
 class AuthRepository extends ChangeNotifier {
   AuthRepository._();
   static final AuthRepository instance = AuthRepository._();
 
   final Map<String, _Account> _accounts = {
-    '9999999999': const _Account(name: 'Demo Admin', password: '123456'),
+    // Dairy Admin
+    '9999999999': const _Account(
+      id: 'ADM-001',
+      name: 'Demo Admin',
+      identifier: '9999999999',
+      password: '123456',
+      role: UserRole.admin,
+      center: 'Jaipur Cooperative Dairy Plant',
+    ),
+    'dairyadmin': const _Account(
+      id: 'ADM-001',
+      name: 'Dairy Plant Admin',
+      identifier: 'dairyadmin',
+      password: 'admin123',
+      role: UserRole.admin,
+      center: 'Jaipur Cooperative Dairy Plant',
+    ),
+    // Collector
+    '123456': const _Account(
+      id: 'C-BHN-001',
+      name: 'Ramesh Kumar',
+      identifier: '123456',
+      password: '123456',
+      role: UserRole.collector,
+      center: 'Central Valley Collection Center',
+    ),
+    '8888888888': const _Account(
+      id: 'C-BHN-001',
+      name: 'Ramesh Kumar',
+      identifier: '8888888888',
+      password: '123456',
+      role: UserRole.collector,
+      center: 'Central Valley Collection Center',
+    ),
+    // Farmer
+    '9876543210': const _Account(
+      id: 'F-BHN-0123',
+      name: 'Ram Singh',
+      identifier: '9876543210',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Central Valley Collection Center',
+      collectorId: 'C-BHN-001',
+    ),
   };
 
   AppUser? _currentUser;
   AppUser? get currentUser => _currentUser;
 
-  /// Returns null when it worked, otherwise an error message to show.
-  Future<String?> register({
+  Future<String?> registerFarmer({
     required String name,
     required String phone,
     required String password,
+    String? referralCollectorId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800)); // fake network
+    await Future.delayed(const Duration(milliseconds: 600));
     if (_accounts.containsKey(phone)) {
-      return 'This mobile number is already registered. Please log in.';
+      return 'This phone number is already registered. Please log in.';
     }
-    _accounts[phone] = _Account(name: name.trim(), password: password);
+    final farmerId = 'F-${phone.substring(phone.length - 4)}';
+    final account = _Account(
+      id: farmerId,
+      name: name.trim(),
+      identifier: phone.trim(),
+      password: password,
+      role: UserRole.farmer,
+      center: 'Central Valley Collection Center',
+      collectorId: referralCollectorId ?? 'C-BHN-001',
+    );
+    _accounts[phone] = account;
     return null;
   }
 
-  /// Returns null when it worked, otherwise an error message to show.
   Future<String?> login({
-    required String phone,
+    required String identifier,
     required String password,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 800)); // fake network
-    final account = _accounts[phone];
-    // One message for both cases, so nobody can guess which numbers exist.
+    await Future.delayed(const Duration(milliseconds: 600));
+    final cleanId = identifier.trim();
+    final account = _accounts[cleanId];
+
     if (account == null || account.password != password) {
-      return 'Wrong mobile number or password';
+      return 'Invalid credentials. Please check and try again.';
     }
-    _currentUser = AppUser(name: account.name, phone: phone);
+
+    _currentUser = AppUser(
+      id: account.id,
+      name: account.name,
+      phone: account.identifier,
+      role: account.role,
+      center: account.center,
+      collectorId: account.collectorId,
+    );
     notifyListeners();
     return null;
   }
@@ -65,3 +147,4 @@ class AuthRepository extends ChangeNotifier {
     notifyListeners();
   }
 }
+
