@@ -43,9 +43,9 @@ class _FarmersScreenState extends State<FarmersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
@@ -105,7 +105,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(color: AppTheme.creamBorder),
                         ),
                         child: TextField(
                           controller: _searchController,
@@ -141,7 +141,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: AppTheme.creamBorder),
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.tune,
@@ -265,7 +265,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 80),
+                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
                         itemCount: results.length,
                         itemBuilder: (context, index) {
                           final farmer = results[index];
@@ -287,6 +287,17 @@ class _FarmersScreenState extends State<FarmersScreen> {
                           );
                         },
                       ),
+              ),
+              // Bottom Pastoral Meadow & Cow Illustration matching Reference UI
+              SizedBox(
+                width: double.infinity,
+                height: 64,
+                child: Image.asset(
+                  'assets/images/cow_footer.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                ),
               ),
             ],
           );
@@ -316,10 +327,10 @@ class _FarmerItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.015),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -363,6 +374,8 @@ class _FarmerItemCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0F172A),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -372,6 +385,8 @@ class _FarmerItemCard extends StatelessWidget {
                           color: Colors.grey.shade500,
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

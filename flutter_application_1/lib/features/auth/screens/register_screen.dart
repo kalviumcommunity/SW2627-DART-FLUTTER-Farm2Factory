@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/brand_footer.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
@@ -66,7 +66,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Create account')),
+      backgroundColor: AppTheme.scaffoldBg,
+      appBar: AppBar(
+        title: const Text('Create account'),
+        backgroundColor: AppTheme.scaffoldBg,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -80,7 +85,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          const AppLogo(size: 72),
+                          // Cute Cow Mascot & Brand Header
+                          Container(
+                            height: 120,
+                            width: 120,
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              border: Border.all(color: AppTheme.creamBorder, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/cow_mascot.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Join Farm2Factory',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'From farm to factory, every litre counted',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 20),
                           CustomTextField(
                             controller: _nameController,

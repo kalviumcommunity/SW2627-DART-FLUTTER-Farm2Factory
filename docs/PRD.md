@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 0.1 (draft) |
+| Version | 0.2 (draft): stack fixed to Dart, Flutter, Firebase Auth, Cloud Firestore, Firebase Storage, run on emulator/device |
 | Status | For review with one operator and one supervisor |
-| Owner | (your name) |
+| Owner | (Kalvium community) |
 
 ---
 
@@ -31,7 +31,7 @@ Farm2Factory is a mobile and web system for dairy cooperatives. It replaces pape
 | G5 | Offline entries synced without manual help | 99% or more |
 | G6 | Farmers who check their records in the app weekly | 60% or more of pilot farmers |
 
-**Not in scope (MVP):** payment gateway and online payouts, hardware/analyzer integration, languages beyond Hindi and English, multi-dairy (multi-tenant) billing, ML or forecasting.
+**Not in scope (MVP):** payment gateway and online payouts, hardware/analyzer integration, languages beyond Hindi and English, multi-dairy (multi-tenant) billing, ML or forecasting, push notifications and Cloud Functions (in-app notifications only for now).
 
 ---
 
@@ -100,7 +100,7 @@ IDs: roles are assigned by admin only. There is **no public sign-up**.
 | F6. Hindi/English, dark mode | 3 | **MVP** |
 | F7. Admin dashboard | 15 | Next |
 | F8. Bills and exports (PDF/Excel) | 18, 19 | Next |
-| F9. Notifications | 13, 16 | Next (correction alert in MVP if easy) |
+| F9. Notifications (in-app inbox; push later) | 13, 16 | Next (correction alert in MVP if easy) |
 | F10. QC tests and lots/tankers | 20, 21 | Next |
 | F11. Payment history (recorded manually) | 14 | Next |
 | F12. Disputes workflow | 22, 23 | Later |
@@ -114,9 +114,9 @@ IDs: roles are assigned by admin only. There is **no public sign-up**.
 ## 6. Functional details (MVP)
 
 ### F1. Login and roles
-- Fields: ID (Farmer ID, collector ID or email), PIN/password. Optional phone OTP.
+- Fields: ID (Farmer ID, collector ID or email), PIN/password. Behind the scenes the ID is mapped to an internal email for Firebase Auth. Optional phone OTP later.
 - Roles: `admin`, `supervisor`, `collector`, `qc`, `farmer`. Role decides the home screen.
-- Rules: PIN of at least 4 digits for farmers (6+ for staff); 5 failed attempts locks the account for 15 minutes; admin can reset.
+- Rules: 6-digit PIN for farmers (Firebase Auth needs at least 6 characters); 8+ characters for staff; Firebase Auth temporarily blocks repeated failed attempts; admin can reset a PIN.
 - Offline: after first login, the session works offline.
 - Errors: wrong credentials show a clear message in the selected language.
 
@@ -131,9 +131,11 @@ IDs: roles are assigned by admin only. There is **no public sign-up**.
 - Auto-calculated and shown before saving: rate per litre, amount.
 - Validation: quantity 0.5 to 200 L; fat 1.0 to 12.0; SNF 5.0 to 12.0 (configurable). Out-of-range asks for confirmation.
 - Duplicate guard: the same farmer and shift on the same day warns "already recorded".
-- Save writes to the local database first, then queues for sync.
+- Save writes to the on-device Firestore cache first and syncs automatically when online. The entry ID is `<farmerCode>_<yyyyMMdd>_<AM|PM>`, so a duplicate for the same farmer and shift is blocked.
+- Before leaving for the route, the collector syncs farmers and the rate chart once while online ("Sync now"). Offline entry depends on this cached data.
 - Offline: fully functional. A banner shows "Pending sync: N".
-- On sync failure: entries stay on the device and retry automatically. The collector can export a PDF or share a summary as a backup.
+- Pending entries show a "waiting to sync" mark. If sync keeps failing, entries stay on the device and retry automatically; the collector can export a PDF summary as a backup.
+- "Close shift" (online): compares the collector's count and litres with what the server holds, so any entry that never synced is caught the same day.
 
 ### F4. Farmer view
 - Tabs: Today, This Month, Last 10 Days.
@@ -147,6 +149,7 @@ IDs: roles are assigned by admin only. There is **no public sign-up**.
 - The log stores old values, new values, who, when and why.
 - The farmer gets a notification: "Entry of 10 Sep AM changed from 120 L to 125 L at 07:45".
 - Collectors can correct only within a set window (default: same day); later corrections need a supervisor.
+- Corrections need an internet connection (so version conflicts are caught immediately). New entries do not.
 
 ### F6. Language and theme
 - Hindi and English via translation files; day/night mode; large readable fonts.
@@ -155,25 +158,27 @@ IDs: roles are assigned by admin only. There is **no public sign-up**.
 
 ## 7. Non-functional requirements
 
-- **Offline-first:** collection entry and viewing work with no internet; automatic sync later.
+- **Mandated stack:** Dart, Flutter, Firebase Auth, Cloud Firestore, Firebase Storage; developed and tested on the Android emulator and real devices (plus the Firebase Emulator Suite for local testing).
+- **Offline-first:** collection entry and viewing work with no internet using Firestore's offline cache; automatic sync later.
 - **Low-end phones:** runs on Android 8+ with 2 GB RAM; APK under 30 MB; no heavy animations.
-- **Security:** each farmer sees only their own data; role-based access enforced on the server; PINs hashed; HTTPS only.
+- **Security:** each farmer sees only their own data; role-based access enforced by Firestore and Storage Security Rules (tested in the emulator); credentials handled by Firebase Auth; HTTPS only.
 - **Auditability:** every edit logged with timestamps; device time and server time both stored.
-- **Reliability:** no data loss on app crash or phone restart; sync is idempotent (no duplicates).
+- **Reliability:** pending writes survive app restart; duplicate entries are impossible because of deterministic entry IDs.
 - **Performance:** entry save under 1 second; farmer screen loads under 3 seconds on 3G.
 - **Data retention:** nothing is deleted. Farmers see 6 months, collectors up to 12 months in the app; older data is archived and exportable by admin.
 - **Scalability:** supports 10,000 farmers and 500 collectors per dairy without redesign.
+- **Cost:** Firestore bills per read and write, so screens read narrow date ranges. Stay inside the free plan during development; set a budget alert before the pilot.
 - **Localization:** Hindi and English; more languages addable through translation files.
 
 ---
 
 ## 8. Data model (summary)
 
-Main entities: dairies, centers, users/profiles (roles), farmers, collectors, rate charts and rows, collections, collection edits, tankers, lots, lot-collections, QC tests, disputes, payouts, notifications, audit log.
+Cloud Firestore (NoSQL) collections: `users` (role, farmer/collector details), `dairies` with `centers`, `rateCharts`, `collections` (with an `edits` history subcollection), `tankers`, `lots`, `qcTests`, `payouts`, `disputes`, and per-user `notifications`. Firebase Storage holds PDF bills, exports and photos.
 
-Key links: collection belongs to farmer, center, collector, shift. A lot groups many collections. QC test belongs to a lot. A payout covers a farmer and a period.
+Key links: a collection entry references farmer, center, collector and shift. A lot is linked to entries through a `lotId` field. A QC test belongs to a lot. A payout covers a farmer and a period.
 
-Full schema: see `LLD.md`.
+Full structure, example documents and security rules: see `LLD.md`.
 
 ---
 
@@ -181,9 +186,9 @@ Full schema: see `LLD.md`.
 
 | Phase | Weeks | Done when |
 |---|---|---|
-| 0. Foundation | 1-2 | App runs on a phone; operator has reviewed sketches |
-| 1. Auth and roles | 3-4 | A farmer cannot read another farmer's data (tested) |
-| 2. Collection entry | 5-8 | Collector completes a full shift offline; sync has no duplicates |
+| 0. Foundation | 1-2 | Flutter app runs on a phone and connects to a Firebase project (Auth, Firestore, Storage); emulator suite starts; operator has reviewed sketches |
+| 1. Auth and roles | 3-4 | A farmer cannot read another farmer's data (proven by Security Rules tests in the emulator) |
+| 2. Collection entry | 5-8 | Collector completes a full shift in airplane mode; all entries appear on the server once online, with no duplicates, and "Close shift" matches |
 | 3. Farmer view | 9-10 | Farmer totals match collector records |
 | 4. Admin portal | 11-14 | Month-end bills generated in minutes |
 | 5. QC and traceability | 15-18 | Rejected lot traced to farmers in under 1 minute |
@@ -198,7 +203,11 @@ Full schema: see `LLD.md`.
 | Disputes continue | Immutable log, dual timestamps, farmer notifications |
 | Scope creep | Hold to MVP list; add to backlog, not to current phase |
 | Low-end devices | Test on an old phone; keep UI light |
-| Privacy of farmer data | Row-level security; no sensitive data in logs |
+| Privacy of farmer data | Security Rules tested in the emulator; no sensitive data in logs |
+| Firestore cost (billed per read/write) | Narrow date-range queries, paginate lists, avoid listening to large collections, budget alert |
+| No server-side code (Cloud Functions not in stack) | Rules validate every write; rates are calculated on the device and checked by rules; add Cloud Functions later for server-side recalculation |
+| Offline writes rejected by the server are dropped silently after an app restart | Strict validation on the device first, "Close shift" reconciliation, corrections only online |
+| NoSQL limits (no joins, limited aggregation) | Design documents around the queries in `LLD.md`; keep totals in simple per-period queries |
 
 ---
 
@@ -211,5 +220,6 @@ Full schema: see `LLD.md`.
 - Can one collector serve more than one center?
 - What farmer ID format will be used (suggestion: `F-<center>-<number>`)?
 - What is the correction window for collectors?
+- Which Firebase plan will the pilot use? Storage and SMS (phone OTP) may need the pay-as-you-go plan. Check current Firebase pricing.
 
 **Review plan:** show this draft and the screen sketches to one real operator and one supervisor; note every point where they are confused and fix it before Phase 2.

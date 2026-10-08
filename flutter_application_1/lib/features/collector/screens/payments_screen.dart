@@ -9,9 +9,9 @@ class PaymentsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
@@ -80,14 +80,17 @@ class PaymentsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(cycle, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(farmers, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(cycle, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(farmers, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           Text(amount, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
         ],
       ),

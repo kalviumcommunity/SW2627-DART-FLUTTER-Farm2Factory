@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 
 /// Logo fades in, stays for a moment, then we move to Login.
@@ -24,9 +25,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: AppTheme.scaffoldBg,
       body: Center(
         // Fade + slight zoom-in, no animation controller needed.
         child: TweenAnimationBuilder<double>(
@@ -40,26 +40,45 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AppLogo(size: 150),
-              const SizedBox(height: 20),
-              Text(
+              const AppLogo(size: 110),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/images/cow_mascot.png',
+                  height: 110,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
                 'Farm2Factory',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: scheme.primary,
+                  color: AppTheme.brandGreenDark,
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              const Text(
                 'From farm to factory, every litre counted',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.brandGreen),
+                ),
               ),
             ],
           ),

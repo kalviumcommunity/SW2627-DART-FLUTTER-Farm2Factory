@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/error_message.dart';
 import '../data/farmer_repository.dart';
 
@@ -15,7 +16,11 @@ class FarmerDetailsScreen extends StatelessWidget {
     final farmer = FarmerRepository.instance.getById(farmerId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Farmer Details')),
+      backgroundColor: AppTheme.scaffoldBg,
+      appBar: AppBar(
+        backgroundColor: AppTheme.scaffoldBg,
+        title: const Text('Farmer Details'),
+      ),
       body: farmer == null
           ? ErrorMessage(
               message: 'Farmer not found',
@@ -26,11 +31,23 @@ class FarmerDetailsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 Center(
-                  child: CircleAvatar(
-                    radius: 40,
-                    child: Text(
-                      farmer.name[0].toUpperCase(),
-                      style: const TextStyle(fontSize: 32),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.brandGreen, width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 38,
+                      backgroundColor: AppTheme.cardMint,
+                      child: Text(
+                        farmer.name.isNotEmpty ? farmer.name[0].toUpperCase() : 'F',
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.brandGreen,
+                        ),
+                      ),
                     ),
                   ),
                 ),

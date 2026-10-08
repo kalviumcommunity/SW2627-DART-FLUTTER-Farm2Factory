@@ -116,9 +116,9 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
     final farmerCount = FarmerRepository.instance.farmers.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         title: Row(
           children: [
@@ -199,12 +199,16 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
               children: [
                 const Icon(Icons.location_on, size: 14, color: AppTheme.brandGreen),
                 const SizedBox(width: 4),
-                Text(
-                  userCenter,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    userCenter,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -296,15 +300,15 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                       ],
                     ),
                   ),
-                  // Milk Can Graphic on the right
+                  // Cute Cartoon Cow Mascot Graphic on the right
                   Positioned(
-                    right: 10,
+                    right: 4,
                     bottom: 0,
                     top: 0,
                     child: SizedBox(
-                      width: 125,
+                      width: 135,
                       child: Image.asset(
-                        'assets/images/milk_can_banner.png',
+                        'assets/images/cow_mascot.png',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const SizedBox.shrink(),
@@ -505,15 +509,9 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
+        decoration: const BoxDecoration(
+          color: AppTheme.scaffoldBg,
+          border: Border(top: BorderSide(color: AppTheme.creamBorder)),
         ),
         child: NavigationBar(
           selectedIndex: _currentNavIndex,
@@ -523,8 +521,8 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             if (index == 2) context.push(AppRoutes.milkEntries);
             if (index == 3) context.push(AppRoutes.reports);
           },
-          backgroundColor: Colors.white,
-          indicatorColor: AppTheme.brandGreen.withOpacity(0.12),
+          backgroundColor: AppTheme.scaffoldBg,
+          indicatorColor: AppTheme.brandGreen.withOpacity(0.15),
           elevation: 0,
           destinations: const [
             NavigationDestination(
@@ -621,12 +619,16 @@ class _ActionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: isSmallValueText ? 15 : 20,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: isSmallValueText ? 15 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
             ),
           ],

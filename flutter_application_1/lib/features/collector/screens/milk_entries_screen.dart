@@ -111,9 +111,9 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
@@ -259,6 +259,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                   // Select Farmer
                   DropdownButtonFormField<String>(
                     initialValue: _selectedFarmerId,
+                    isExpanded: true,
                     decoration: InputDecoration(
                       labelText: 'Select Farmer',
                       prefixIcon: Icon(Icons.person_outline,
@@ -267,7 +268,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                     items: _farmerRepo.farmers.map((f) {
                       return DropdownMenuItem(
                         value: f.id,
-                        child: Text('${f.name} (${f.id} • ${f.village})'),
+                        child: Text(
+                          '${f.name} (${f.id} • ${f.village})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedFarmerId = val),
@@ -422,22 +426,29 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${entry.farmerName} (${entry.farmerCode})',
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}%',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.grey.shade600),
-                              ),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${entry.farmerName} (${entry.farmerCode})',
+                                  style: const TextStyle(
+                                      fontSize: 14, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}%',
+                                  style: TextStyle(
+                                      fontSize: 11, color: Colors.grey.shade600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [

@@ -59,9 +59,13 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: Colors.white,
+=======
+      backgroundColor: AppTheme.scaffoldBg,
+>>>>>>> origin/main
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
@@ -84,57 +88,72 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Banner Card: "Register New Farmer"
+                // Top Banner Card: "Register New Farmer" with Cute Cow Mascot
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  height: 125,
+                  width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppTheme.cardMint,
-                    borderRadius: BorderRadius.circular(18),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEAF5EB), Color(0xFFD7ECD9)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: AppTheme.brandGreen.withOpacity(0.15)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.brandGreen.withOpacity(0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.person_add_alt_1,
-                          color: AppTheme.brandGreen,
-                          size: 24,
-                        ),
+                        color: AppTheme.brandGreen.withOpacity(0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
-                      const SizedBox(width: 14),
-                      const Expanded(
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Register New Farmer',
+                            const Text(
+                              'Register\nNew Farmer',
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF1B3821),
+                                height: 1.15,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 6),
                             Text(
-                              'Add farmer details to your collection center',
+                              'Add farmer details to your\ncollection center',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF475569),
+                                fontSize: 11.5,
+                                color: Colors.grey.shade700,
+                                height: 1.2,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      Positioned(
+                        right: 6,
+                        top: 4,
+                        bottom: 4,
+                        child: Image.asset(
+                          'assets/images/cow_mascot.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox.shrink(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
 
                 // Full Name
                 TextFormField(
@@ -277,7 +296,24 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                     ),
                   ),
                 ),
+<<<<<<< HEAD
                 const SizedBox(height: 40),
+=======
+                const SizedBox(height: 20),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/images/milk_can_banner.png',
+                      height: 100,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+>>>>>>> origin/main
               ],
             ),
           ),
