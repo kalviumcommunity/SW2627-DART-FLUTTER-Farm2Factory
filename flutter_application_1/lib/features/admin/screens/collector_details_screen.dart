@@ -101,136 +101,168 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
   }
 
   Widget _buildCollectorHeaderCard(BuildContext context, Collector c) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 420;
+        return Container(
+          padding: const EdgeInsets.all(14),
+          margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 28,
+                radius: 24,
                 backgroundColor: AppTheme.brandGreen,
                 child: Text(
                   c.name[0],
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Text(
                           c.name,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                         ),
-                        const SizedBox(width: 8),
                         StatusBadge(status: c.status),
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text(
                       'ID: ${c.id}  •  ${c.center}',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Phone: +91 ${c.phone}  •  Joined: ${c.joiningDate.day}/${c.joiningDate.month}/${c.joiningDate.year}',
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey.shade500),
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.edit_outlined, size: 14),
-                label: const Text('Edit Profile', style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.brandGreen,
-                  side: const BorderSide(color: AppTheme.brandGreen),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              if (!isNarrow) ...[
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.brandGreen,
+                    side: const BorderSide(color: AppTheme.brandGreen),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Collector edit dialog opened')),
+                    );
+                  },
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Collector edit dialog opened')),
-                  );
-                },
-              ),
+              ] else ...[
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.brandGreen),
+                  tooltip: 'Edit Profile',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Collector edit dialog opened')),
+                    );
+                  },
+                ),
+              ],
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   // 1. Overview Tab
   Widget _buildOverviewTab(Collector c) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Performance Highlights', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.4,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 700 ? 3 : 2;
+        final aspectRatio = constraints.maxWidth > 700 ? 1.4 : 1.35;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _overviewCard('Today Morning', '${c.morningLitresToday.toInt()} L', AppTheme.cardPeach, const Color(0xFFF57C00)),
-              _overviewCard('Today Evening', '${c.eveningLitresToday.toInt()} L', AppTheme.cardLavender, const Color(0xFF5C6BC0)),
-              _overviewCard('Today Total', '${c.todayTotalLitres.toInt()} L', AppTheme.cardMint, AppTheme.brandGreen),
-              _overviewCard('Monthly Total', '${c.monthlyTotalLitres.toInt()} L', AppTheme.cardSky, const Color(0xFF0288D1)),
-              _overviewCard('Daily Average', '${c.avgDailyLitres.toInt()} L/day', AppTheme.cardMint, AppTheme.brandGreenDark),
-              _overviewCard('Active Farmers', '${c.farmersHandled} Farmers', AppTheme.cardPeach, const Color(0xFFE65100)),
-              _overviewCard('Average FAT', '${c.avgFat}%', AppTheme.cardSky, const Color(0xFF0288D1)),
-              _overviewCard('Average SNF', '${c.avgSnf}%', AppTheme.cardLavender, const Color(0xFF6A1B9A)),
-              _overviewCard('Chilling Temp', '${c.avgTemp}°C', AppTheme.cardMint, AppTheme.brandGreen),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const Text('Performance Highlights', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: aspectRatio,
+                children: [
+                  _overviewCard('Today Morning', '${c.morningLitresToday.toInt()} L', AppTheme.cardPeach, const Color(0xFFF57C00)),
+                  _overviewCard('Today Evening', '${c.eveningLitresToday.toInt()} L', AppTheme.cardLavender, const Color(0xFF5C6BC0)),
+                  _overviewCard('Today Total', '${c.todayTotalLitres.toInt()} L', AppTheme.cardMint, AppTheme.brandGreen),
+                  _overviewCard('Monthly Total', '${c.monthlyTotalLitres.toInt()} L', AppTheme.cardSky, const Color(0xFF0288D1)),
+                  _overviewCard('Daily Average', '${c.avgDailyLitres.toInt()} L/day', AppTheme.cardMint, AppTheme.brandGreenDark),
+                  _overviewCard('Active Farmers', '${c.farmersHandled} Farmers', AppTheme.cardPeach, const Color(0xFFE65100)),
+                  _overviewCard('Average FAT', '${c.avgFat}%', AppTheme.cardSky, const Color(0xFF0288D1)),
+                  _overviewCard('Average SNF', '${c.avgSnf}%', AppTheme.cardLavender, const Color(0xFF6A1B9A)),
+                  _overviewCard('Chilling Temp', '${c.avgTemp}°C', AppTheme.cardMint, AppTheme.brandGreen),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Current Payment Status', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                    SizedBox(height: 4),
-                    Text('Settled for Current Cycle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Current Payment Status', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          SizedBox(height: 4),
+                          Text('Settled for Current Cycle', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    StatusBadge(status: c.paymentStatus, fontSize: 13),
                   ],
                 ),
-                StatusBadge(status: c.paymentStatus, fontSize: 13),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -467,22 +499,28 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppTheme.brandGreen.withValues(alpha: 0.1),
-                          child: Text(f.name[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(f.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            Text('${f.id} • ${f.village}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                          ],
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: AppTheme.brandGreen.withValues(alpha: 0.1),
+                            child: Text(f.name[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(f.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text('${f.id} • ${f.village}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -608,8 +646,15 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600)),
-          Text(value, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600))),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            ),
+          ),
         ],
       ),
     );

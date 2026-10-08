@@ -52,7 +52,7 @@ class DairyFilterBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: TextField(
               onChanged: onSearchChanged,
@@ -118,7 +118,7 @@ class DairyFilterBar extends StatelessWidget {
                     selectedColor: AppTheme.brandGreen,
                     checkmarkColor: Colors.white,
                     side: BorderSide(
-                      color: isSelected ? AppTheme.brandGreen : Colors.grey.shade300,
+                      color: isSelected ? AppTheme.brandGreen : AppTheme.creamBorder,
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     onSelected: (_) => onDateFilterChanged(opt),

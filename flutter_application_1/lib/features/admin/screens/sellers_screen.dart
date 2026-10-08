@@ -47,13 +47,17 @@ class _SellersScreenState extends State<SellersScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(s.farmName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                      Text('${s.id}  •  ${s.name}  •  +91 ${s.phone}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.farmName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 2),
+                        Text('${s.id}  •  ${s.name}  •  +91 ${s.phone}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   StatusBadge(status: s.status),
                 ],
               ),
@@ -61,12 +65,11 @@ class _SellersScreenState extends State<SellersScreen> {
 
               // Farm KPIs
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _sellerModalMetric('Cattle Headcount', '${s.cattleCount} Cows', Icons.pets),
-                  _sellerModalMetric('Daily Supply', '${s.dailySupplyLitres.toInt()} L', Icons.water_drop),
-                  _sellerModalMetric('FAT / SNF', '${s.avgFat}% / ${s.avgSnf}%', Icons.science),
-                  _sellerModalMetric('Rate / Litre', '₹ ${s.ratePerLitre}', Icons.currency_rupee),
+                  Expanded(child: _sellerModalMetric('Cattle', '${s.cattleCount} Cows', Icons.pets)),
+                  Expanded(child: _sellerModalMetric('Daily', '${s.dailySupplyLitres.toInt()} L', Icons.water_drop)),
+                  Expanded(child: _sellerModalMetric('FAT/SNF', '${s.avgFat}%/${s.avgSnf}%', Icons.science)),
+                  Expanded(child: _sellerModalMetric('Rate/L', '₹ ${s.ratePerLitre}', Icons.currency_rupee)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -86,13 +89,16 @@ class _SellersScreenState extends State<SellersScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${sup.date.day}/${sup.date.month}/${sup.date.year}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                          Text('FAT: ${sup.fat}% • SNF: ${sup.snf}% • ${sup.temperature}°C', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${sup.date.day}/${sup.date.month}/${sup.date.year}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text('FAT: ${sup.fat}% • SNF: ${sup.snf}% • ${sup.temperature}°C', style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -116,8 +122,11 @@ class _SellersScreenState extends State<SellersScreen> {
       children: [
         Icon(icon, size: 18, color: AppTheme.brandGreen),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        Text(title, style: const TextStyle(fontSize: 10.5, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(val, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+        ),
       ],
     );
   }
@@ -156,10 +165,15 @@ class _SellersScreenState extends State<SellersScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Bulk Farm Suppliers (${sellers.length})',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                Expanded(
+                  child: Text(
+                    'Bulk Suppliers (${sellers.length})',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   'Total Cattle: ${sellers.fold(0, (sum, s) => sum + s.cattleCount)}',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
@@ -212,22 +226,27 @@ class _SellersScreenState extends State<SellersScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: const Color(0xFF558B2F).withValues(alpha: 0.12),
-                          child: const Icon(Icons.agriculture, color: Color(0xFF558B2F)),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(s.farmName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            Text('${s.id} • ${s.location}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
-                          ],
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: const Color(0xFF558B2F).withValues(alpha: 0.12),
+                            child: const Icon(Icons.agriculture, color: Color(0xFF558B2F)),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(s.farmName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text('${s.id} • ${s.location}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     StatusBadge(status: s.status),
                   ],
                 ),
@@ -240,12 +259,11 @@ class _SellersScreenState extends State<SellersScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _metricCol('Cattle Head', '${s.cattleCount}'),
-                      _metricCol('Daily Supply', '${s.dailySupplyLitres.toInt()} L'),
-                      _metricCol('Avg FAT', '${s.avgFat}%'),
-                      _metricCol('Rate / L', '₹ ${s.ratePerLitre}'),
+                      Expanded(child: _metricCol('Cattle', '${s.cattleCount}')),
+                      Expanded(child: _metricCol('Supply', '${s.dailySupplyLitres.toInt()} L')),
+                      Expanded(child: _metricCol('Avg FAT', '${s.avgFat}%')),
+                      Expanded(child: _metricCol('Rate / L', '₹ ${s.ratePerLitre}')),
                     ],
                   ),
                 ),
@@ -254,7 +272,15 @@ class _SellersScreenState extends State<SellersScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Contact: ${s.name} (+91 ${s.phone})', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
+                    Expanded(
+                      child: Text(
+                        'Contact: ${s.name} (+91 ${s.phone})',
+                        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     StatusBadge(status: s.paymentStatus, fontSize: 10),
                   ],
                 ),

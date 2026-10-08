@@ -42,13 +42,21 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(d.vehicleNo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Driver: ${d.driverName} (+91 ${d.driverPhone})', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(d.vehicleNo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Driver: ${d.driverName} (+91 ${d.driverPhone})',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 StatusBadge(status: d.status, fontSize: 13),
               ],
             ),
@@ -91,7 +99,14 @@ class _DispatchScreenState extends State<DispatchScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(step.stageName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: step.isCompleted ? const Color(0xFF0F172A) : Colors.grey)),
+                            Expanded(
+                              child: Text(
+                                step.stageName,
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: step.isCompleted ? const Color(0xFF0F172A) : Colors.grey),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                             Text(step.time, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                           ],
                         ),
@@ -108,13 +123,21 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Last GPS Ping', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text(d.lastKnownLocation, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Last GPS Ping', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      Text(
+                        d.lastKnownLocation,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.brandGreen,
@@ -173,12 +196,17 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Tankers & Logistics Fleet (${dispatches.length})',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                Expanded(
+                  child: Text(
+                    'Tankers & Fleet (${dispatches.length})',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
-                  'Total Loaded: ${dispatches.fold(0, (sum, d) => sum + d.loadedLitres)} L',
+                  'Loaded: ${dispatches.fold(0, (sum, d) => sum + d.loadedLitres)} L',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
                 ),
               ],
@@ -223,26 +251,31 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.brandTeal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandTeal.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.local_shipping, color: AppTheme.brandTeal, size: 20),
                       ),
-                      child: const Icon(Icons.local_shipping, color: AppTheme.brandTeal, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(d.vehicleNo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('${d.vehicleType} • ${d.capacityLitres}L Cap', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
-                      ],
-                    ),
-                  ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(d.vehicleNo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text('${d.vehicleType} • ${d.capacityLitres}L Cap', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 StatusBadge(status: d.status),
               ],
             ),
@@ -252,14 +285,19 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Driver: ${d.driverName}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
-                    Text('From: ${d.fromLocation}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
-                    Text('To: ${d.toDestination}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Driver: ${d.driverName}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text('From: ${d.fromLocation}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text('To: ${d.toDestination}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -299,13 +337,18 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Amount: ₹ ${d.dispatchAmount.toInt()}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE65100)),
+                Expanded(
+                  child: Text(
+                    'Amount: ₹ ${d.dispatchAmount.toInt()}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE65100)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.timeline, size: 14),
-                  label: const Text('Track Timeline', style: TextStyle(fontSize: 12)),
+                  label: const Text('Track', style: TextStyle(fontSize: 12)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.brandTeal,
                     foregroundColor: Colors.white,

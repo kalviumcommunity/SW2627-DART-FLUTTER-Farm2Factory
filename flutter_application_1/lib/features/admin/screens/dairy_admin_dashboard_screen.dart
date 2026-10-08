@@ -273,6 +273,21 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       ),
       child: Stack(
         children: [
+          // Background Cow Mascot Accent
+          Positioned(
+            right: -6,
+            bottom: -4,
+            child: Opacity(
+              opacity: 0.32,
+              child: Image.asset(
+                'assets/images/cow_mascot.png',
+                height: 125,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+          ),
           // Content
           Padding(
             padding: const EdgeInsets.all(22),
@@ -289,6 +304,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.verified, color: Colors.white, size: 14),
                           SizedBox(width: 5),
@@ -299,9 +315,14 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                         ],
                       ),
                     ),
-                    Text(
-                      '$_selectedCenter | $_selectedDateFilter',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        '$_selectedCenter | $_selectedDateFilter',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11.5),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -434,43 +455,53 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
-                  ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                  ],
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: 6),
         if (onViewAll != null)
           TextButton(
             onPressed: onViewAll,
             child: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('View Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
-                Icon(Icons.chevron_right, size: 16, color: AppTheme.brandGreen),
+                Text('View Details', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
+                Icon(Icons.chevron_right, size: 15, color: AppTheme.brandGreen),
               ],
             ),
           )
@@ -499,7 +530,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: const [
           DairyStatCard(
             icon: Icons.wb_sunny_outlined,
@@ -552,7 +583,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: [
           DairyStatCard(
             icon: Icons.group_outlined,
@@ -612,7 +643,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: [
           DairyStatCard(
             icon: Icons.local_shipping,
@@ -669,7 +700,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: [
           DairyStatCard(
             icon: Icons.domain,
@@ -725,7 +756,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: [
           DairyStatCard(
             icon: Icons.hourglass_top_outlined,
@@ -781,7 +812,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.5,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
         children: [
           DairyStatCard(
             icon: Icons.star,

@@ -136,7 +136,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 1.5,
+              childAspectRatio: MediaQuery.of(context).size.width > 700 ? 1.4 : 1.18,
               children: [
                 DairyStatCard(
                   icon: Icons.hourglass_empty,
@@ -178,29 +178,31 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
 
             // Settlement Cycle Selector
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Settlement Cycle', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['Weekly', '10 Days', 'Monthly', 'Custom'].map((cyc) {
-                      final isSelected = _selectedCycle == cyc;
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: ChoiceChip(
-                          selected: isSelected,
-                          label: Text(cyc),
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? Colors.white : Colors.grey.shade700,
+                const Text('Cycle:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['Weekly', '10 Days', 'Monthly', 'Custom'].map((cyc) {
+                        final isSelected = _selectedCycle == cyc;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            selected: isSelected,
+                            label: Text(cyc),
+                            labelStyle: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected ? Colors.white : Colors.grey.shade700,
+                            ),
+                            selectedColor: AppTheme.brandGreen,
+                            onSelected: (_) => setState(() => _selectedCycle = cyc),
                           ),
-                          selectedColor: AppTheme.brandGreen,
-                          onSelected: (_) => setState(() => _selectedCycle = cyc),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],
@@ -240,7 +242,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
@@ -251,59 +253,77 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(p.recipientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(6)),
-                                    child: Text(p.recipientType, style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontWeight: FontWeight.bold)),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text('${p.recipientId} • ${p.centerOrLocation} • ${p.paymentCycle}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        p.recipientName,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(6)),
+                                      child: Text(p.recipientType, style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${p.recipientId} • ${p.centerOrLocation}',
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           StatusBadge(status: p.status),
                         ],
                       ),
-                      const Divider(height: 20),
+                      const Divider(height: 18),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-                              Text('Ref: ${p.transactionReference}', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700)),
+                                Text('Ref: ${p.transactionReference}', style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Row(
                             children: [
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('₹ ${p.finalAmount.toInt()}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-                                  Text('${p.paymentDate.day}/${p.paymentDate.month}/${p.paymentDate.year}', style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500)),
+                                  Text('₹ ${p.finalAmount.toInt()}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                                  Text('${p.paymentDate.day}/${p.paymentDate.month}/${p.paymentDate.year}', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                                 ],
                               ),
                               if (isPending) ...[
-                                const SizedBox(width: 14),
+                                const SizedBox(width: 10),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppTheme.brandGreen,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
                                   onPressed: () => _showPaymentConfirmationDialog(context, p),
-                                  child: const Text('Disburse', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  child: const Text('Disburse', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ],

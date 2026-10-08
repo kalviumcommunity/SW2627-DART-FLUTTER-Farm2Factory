@@ -183,12 +183,16 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                c.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
+                              Flexible(
+                                child: Text(
+                                  c.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F172A),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -235,17 +239,25 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          c.location,
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              c.location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.access_time, size: 13, color: Colors.grey),
                         const SizedBox(width: 4),
@@ -253,7 +265,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                           'Active ${c.lastActiveTime}',
                           style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         StatusBadge(
                           status: c.paymentStatus,
                           fontSize: 10,

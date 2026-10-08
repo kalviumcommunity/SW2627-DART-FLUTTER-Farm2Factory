@@ -82,62 +82,82 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.scaffoldBg,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom,
-            ),
-            child: IntrinsicHeight(
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  // Logo & Brand Header
-                  const Center(child: AppLogo(size: 80)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Farm2Factory',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.brandGreenDark,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'From farm to factory, every litre counted',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              // Logo & Brand Header
+              const Center(child: AppLogo(size: 64)),
+              const SizedBox(height: 6),
+              const Text(
+                'Farm2Factory',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.brandGreenDark,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'From farm to factory, every litre counted',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 14),
 
-                  // "Welcome Back" Header
-                  const Text(
-                    'Welcome Back',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+              // Cute Cartoon Cow Mascot Hero Illustration
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF267332).withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/cow_mascot.png',
+                    height: 135,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _isAdminTab
-                        ? 'Log in with your dairy staff username'
-                        : 'Log in with your mobile number',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // "Welcome Back" Header
+              const Text(
+                'Welcome Back',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _isAdminTab
+                    ? 'Log in with your dairy staff username'
+                    : 'Log in with your mobile number',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 16),
 
                   // Role Segment Switcher (Farmer/Collector vs Dairy Admin)
                   Padding(
@@ -489,13 +509,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const Spacer(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 24),
 
                   // Bottom Illustration: Cow & Milk Can
                   SizedBox(
                     width: double.infinity,
-                    height: 120,
+                    height: 100,
                     child: Image.asset(
                       'assets/images/cow_footer.png',
                       fit: BoxFit.contain,
@@ -505,8 +524,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
         ),
       ),
     );
@@ -536,9 +553,16 @@ class _DemoPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          border: Border.all(color: Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          border: Border.all(color: AppTheme.creamBorder),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

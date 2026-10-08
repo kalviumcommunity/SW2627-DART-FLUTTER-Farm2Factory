@@ -156,7 +156,9 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  Row(
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.download, size: 16),
@@ -164,18 +166,17 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.brandGreen,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: _downloadCsv,
                       ),
-                      const SizedBox(width: 10),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.print_outlined, size: 16),
                         label: const Text('Print Summary'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.brandTeal,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: () {
@@ -205,7 +206,15 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Data Preview & Verification', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Expanded(
+                        child: Text(
+                          'Data Preview & Verification',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(

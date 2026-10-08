@@ -40,7 +40,7 @@ class DairyPortalScaffold extends StatelessWidget {
 
     if (isDesktop) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAF8),
+        backgroundColor: AppTheme.scaffoldBg,
         floatingActionButton: floatingActionButton,
         body: Row(
           children: [
@@ -63,14 +63,16 @@ class DairyPortalScaffold extends StatelessWidget {
 
     // Mobile / Tablet layout
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF8),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         title: Text(
           title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0F172A),
           ),
@@ -386,24 +388,31 @@ class DairyPortalScaffold extends StatelessWidget {
     int currentIndex = quickItems.indexWhere((it) => it.route == activeRoute);
     if (currentIndex == -1) currentIndex = 0;
 
-    return NavigationBar(
-      backgroundColor: Colors.white,
-      elevation: 3,
-      selectedIndex: currentIndex,
-      height: 60,
-      onDestinationSelected: (idx) {
-        final target = quickItems[idx].route;
-        if (target != activeRoute) {
-          context.go(target);
-        }
-      },
-      destinations: quickItems.map((it) {
-        return NavigationDestination(
-          icon: Icon(it.icon, size: 20),
-          selectedIcon: Icon(it.activeIcon, color: AppTheme.brandGreen, size: 20),
-          label: it.title.split(' ').first,
-        );
-      }).toList(),
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.scaffoldBg,
+        border: Border(top: BorderSide(color: AppTheme.creamBorder)),
+      ),
+      child: NavigationBar(
+        backgroundColor: AppTheme.scaffoldBg,
+        elevation: 0,
+        selectedIndex: currentIndex,
+        height: 60,
+        indicatorColor: AppTheme.brandGreen.withOpacity(0.15),
+        onDestinationSelected: (idx) {
+          final target = quickItems[idx].route;
+          if (target != activeRoute) {
+            context.go(target);
+          }
+        },
+        destinations: quickItems.map((it) {
+          return NavigationDestination(
+            icon: Icon(it.icon, size: 20),
+            selectedIcon: Icon(it.activeIcon, color: AppTheme.brandGreen, size: 20),
+            label: it.title.split(' ').first,
+          );
+        }).toList(),
+      ),
     );
   }
 }

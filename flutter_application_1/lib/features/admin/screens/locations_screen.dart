@@ -87,36 +87,83 @@ class _LocationsScreenState extends State<LocationsScreen> {
     final farms = locations.where((l) => l.type == DairyLocationType.sellerFarm).length;
     final vehicles = locations.where((l) => l.type == DairyLocationType.vehicle).length;
 
-    return Row(
-      children: [
-        _buildStatChip(
-          label: 'Processing Plant',
-          value: '$plants Facility',
-          icon: Icons.factory_outlined,
-          color: AppTheme.brandGreen,
-        ),
-        const SizedBox(width: 12),
-        _buildStatChip(
-          label: 'Collection Centers',
-          value: '$centers Active',
-          icon: Icons.store_mall_directory_outlined,
-          color: const Color(0xFF2563EB),
-        ),
-        const SizedBox(width: 12),
-        _buildStatChip(
-          label: 'Seller Mega Farms',
-          value: '$farms Connected',
-          icon: Icons.agriculture_outlined,
-          color: const Color(0xFFD97706),
-        ),
-        const SizedBox(width: 12),
-        _buildStatChip(
-          label: 'In-Transit Tankers',
-          value: '$vehicles Tracked',
-          icon: Icons.local_shipping_outlined,
-          color: const Color(0xFF7C3AED),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth > 750;
+        if (isDesktop) {
+          return Row(
+            children: [
+              _buildStatChip(
+                label: 'Processing Plant',
+                value: '$plants Facility',
+                icon: Icons.factory_outlined,
+                color: AppTheme.brandGreen,
+              ),
+              const SizedBox(width: 12),
+              _buildStatChip(
+                label: 'Collection Centers',
+                value: '$centers Active',
+                icon: Icons.store_mall_directory_outlined,
+                color: const Color(0xFF2563EB),
+              ),
+              const SizedBox(width: 12),
+              _buildStatChip(
+                label: 'Seller Mega Farms',
+                value: '$farms Connected',
+                icon: Icons.agriculture_outlined,
+                color: const Color(0xFFD97706),
+              ),
+              const SizedBox(width: 12),
+              _buildStatChip(
+                label: 'In-Transit Tankers',
+                value: '$vehicles Tracked',
+                icon: Icons.local_shipping_outlined,
+                color: const Color(0xFF7C3AED),
+              ),
+            ],
+          );
+        }
+        // Responsive 2x2 grid on mobile
+        return Column(
+          children: [
+            Row(
+              children: [
+                _buildStatChip(
+                  label: 'Processing Plant',
+                  value: '$plants Facility',
+                  icon: Icons.factory_outlined,
+                  color: AppTheme.brandGreen,
+                ),
+                const SizedBox(width: 10),
+                _buildStatChip(
+                  label: 'Collection Centers',
+                  value: '$centers Active',
+                  icon: Icons.store_mall_directory_outlined,
+                  color: const Color(0xFF2563EB),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _buildStatChip(
+                  label: 'Seller Mega Farms',
+                  value: '$farms Connected',
+                  icon: Icons.agriculture_outlined,
+                  color: const Color(0xFFD97706),
+                ),
+                const SizedBox(width: 10),
+                _buildStatChip(
+                  label: 'In-Transit Tankers',
+                  value: '$vehicles Tracked',
+                  icon: Icons.local_shipping_outlined,
+                  color: const Color(0xFF7C3AED),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -199,41 +246,50 @@ class _LocationsScreenState extends State<LocationsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.satellite_alt_outlined, color: Colors.white, size: 20),
                     ),
-                    child: const Icon(Icons.satellite_alt_outlined, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Live Regional Dairy Supply Network (Rajasthan Grid)',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Live Regional Dairy Supply Network',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Jaipur • Alwar • Sikar • Ajmer Grid',
+                            style: TextStyle(
+                              color: Color(0xFFA7F3D0),
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Jaipur Hub • Alwar • Sikar • Ajmer • Tonk Logistics Corridor',
-                        style: TextStyle(
-                          color: Color(0xFFA7F3D0),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -242,11 +298,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.sensors, color: Color(0xFF6EE7B7), size: 14),
-                    SizedBox(width: 6),
+                    Icon(Icons.sensors, color: Color(0xFF6EE7B7), size: 12),
+                    SizedBox(width: 4),
                     Text(
-                      'Cellular Telemetry Active',
-                      style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      'Live',
+                      style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -380,70 +436,84 @@ class _LocationsScreenState extends State<LocationsScreen> {
   Widget _buildFilterAndSearchBar() {
     final filters = ['All', 'Plants', 'Centers', 'Farms', 'Vehicles'];
 
-    return Row(
-      children: [
-        // Filter tabs
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: filters.map((f) {
-                final isSelected = _selectedFilter == f;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(f),
-                    selected: isSelected,
-                    selectedColor: AppTheme.brandGreen,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF64748B),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13,
-                    ),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? AppTheme.brandGreen : const Color(0xFFE2E8F0),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedFilter = f);
-                    },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 650;
+        final filterChips = SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: filters.map((f) {
+              final isSelected = _selectedFilter == f;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(f),
+                  selected: isSelected,
+                  selectedColor: AppTheme.brandGreen,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12.5,
                   ),
-                );
-              }).toList(),
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: isSelected ? AppTheme.brandGreen : const Color(0xFFE2E8F0),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedFilter = f);
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        );
+
+        final searchBox = TextField(
+          onChanged: (val) => setState(() => _searchQuery = val),
+          decoration: InputDecoration(
+            hintText: 'Search city, facility, contact...',
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.brandGreen),
             ),
           ),
-        ),
-        // Search box
-        SizedBox(
-          width: 260,
-          child: TextField(
-            onChanged: (val) => setState(() => _searchQuery = val),
-            decoration: InputDecoration(
-              hintText: 'Search city, facility, contact...',
-              hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.brandGreen),
-              ),
-            ),
-          ),
-        ),
-      ],
+        );
+
+        if (isMobile) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              searchBox,
+              const SizedBox(height: 10),
+              filterChips,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: filterChips),
+            const SizedBox(width: 12),
+            SizedBox(width: 260, child: searchBox),
+          ],
+        );
+      },
     );
   }
 
@@ -474,7 +544,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
           shrinkWrap: true,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: crossAxisCount == 2 ? 1.75 : 1.5,
+            childAspectRatio: crossAxisCount == 2 ? 1.75 : 1.25,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
           ),
@@ -625,8 +695,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAF8),
+              color: AppTheme.creamLight,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: Row(
               children: [

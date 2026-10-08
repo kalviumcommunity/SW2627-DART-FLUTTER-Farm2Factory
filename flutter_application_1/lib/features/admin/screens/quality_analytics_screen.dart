@@ -124,7 +124,7 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 1.5,
+              childAspectRatio: MediaQuery.of(context).size.width > 700 ? 1.4 : 1.18,
               children: [
                 DairyStatCard(
                   icon: Icons.grain,
@@ -193,8 +193,10 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.spaceAround,
                     children: [
                       _gradePill('Grade A', '${m.gradeAPercent}%', AppTheme.brandGreen),
                       _gradePill('Grade B', '${m.gradeBPercent}%', const Color(0xFFFFA000)),
@@ -237,6 +239,7 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
 
   Widget _gradePill(String label, String percent, Color col) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: col, shape: BoxShape.circle)),
         const SizedBox(width: 6),
@@ -254,8 +257,19 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(center, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isAlert ? Colors.redAccent : const Color(0xFF0F172A))),
-              Text('$litres L  •  FAT: $fat%  •  SNF: $snf%', style: TextStyle(fontSize: 12, color: isAlert ? Colors.redAccent : Colors.grey.shade700, fontWeight: isAlert ? FontWeight.bold : FontWeight.normal)),
+              Expanded(
+                child: Text(
+                  center,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isAlert ? Colors.redAccent : const Color(0xFF0F172A)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$litres L  •  FAT: $fat%  •  SNF: $snf%',
+                style: TextStyle(fontSize: 11.5, color: isAlert ? Colors.redAccent : Colors.grey.shade700, fontWeight: isAlert ? FontWeight.bold : FontWeight.normal),
+              ),
             ],
           ),
           const SizedBox(height: 4),

@@ -24,9 +24,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     final collectorName = 'Ramesh Kumar (ID: C-BHN-001)';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         title: const Row(
           children: [
@@ -55,21 +55,15 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       ),
       body: _buildTabBody(farmerName, farmerId, collectorName),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
+        decoration: const BoxDecoration(
+          color: AppTheme.scaffoldBg,
+          border: Border(top: BorderSide(color: AppTheme.creamBorder)),
         ),
         child: NavigationBar(
           selectedIndex: _currentTab,
           onDestinationSelected: (idx) => setState(() => _currentTab = idx),
-          backgroundColor: Colors.white,
-          indicatorColor: AppTheme.brandGreen.withOpacity(0.12),
+          backgroundColor: AppTheme.scaffoldBg,
+          indicatorColor: AppTheme.brandGreen.withOpacity(0.15),
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.today_outlined),
@@ -162,8 +156,22 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                           fontSize: 11,
                           color: Colors.grey.shade700,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/cow_mascot.png',
+                    height: 56,
+                    width: 56,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
               ],
@@ -574,11 +582,20 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -679,12 +696,18 @@ class _ShiftSellCard extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey)),
-                    Text(
-                      total,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.brandGreen,
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          total,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.brandGreen,
+                          ),
+                        ),
                       ),
                     ),
                   ],
