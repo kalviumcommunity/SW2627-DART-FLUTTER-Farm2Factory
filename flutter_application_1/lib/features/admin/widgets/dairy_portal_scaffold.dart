@@ -28,6 +28,7 @@ class DairyPortalScaffold extends StatelessWidget {
     _NavItem(title: 'Dispatch & Logistics', route: '/dairy/dispatch', icon: Icons.local_shipping_outlined, activeIcon: Icons.local_shipping),
     _NavItem(title: 'Sellers & Farms', route: '/dairy/sellers', icon: Icons.agriculture_outlined, activeIcon: Icons.agriculture),
     _NavItem(title: 'Quality & Lab', route: '/dairy/quality', icon: Icons.science_outlined, activeIcon: Icons.science),
+    _NavItem(title: 'Rate Charts & Pricing', route: AppRoutes.dairyRates, icon: Icons.currency_rupee_outlined, activeIcon: Icons.currency_rupee),
     _NavItem(title: 'Payments & Payouts', route: '/dairy/payments', icon: Icons.payments_outlined, activeIcon: Icons.payments),
     _NavItem(title: 'Reports & Export', route: '/dairy/reports', icon: Icons.assessment_outlined, activeIcon: Icons.assessment),
     _NavItem(title: 'Locations & Fleet', route: '/dairy/locations', icon: Icons.map_outlined, activeIcon: Icons.map),

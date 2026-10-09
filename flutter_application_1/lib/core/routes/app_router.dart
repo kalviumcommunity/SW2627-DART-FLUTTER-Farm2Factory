@@ -7,6 +7,7 @@ import '../../features/admin/screens/dairy_payments_screen.dart';
 import '../../features/admin/screens/dispatch_screen.dart';
 import '../../features/admin/screens/locations_screen.dart';
 import '../../features/admin/screens/quality_analytics_screen.dart';
+import '../../features/admin/screens/rate_chart_screen.dart';
 import '../../features/admin/screens/reports_export_screen.dart';
 import '../../features/admin/screens/sellers_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -46,6 +47,7 @@ class AppRoutes {
   static const dairyPayments = '/dairy/payments';
   static const dairyReports = '/dairy/reports';
   static const dairyLocations = '/dairy/locations';
+  static const dairyRates = '/dairy/rates';
 }
 
 class AppRouter {
@@ -145,6 +147,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.dairyLocations,
         builder: (context, state) => const LocationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dairyRates,
+        builder: (context, state) => const RateChartScreen(),
       ),
     ],
   );
