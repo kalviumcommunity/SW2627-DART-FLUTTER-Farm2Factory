@@ -32,8 +32,6 @@ class FarmerCard extends StatelessWidget {
         ),
 
         title: Text(farmer.name),
-<<<<<<< HEAD
-
         subtitle: Text(
           'ID: ${farmer.id}\n'
           'Village: ${farmer.village}',
@@ -57,11 +55,7 @@ class FarmerCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-=======
-        subtitle: Text('${farmer.id}  -  ${farmer.village}'),
-        trailing: const Icon(Icons.chevron_right),
->>>>>>> origin/main
       ),
     );
   }
-}
+}

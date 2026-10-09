@@ -5,7 +5,8 @@ import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../auth/data/auth_repository.dart';
-import '../../farmers/data/farmer_repository.dart';
+import '../../../services/farmer_service.dart';
+import '../data/milk_entry_service.dart';
 
 class CollectorDashboardScreen extends StatefulWidget {
   const CollectorDashboardScreen({super.key});
@@ -17,6 +18,36 @@ class CollectorDashboardScreen extends StatefulWidget {
 
 class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
   int _currentNavIndex = 0;
+  
+  final _milkEntryService = MilkEntryService();
+  final _farmerService = FarmerService();
+  
+  bool _isLoading = true;
+  int _farmerCount = 0;
+  double _todayTotalLitres = 0;
+  int _activeFarmersCount = 0;
+  double _todayPayout = 0;
+  int _totalEntriesCount = 0;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+  
+  Future<void> _loadDashboardData() async {
+    final farmers = await _farmerService.getFarmers();
+    final stats = await _milkEntryService.getTodayDashboardStats();
+    
+    setState(() {
+      _farmerCount = farmers.length;
+      _todayTotalLitres = stats['todayTotalLitres'];
+      _activeFarmersCount = stats['activeFarmersCount'];
+      _todayPayout = stats['todayPayout'];
+      _totalEntriesCount = stats['totalEntriesCount'];
+      _isLoading = false;
+    });
+  }
 
   void _showShareInviteDialog(BuildContext context) {
     const inviteLink = 'https://farm2factory.app/join?collector=C-BHN-001';
@@ -113,7 +144,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
     final user = AuthRepository.instance.currentUser;
     final userName = user?.name ?? 'Ramesh Kumar';
     final userCenter = user?.center ?? 'Central Valley Collection Center';
-    final farmerCount = FarmerRepository.instance.farmers.length;
+
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
@@ -180,7 +211,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,8 +293,8 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Text(
-                              '1,248 L',
+                            Text(
+                              '${_todayTotalLitres.toStringAsFixed(1)} L',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 28,
@@ -329,7 +360,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                     icon: Icons.people,
                     iconColor: AppTheme.brandGreen,
                     title: 'Farmers',
-                    value: '$farmerCount',
+                    value: '$_farmerCount',
                     onTap: () => context.push(AppRoutes.farmers),
                   ),
                 ),
@@ -340,7 +371,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                     icon: Icons.water_drop,
                     iconColor: const Color(0xFF0288D1),
                     title: 'Milk Entries',
-                    value: '320',
+                    value: '$_totalEntriesCount',
                     onTap: () => context.push(AppRoutes.milkEntries),
                   ),
                 ),
@@ -419,20 +450,20 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             // 3 Stat Cards Row
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: _StatCard(
                     icon: Icons.water_drop,
                     iconColor: Color(0xFF0288D1),
-                    value: '1,248 L',
+                    value: '${_todayTotalLitres.toStringAsFixed(1)} L',
                     label: 'Total Milk',
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: _StatCard(
                     icon: Icons.people_outline,
                     iconColor: AppTheme.brandGreen,
-                    value: '84',
+                    value: '$_activeFarmersCount',
                     label: 'Active Farmers',
                   ),
                 ),
@@ -441,7 +472,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                   child: _StatCard(
                     icon: Icons.currency_rupee,
                     iconColor: const Color(0xFFE65100),
-                    value: '₹ 21,340',
+                    value: '₹ ${_todayPayout.toStringAsFixed(0)}',
                     label: "Today's Payout",
                   ),
                 ),
