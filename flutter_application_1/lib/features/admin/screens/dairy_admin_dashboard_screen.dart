@@ -149,6 +149,11 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       title: 'Operations Dashboard',
       actions: [
         IconButton(
+          tooltip: 'Rate Charts & Pricing',
+          icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
+          onPressed: () => context.push(AppRoutes.dairyRates),
+        ),
+        IconButton(
           tooltip: 'Dispatch Tanker',
           icon: const Icon(Icons.add_road, color: AppTheme.brandTeal),
           onPressed: () => _showDispatchDialog(context),

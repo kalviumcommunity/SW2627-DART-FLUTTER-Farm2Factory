@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../admin/data/rate_chart_repository.dart';
+import '../../admin/models/rate_chart.dart';
 import '../../farmers/data/farmer_repository.dart';
 import '../data/milk_entry_repository.dart';
 import '../models/milk_entry.dart';
@@ -16,8 +18,10 @@ class MilkEntriesScreen extends StatefulWidget {
 class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   final _entryRepo = MilkEntryRepository.instance;
   final _farmerRepo = FarmerRepository.instance;
+  final _rateRepo = RateChartRepository.instance;
 
   String _shift = 'Morning (AM)';
+  MilkType _selectedMilkType = MilkType.cow;
   String? _selectedFarmerId;
   final _litresController = TextEditingController();
   final _fatController = TextEditingController();
@@ -25,6 +29,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
   double _calculatedRate = 0.0;
   double _calculatedAmount = 0.0;
+  RateCalculationResult _calcResult = RateCalculationResult.empty;
 
   @override
   void initState() {
@@ -32,14 +37,20 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     if (_farmerRepo.farmers.isNotEmpty) {
       _selectedFarmerId = _farmerRepo.farmers.first.id;
     }
+    _rateRepo.addListener(_onRateChanged);
   }
 
   @override
   void dispose() {
+    _rateRepo.removeListener(_onRateChanged);
     _litresController.dispose();
     _fatController.dispose();
     _snfController.dispose();
     super.dispose();
+  }
+
+  void _onRateChanged() {
+    _recalculate();
   }
 
   void _recalculate() {
@@ -47,15 +58,21 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     final fat = double.tryParse(_fatController.text) ?? 0.0;
     final snf = double.tryParse(_snfController.text) ?? 0.0;
 
-    if (fat > 0 && snf > 0) {
-      // Standard dairy formula: Base rate + Fat weight + SNF weight
-      final rate = (fat * 6.5) + (snf * 1.8);
+    if (qty > 0 && fat > 0 && snf > 0) {
+      final res = _rateRepo.calculate(
+        quantity: qty,
+        fat: fat,
+        snf: snf,
+        milkType: _selectedMilkType,
+      );
       setState(() {
-        _calculatedRate = double.parse(rate.toStringAsFixed(2));
-        _calculatedAmount = double.parse((qty * _calculatedRate).toStringAsFixed(2));
+        _calcResult = res;
+        _calculatedRate = res.ratePerLitre;
+        _calculatedAmount = res.totalAmount;
       });
     } else {
       setState(() {
+        _calcResult = RateCalculationResult.empty;
         _calculatedRate = 0.0;
         _calculatedAmount = 0.0;
       });
@@ -92,17 +109,19 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
     _entryRepo.addEntry(entry);
 
+    final grade = _calcResult.qualityGrade;
     _litresController.clear();
     _fatController.clear();
     _snfController.clear();
     setState(() {
+      _calcResult = RateCalculationResult.empty;
       _calculatedRate = 0.0;
       _calculatedAmount = 0.0;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L (₹${entry.totalAmount})'),
+        content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L (₹${entry.totalAmount}) • $grade'),
         backgroundColor: AppTheme.brandGreen,
       ),
     );
@@ -250,9 +269,105 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Record Farmer Milk',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Record Farmer Milk',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      // Active policy indicator chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardMint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _rateRepo.getActiveChartFor(_selectedMilkType).title,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Milk Type Choice (Cow vs Buffalo)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            setState(() => _selectedMilkType = MilkType.cow);
+                            _recalculate();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: _selectedMilkType == MilkType.cow ? AppTheme.cardMint : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _selectedMilkType == MilkType.cow ? AppTheme.brandGreen : Colors.grey.shade300,
+                                width: _selectedMilkType == MilkType.cow ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(MilkType.cow.emoji, style: const TextStyle(fontSize: 16)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Cow Milk',
+                                  style: TextStyle(
+                                    fontWeight: _selectedMilkType == MilkType.cow ? FontWeight.bold : FontWeight.w500,
+                                    color: _selectedMilkType == MilkType.cow ? AppTheme.brandGreenDark : Colors.grey.shade700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            setState(() => _selectedMilkType = MilkType.buffalo);
+                            _recalculate();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: _selectedMilkType == MilkType.buffalo ? AppTheme.cardMint : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _selectedMilkType == MilkType.buffalo ? AppTheme.brandGreen : Colors.grey.shade300,
+                                width: _selectedMilkType == MilkType.buffalo ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(MilkType.buffalo.emoji, style: const TextStyle(fontSize: 16)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Buffalo Milk',
+                                  style: TextStyle(
+                                    fontWeight: _selectedMilkType == MilkType.buffalo ? FontWeight.bold : FontWeight.w500,
+                                    color: _selectedMilkType == MilkType.buffalo ? AppTheme.brandGreenDark : Colors.grey.shade700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 
@@ -331,46 +446,96 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
                   // Live Calculated Rate & Amount Banner
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: AppTheme.cardMint,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.brandGreen.withOpacity(0.2)),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Rate per Litre',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.grey)),
-                            Text(
-                              '₹ ${_calculatedRate.toStringAsFixed(2)} / L',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.brandGreenDark,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Rate per Litre',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Colors.grey)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹ ${_calculatedRate.toStringAsFixed(2)} / L',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.brandGreenDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_calculatedRate > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _calcResult.isQualityAcceptable
+                                      ? Colors.green.shade100
+                                      : Colors.orange.shade100,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  _calcResult.qualityGrade,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: _calcResult.isQualityAcceptable
+                                        ? Colors.green.shade800
+                                        : Colors.orange.shade900,
+                                  ),
+                                ),
                               ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text('Total Payout',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Colors.grey)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹ ${_calculatedAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.brandGreen,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text('Total Amount',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.grey)),
-                            Text(
-                              '₹ ${_calculatedAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: AppTheme.brandGreen,
+                        if (_calculatedRate > 0) ...[
+                          const Divider(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Fat: ₹${_calcResult.fatComponent.toStringAsFixed(2)} + SNF: ₹${_calcResult.snfComponent.toStringAsFixed(2)}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
                               ),
+                              Text(
+                                '${_selectedMilkType.displayName} Chart',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                          if (_calcResult.warningMessage != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _calcResult.warningMessage!,
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange.shade900),
                             ),
                           ],
-                        ),
+                        ],
                       ],
                     ),
                   ),
