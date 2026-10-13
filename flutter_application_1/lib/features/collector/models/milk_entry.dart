@@ -29,4 +29,42 @@ class MilkEntry {
     required this.totalAmount,
     this.isSynced = true,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'farmerId': farmerId,
+      'farmerName': farmerName,
+      'farmerCode': farmerCode,
+      'collectorId': collectorId,
+      'shift': shift,
+      'date': date,
+      'quantityLitres': quantityLitres,
+      'fatPercentage': fatPercentage,
+      'snfPercentage': snfPercentage,
+      'ratePerLitre': ratePerLitre,
+      'totalAmount': totalAmount,
+      'isSynced': isSynced,
+    };
+  }
+
+  factory MilkEntry.fromMap(String documentId, Map<String, dynamic> map) {
+    return MilkEntry(
+      id: documentId,
+      farmerId: map['farmerId'] ?? '',
+      farmerName: map['farmerName'] ?? '',
+      farmerCode: map['farmerCode'] ?? '',
+      collectorId: map['collectorId'] ?? '',
+      shift: map['shift'] ?? '',
+      date: map['date'] != null 
+          ? (map['date'] as dynamic).toDate() 
+          : DateTime.now(),
+      quantityLitres: (map['quantityLitres'] ?? 0).toDouble(),
+      fatPercentage: (map['fatPercentage'] ?? 0).toDouble(),
+      snfPercentage: (map['snfPercentage'] ?? 0).toDouble(),
+      ratePerLitre: (map['ratePerLitre'] ?? 0).toDouble(),
+      totalAmount: (map['totalAmount'] ?? 0).toDouble(),
+      isSynced: map['isSynced'] ?? true,
+    );
+  }
 }

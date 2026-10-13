@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../models/farmer.dart';
+import '../../../services/farmer_service.dart';
 import '../../admin/data/rate_chart_repository.dart';
 import '../../admin/models/rate_chart.dart';
-import '../../farmers/data/farmer_repository.dart';
-import '../data/milk_entry_repository.dart';
+import '../data/milk_entry_service.dart';
 import '../models/milk_entry.dart';
 
 class MilkEntriesScreen extends StatefulWidget {
@@ -16,9 +17,13 @@ class MilkEntriesScreen extends StatefulWidget {
 }
 
 class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
-  final _entryRepo = MilkEntryRepository.instance;
-  final _farmerRepo = FarmerRepository.instance;
+  final _milkEntryService = MilkEntryService();
+  final _farmerService = FarmerService();
   final _rateRepo = RateChartRepository.instance;
+
+  List<Farmer> _farmers = [];
+  List<MilkEntry> _recentEntries = [];
+  bool _isLoading = true;
 
   String _shift = 'Morning (AM)';
   MilkType _selectedMilkType = MilkType.cow;
@@ -34,10 +39,21 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   void initState() {
     super.initState();
-    if (_farmerRepo.farmers.isNotEmpty) {
-      _selectedFarmerId = _farmerRepo.farmers.first.id;
-    }
+    _loadData();
     _rateRepo.addListener(_onRateChanged);
+  }
+
+  Future<void> _loadData() async {
+    final farmers = await _farmerService.getFarmers();
+    final entries = await _milkEntryService.getEntriesForCenter('C-BHN-001');
+    setState(() {
+      _farmers = farmers;
+      if (_farmers.isNotEmpty && _selectedFarmerId == null) {
+        _selectedFarmerId = _farmers.first.id;
+      }
+      _recentEntries = entries;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -79,7 +95,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     }
   }
 
-  void _saveEntry() {
+  Future<void> _saveEntry() async {
     final qty = double.tryParse(_litresController.text);
     final fat = double.tryParse(_fatController.text);
     final snf = double.tryParse(_snfController.text);
@@ -91,12 +107,12 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       return;
     }
 
-    final farmer = _farmerRepo.getById(_selectedFarmerId!);
+    final farmer = _farmers.firstWhere((f) => f.id == _selectedFarmerId);
     final entry = MilkEntry(
       id: 'ENT-${DateTime.now().millisecondsSinceEpoch % 10000}',
       farmerId: _selectedFarmerId!,
-      farmerName: farmer?.name ?? 'Unknown',
-      farmerCode: farmer?.id ?? 'F000',
+      farmerName: farmer.name,
+      farmerCode: farmer.id,
       collectorId: 'C-BHN-001',
       shift: _shift,
       date: DateTime.now(),
@@ -107,7 +123,8 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       totalAmount: _calculatedAmount,
     );
 
-    _entryRepo.addEntry(entry);
+    await _milkEntryService.createEntry(entry);
+    _loadData();
 
     final grade = _calcResult.qualityGrade;
     _litresController.clear();
@@ -119,6 +136,8 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       _calculatedAmount = 0.0;
     });
 
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L (₹${entry.totalAmount}) • $grade'),
@@ -147,7 +166,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +399,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                       prefixIcon: Icon(Icons.person_outline,
                           color: Colors.grey.shade600, size: 20),
                     ),
-                    items: _farmerRepo.farmers.map((f) {
+                    items: _farmers.map((f) {
                       return DropdownMenuItem(
                         value: f.id,
                         child: Text(
@@ -575,11 +594,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
             ),
             const SizedBox(height: 10),
 
-            ListenableBuilder(
-              listenable: _entryRepo,
-              builder: (context, _) {
+            Builder(
+              builder: (context) {
                 return Column(
-                  children: _entryRepo.entries.map((entry) {
+                  children: _recentEntries.map((entry) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
