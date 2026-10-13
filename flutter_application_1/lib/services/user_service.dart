@@ -17,10 +17,10 @@ class UserService {
       'name': name,
       'email': email,
       'role': role,
-      'phone': ?phone,
-      'center': ?center,
-      'collectorId': ?collectorId,
-      'customId': ?customId,
+      if (phone != null) 'phone': phone,
+      if (center != null) 'center': center,
+      if (collectorId != null) 'collectorId': collectorId,
+      if (customId != null) 'customId': customId,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -31,4 +31,3 @@ class UserService {
     return doc.data();
   }
 }
-
