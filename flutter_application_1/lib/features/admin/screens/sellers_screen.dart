@@ -64,13 +64,32 @@ class _SellersScreenState extends State<SellersScreen> {
               const Divider(height: 24),
 
               // Farm KPIs
-              Row(
-                children: [
-                  Expanded(child: _sellerModalMetric('Cattle', '${s.cattleCount} Cows', Icons.pets)),
-                  Expanded(child: _sellerModalMetric('Daily', '${s.dailySupplyLitres.toInt()} L', Icons.water_drop)),
-                  Expanded(child: _sellerModalMetric('FAT/SNF', '${s.avgFat}%/${s.avgSnf}%', Icons.science)),
-                  Expanded(child: _sellerModalMetric('Rate/L', '₹ ${s.ratePerLitre}', Icons.currency_rupee)),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isNarrow = constraints.maxWidth < 420;
+                  final kpi1 = _sellerModalMetric('Cattle', '${s.cattleCount} Cows', Icons.pets);
+                  final kpi2 = _sellerModalMetric('Daily', '${s.dailySupplyLitres.toInt()} L', Icons.water_drop);
+                  final kpi3 = _sellerModalMetric('FAT/SNF', '${s.avgFat}%/${s.avgSnf}%', Icons.science);
+                  final kpi4 = _sellerModalMetric('Rate/L', '₹ ${s.ratePerLitre}', Icons.currency_rupee);
+
+                  if (isNarrow) {
+                    return Column(
+                      children: [
+                        Row(children: [Expanded(child: kpi1), Expanded(child: kpi2)]),
+                        const SizedBox(height: 12),
+                        Row(children: [Expanded(child: kpi3), Expanded(child: kpi4)]),
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: kpi1),
+                      Expanded(child: kpi2),
+                      Expanded(child: kpi3),
+                      Expanded(child: kpi4),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 20),
 

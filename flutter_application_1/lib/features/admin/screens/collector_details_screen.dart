@@ -64,6 +64,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               labelColor: AppTheme.brandGreen,
               unselectedLabelColor: Colors.grey.shade600,
               indicatorColor: AppTheme.brandGreen,
@@ -230,9 +231,31 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                   _overviewCard('Active Farmers', '${c.farmersHandled} Farmers', AppTheme.cardPeach, const Color(0xFFE65100)),
                   _overviewCard('Average FAT', '${c.avgFat}%', AppTheme.cardSky, const Color(0xFF0288D1)),
                   _overviewCard('Average SNF', '${c.avgSnf}%', AppTheme.cardLavender, const Color(0xFF6A1B9A)),
-                  _overviewCard('Chilling Temp', '${c.avgTemp}°C', AppTheme.cardMint, AppTheme.brandGreen),
                 ],
               ),
+              if (c.avgTemp != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardMint,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.brandGreen.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.ac_unit, size: 16, color: AppTheme.brandGreen),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Center BMC Chilling Unit: ${c.avgTemp}°C (Optimal Cold Chain)',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.brandGreenDark),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -601,6 +624,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
             _profileRow('Collector ID', c.id),
             _profileRow('Terminal Device', 'F2F Micro-Analyzer #M-8821'),
             _profileRow('Current Status', c.status),
+            _profileRow('Chilling Facility', c.avgTemp != null ? '${c.avgTemp}°C (BMC Unit)' : 'Ambient Can Intake (No Chiller)'),
           ]),
           const SizedBox(height: 14),
           _profileSection('Contact & Authentication', [
