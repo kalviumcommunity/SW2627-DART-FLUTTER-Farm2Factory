@@ -9,7 +9,6 @@ class ReportService {
     'Dispatch & Logistics Report',
     'Commercial Seller Report',
     'Milk Quality & Lab Report',
-    'Custom Date Range Report',
   ];
 
   static String generateCsv({

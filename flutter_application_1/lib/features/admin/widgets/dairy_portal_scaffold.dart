@@ -68,14 +68,15 @@ class DairyPortalScaffold extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
+        titleSpacing: 8,
         title: Text(
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 17,
+          style: TextStyle(
+            fontSize: screenWidth < 380 ? 15 : 17,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
+            color: const Color(0xFF0F172A),
           ),
         ),
         actions: [

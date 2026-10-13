@@ -291,23 +291,22 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                       ),
                       const Divider(height: 18),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700)),
-                                Text('Ref: ${p.transactionReference}', style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Row(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 380;
+                          final detailsCol = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700)),
+                              Text('Ref: ${p.transactionReference}', style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          );
+
+                          final actionRow = Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                                crossAxisAlignment: isNarrow ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                                 children: [
                                   Text('₹ ${p.finalAmount.toInt()}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
                                   Text('${p.paymentDate.day}/${p.paymentDate.month}/${p.paymentDate.year}', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
@@ -327,8 +326,33 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                                 ),
                               ],
                             ],
-                          ),
-                        ],
+                          );
+
+                          if (isNarrow) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                detailsCol,
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    actionRow,
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(child: detailsCol),
+                              const SizedBox(width: 8),
+                              actionRow,
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

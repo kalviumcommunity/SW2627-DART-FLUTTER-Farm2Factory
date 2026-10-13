@@ -15,7 +15,7 @@ class Collector {
   final String paymentStatus; // 'Paid', 'Pending', 'Processing'
   final double avgFat;
   final double avgSnf;
-  final double avgTemp;
+  final double? avgTemp;
   final List<CollectorDailyRecord> dailyRecords;
   final List<CollectorPaymentTransaction> payments;
   final List<String> assignedFarmerIds;
@@ -37,7 +37,7 @@ class Collector {
     required this.paymentStatus,
     this.avgFat = 4.2,
     this.avgSnf = 8.5,
-    this.avgTemp = 4.1,
+    this.avgTemp,
     this.dailyRecords = const [],
     this.payments = const [],
     this.assignedFarmerIds = const [],
