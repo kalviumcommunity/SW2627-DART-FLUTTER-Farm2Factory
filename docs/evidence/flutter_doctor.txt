@@ -1,0 +1,37 @@
+[√] Flutter (Channel stable, 3.47.6, on Microsoft Windows [Version 10.0.28000.3231], locale en-IN)
+    • Flutter version 3.47.6 on channel stable at C:\Flutter\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 5fc346839b (2 weeks ago), 2026-09-30 15:02:49 -0700
+    • Engine revision 692136cb65
+    • Dart version 3.13.5
+    • DevTools version 2.60.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-record-use, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[√] Windows Version (Windows 11 or higher, 26H1, 2009)
+
+[√] Android toolchain - develop for Android devices (Android SDK version 36.0.0)
+    • Android SDK at C:\Android\android-sdk
+    • Platform android-36, build-tools 36.0.0
+    • Java binary at: C:\Android\jdk-17\bin\java
+      This JDK is specified in your Flutter configuration.
+      To change the current JDK, run: `flutter config --jdk-dir="path/to/jdk"`.
+    • Java version OpenJDK Runtime Environment Temurin-17.0.10+7 (build 17.0.10+7)
+    • All Android licenses accepted.
+
+[√] Chrome - develop for the web
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[√] Visual Studio - develop Windows apps (Visual Studio Build Tools 2026 18.9.2)
+    • Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools
+    • Visual Studio Build Tools 2026 version 18.9.12120.119
+    • Windows 10 SDK version 10.0.26100.0
+
+[√] Connected device (3 available)
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.28000.3231]
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 155.0.8059.41
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 155.0.4283.45
+
+[√] Network resources
+    • All expected network resources are available.
+
+• No issues found!
