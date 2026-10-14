@@ -31,6 +31,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   final _litresController = TextEditingController();
   final _fatController = TextEditingController();
   final _snfController = TextEditingController();
+  final _tempController = TextEditingController(text: '4.0');
 
   double _calculatedRate = 0.0;
   double _calculatedAmount = 0.0;
@@ -62,6 +63,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     _litresController.dispose();
     _fatController.dispose();
     _snfController.dispose();
+    _tempController.dispose();
     super.dispose();
   }
 
@@ -107,6 +109,16 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       return;
     }
 
+    final temp = double.tryParse(_tempController.text) ?? 4.0;
+    final isQualityGood = _calcResult.isQualityAcceptable && temp <= 10.0;
+    final status = isQualityGood ? 'ACCEPTED' : 'REJECTED';
+    final reason = !isQualityGood
+        ? (_calcResult.warningMessage ??
+            (temp > 10.0
+                ? 'High Temperature (${temp.toStringAsFixed(1)}°C > 10°C)'
+                : 'Quality below threshold'))
+        : null;
+
     final farmer = _farmers.firstWhere((f) => f.id == _selectedFarmerId);
     final entry = MilkEntry(
       id: 'ENT-${DateTime.now().millisecondsSinceEpoch % 10000}',
@@ -114,11 +126,17 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       farmerName: farmer.name,
       farmerCode: farmer.id,
       collectorId: 'C-BHN-001',
+      centerId: farmer.center.isNotEmpty ? farmer.center : 'Jaipur Center',
       shift: _shift,
       date: DateTime.now(),
+      milkType: _selectedMilkType.name,
       quantityLitres: qty,
       fatPercentage: fat,
       snfPercentage: snf,
+      temperature: temp,
+      qualityStatus: status,
+      qualityGrade: _calcResult.qualityGrade,
+      rejectionReason: reason,
       ratePerLitre: _calculatedRate,
       totalAmount: _calculatedAmount,
     );
@@ -130,6 +148,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     _litresController.clear();
     _fatController.clear();
     _snfController.clear();
+    _tempController.text = '4.0';
     setState(() {
       _calcResult = RateCalculationResult.empty;
       _calculatedRate = 0.0;
@@ -137,11 +156,13 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     });
 
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L (₹${entry.totalAmount}) • $grade'),
-        backgroundColor: AppTheme.brandGreen,
+        content: Text(
+            'Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L • $status ($grade)'),
+        backgroundColor:
+            isQualityGood ? AppTheme.brandGreen : Colors.orange.shade800,
       ),
     );
   }
@@ -412,18 +433,38 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Quantity in Litres
-                  TextField(
-                    controller: _litresController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => _recalculate(),
-                    decoration: InputDecoration(
-                      labelText: 'Quantity (Litres)',
-                      hintText: 'e.g. 15.5',
-                      prefixIcon: Icon(Icons.water_drop_outlined,
-                          color: Colors.grey.shade600, size: 20),
-                    ),
+                  // Quantity and Temperature side-by-side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _litresController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          onChanged: (_) => _recalculate(),
+                          decoration: InputDecoration(
+                            labelText: 'Quantity (Litres)',
+                            hintText: 'e.g. 15.5',
+                            prefixIcon: Icon(Icons.water_drop_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _tempController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: 'Temp (°C)',
+                            hintText: 'e.g. 4.0',
+                            prefixIcon: Icon(Icons.thermostat_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 
@@ -622,11 +663,51 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}%',
+                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}% | ${entry.temperature}°C',
                                   style: TextStyle(
                                       fontSize: 11, color: Colors.grey.shade600),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: entry.isAccepted
+                                            ? Colors.green.shade50
+                                            : Colors.red.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: entry.isAccepted
+                                              ? Colors.green.shade200
+                                              : Colors.red.shade200,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        entry.qualityStatus,
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          color: entry.isAccepted
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                    if (entry.qualityGrade.isNotEmpty) ...[
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        entry.qualityGrade,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),
