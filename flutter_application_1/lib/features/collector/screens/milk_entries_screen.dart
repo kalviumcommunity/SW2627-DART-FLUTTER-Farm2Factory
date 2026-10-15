@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/farmer.dart';
+import '../../../services/batch_service.dart';
 import '../../../services/farmer_service.dart';
 import '../../admin/data/rate_chart_repository.dart';
 import '../../admin/models/rate_chart.dart';
@@ -19,6 +21,7 @@ class MilkEntriesScreen extends StatefulWidget {
 class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   final _milkEntryService = MilkEntryService();
   final _farmerService = FarmerService();
+  final _batchService = BatchService();
   final _rateRepo = RateChartRepository.instance;
 
   List<Farmer> _farmers = [];
@@ -163,6 +166,96 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
             'Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L • $status ($grade)'),
         backgroundColor:
             isQualityGood ? AppTheme.brandGreen : Colors.orange.shade800,
+      ),
+    );
+  }
+
+  Future<void> _showDispatchBatchDialog() async {
+    final unbatched =
+        await _milkEntryService.getUnbatchedEntries('Jaipur Center');
+    if (!mounted) return;
+
+    if (unbatched.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No unbatched collections available to dispatch.'),
+        ),
+      );
+      return;
+    }
+
+    final totalLitres =
+        unbatched.fold<double>(0.0, (sum, e) => sum + e.quantityLitres);
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.local_shipping_outlined, color: AppTheme.brandGreen),
+            SizedBox(width: 8),
+            Text('Dispatch Tanker Batch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Ready to package ${unbatched.length} collections into a single dispatch batch.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.cardMint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total Volume:'),
+                  Text('${totalLitres.toStringAsFixed(1)} L',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppTheme.brandGreenDark)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.brandGreen,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              final batch = await _batchService.createBatch(
+                centerId: 'Jaipur Center',
+                centerName: 'Central Valley Center',
+                shift: _shift,
+                entries: unbatched,
+              );
+              await _loadData();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Batch ${batch.id} dispatched successfully!'),
+                  backgroundColor: AppTheme.brandGreen,
+                ),
+              );
+            },
+            child: const Text('Confirm Dispatch'),
+          ),
+        ],
       ),
     );
   }
@@ -624,14 +717,53 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Recent Collection Entries List
-            const Text(
-              'Recent Recorded Entries',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
+            // Recent Collection Entries List Header & Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Recorded Entries',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => context.push(AppRoutes.dairyBatches),
+                      icon: const Icon(Icons.history, size: 14),
+                      label: const Text('Batches',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 6),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.brandGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: _showDispatchBatchDialog,
+                      icon: const Icon(Icons.local_shipping_outlined, size: 13),
+                      label: const Text('Dispatch Batch',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 10),
 
