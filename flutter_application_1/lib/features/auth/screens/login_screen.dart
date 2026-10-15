@@ -28,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _identifierController = TextEditingController(text: widget.initialPhone ?? '9999999999');
+    _identifierController = TextEditingController(
+      text: widget.initialPhone ?? (_isAdminTab ? '9999999999' : '123456'),
+    );
     _passwordController.text = '123456';
   }
 
@@ -175,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: () {
                                 setState(() {
                                   _isAdminTab = false;
-                                  _identifierController.text = '9999999999';
+                                  _identifierController.text = '123456';
                                   _passwordController.text = '123456';
                                 });
                               },

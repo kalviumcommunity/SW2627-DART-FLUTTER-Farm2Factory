@@ -19,6 +19,11 @@ class FarmerDetailsScreen extends StatelessWidget {
       backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.farmers),
+        ),
         title: const Text('Farmer Details'),
       ),
       body: farmer == null

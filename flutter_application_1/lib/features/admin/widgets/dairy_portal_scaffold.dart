@@ -384,7 +384,7 @@ class DairyPortalScaffold extends StatelessWidget {
       _navItems[0], // Dashboard
       _navItems[1], // Collectors
       _navItems[2], // Dispatch
-      _navItems[5], // Payments
+      _navItems[6], // Payments & Payouts
     ];
 
     int currentIndex = quickItems.indexWhere((it) => it.route == activeRoute);

@@ -25,9 +25,9 @@ class FarmerRepository extends ChangeNotifier {
   final List<Farmer> _farmers = [
     const Farmer(
       id: 'F001',
-      name: 'John Doe',
+      name: 'Ram Singh',
       phone: '9876543210',
-      village: 'Jaipur',
+      village: 'Jaipur Rural',
       center: 'Jaipur Center',
     ),
     const Farmer(

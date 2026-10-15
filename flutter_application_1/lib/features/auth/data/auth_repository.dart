@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../farmers/data/farmer_repository.dart';
 
 enum UserRole { farmer, collector, admin }
 
@@ -115,6 +116,16 @@ class AuthRepository extends ChangeNotifier {
       collectorId: referralCollectorId ?? 'C-BHN-001',
     );
     _accounts[phone] = account;
+
+    // Synchronize to FarmerRepository so collector and admin portals immediately reflect the new farmer
+    FarmerRepository.instance.add(
+      name: name.trim(),
+      phone: phone.trim(),
+      village: 'Central Valley',
+      center: 'Central Valley Collection Center',
+      collectorId: referralCollectorId ?? 'C-BHN-001',
+    );
+
     return null;
   }
 
