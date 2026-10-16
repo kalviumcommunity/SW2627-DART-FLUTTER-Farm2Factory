@@ -80,17 +80,72 @@ class AuthRepository extends ChangeNotifier {
       role: UserRole.collector,
       center: 'Central Valley Collection Center',
     ),
-    // Farmer
+    // Farmers (pre-seeded from FarmerRepository with default PIN 123456)
     '9876543210': const _Account(
-      id: 'F-BHN-0123',
+      id: 'F001',
       name: 'Ram Singh',
       identifier: '9876543210',
       password: '123456',
       role: UserRole.farmer,
-      center: 'Central Valley Collection Center',
+      center: 'Jaipur Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9123456780': const _Account(
+      id: 'F002',
+      name: 'Rahul Kumar',
+      identifier: '9123456780',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Ajmer Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9988776655': const _Account(
+      id: 'F003',
+      name: 'Sita Devi',
+      identifier: '9988776655',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Sikar Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9812345678': const _Account(
+      id: 'F004',
+      name: 'Mohan Singh',
+      identifier: '9812345678',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Jaipur Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9765432109': const _Account(
+      id: 'F005',
+      name: 'Priya Sharma',
+      identifier: '9765432109',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Ajmer Center',
       collectorId: 'C-BHN-001',
     ),
   };
+
+  void addFarmerAccount({
+    required String id,
+    required String name,
+    required String phone,
+    String password = '123456',
+    String center = 'Central Valley Collection Center',
+    String? collectorId,
+  }) {
+    _accounts[phone.trim()] = _Account(
+      id: id,
+      name: name.trim(),
+      identifier: phone.trim(),
+      password: password,
+      role: UserRole.farmer,
+      center: center,
+      collectorId: collectorId ?? 'C-BHN-001',
+    );
+  }
 
   AppUser? _currentUser;
   AppUser? get currentUser => _currentUser;

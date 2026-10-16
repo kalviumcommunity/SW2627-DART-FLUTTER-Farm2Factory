@@ -86,7 +86,9 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.milkEntries,
-        builder: (context, state) => const MilkEntriesScreen(),
+        builder: (context, state) => MilkEntriesScreen(
+          initialFarmerId: state.extra as String?,
+        ),
       ),
       GoRoute(
         path: AppRoutes.reports,

@@ -10,7 +10,9 @@ import '../data/milk_entry_repository.dart';
 import '../models/milk_entry.dart';
 
 class MilkEntriesScreen extends StatefulWidget {
-  const MilkEntriesScreen({super.key});
+  final String? initialFarmerId;
+
+  const MilkEntriesScreen({super.key, this.initialFarmerId});
 
   @override
   State<MilkEntriesScreen> createState() => _MilkEntriesScreenState();
@@ -35,7 +37,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   void initState() {
     super.initState();
-    if (_farmerRepo.farmers.isNotEmpty) {
+    if (widget.initialFarmerId != null &&
+        _farmerRepo.farmers.any((f) => f.id == widget.initialFarmerId)) {
+      _selectedFarmerId = widget.initialFarmerId;
+    } else if (_farmerRepo.farmers.isNotEmpty) {
       _selectedFarmerId = _farmerRepo.farmers.first.id;
     }
     _rateRepo.addListener(_onRateChanged);

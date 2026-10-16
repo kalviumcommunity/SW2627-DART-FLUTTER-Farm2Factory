@@ -10,7 +10,7 @@ class MilkEntryRepository extends ChangeNotifier {
     MilkEntry(
       id: 'ENT-001',
       farmerId: 'F001',
-      farmerName: 'John Doe',
+      farmerName: 'Ram Singh',
       farmerCode: 'F001',
       collectorId: 'C-BHN-001',
       shift: 'Morning (AM)',
@@ -24,7 +24,7 @@ class MilkEntryRepository extends ChangeNotifier {
     MilkEntry(
       id: 'ENT-002',
       farmerId: 'F001',
-      farmerName: 'John Doe',
+      farmerName: 'Ram Singh',
       farmerCode: 'F001',
       collectorId: 'C-BHN-001',
       shift: 'Evening (PM)',
