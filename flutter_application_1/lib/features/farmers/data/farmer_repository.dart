@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 
 import '../models/farmer.dart';
 
-/// Data store for registered farmers.
+/// Single source of truth and data repository for registered farmers.
+/// Provides reactive state (ChangeNotifier), memory caching, Firestore persistence,
+/// and filtering/search across cooperative centers.
 class FarmerRepository extends ChangeNotifier {
   FarmerRepository._();
 
@@ -37,28 +39,16 @@ class FarmerRepository extends ChangeNotifier {
   Future<List<Farmer>> getFarmers() async {
     final snapshot = await _farmersCollection.get();
 
-    final farmers = snapshot.docs.map((doc) {
-      final data = doc.data();
-
-      return Farmer(
-        id: data['id'] ?? doc.id,
-        name: data['name'] ?? '',
-        phone: data['phone'] ?? '',
-        village: data['village'] ?? '',
-        center: data['center'] ?? '',
-        aadhaarNumber: data['aadhaarNumber'],
-        collectorId: data['collectorId'] ?? 'C-BHN-001',
-        status: data['status'] ?? 'Active',
-      );
-    }).toList();
+    final loadedFarmers = snapshot.docs
+        .map((doc) => Farmer.fromMap(doc.id, doc.data()))
+        .toList();
 
     _farmers
       ..clear()
-      ..addAll(farmers);
+      ..addAll(loadedFarmers);
 
     notifyListeners();
-
-    return farmers;
+    return loadedFarmers;
   }
 
   /// Filters by center and search query.
@@ -79,7 +69,7 @@ class FarmerRepository extends ChangeNotifier {
     }).toList();
   }
 
-  /// Create a new farmer in Firestore.
+  /// Create a new farmer in Firestore with an auto-generated sequential ID (F001, etc.).
   Future<Farmer> createFarmer({
     required String name,
     required String phone,
@@ -103,19 +93,12 @@ class FarmerRepository extends ChangeNotifier {
           ? null
           : aadhaarNumber!.trim(),
       collectorId: collectorId,
+      createdAt: DateTime.now(),
     );
 
-    await _farmersCollection.doc(id).set({
-      'id': farmer.id,
-      'name': farmer.name,
-      'phone': farmer.phone,
-      'village': farmer.village,
-      'center': farmer.center,
-      'aadhaarNumber': farmer.aadhaarNumber,
-      'collectorId': farmer.collectorId,
-      'status': farmer.status,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    final map = farmer.toMap();
+    map['createdAt'] = FieldValue.serverTimestamp();
+    await _farmersCollection.doc(id).set(map);
 
     _farmers.add(farmer);
     notifyListeners();
@@ -123,30 +106,37 @@ class FarmerRepository extends ChangeNotifier {
     return farmer;
   }
 
-  /// Get one farmer from Firestore by ID.
+  /// Save or update an existing Farmer object.
+  Future<void> saveFarmer(Farmer farmer) async {
+    final map = farmer.toMap();
+    if (farmer.createdAt == null) {
+      map['createdAt'] = FieldValue.serverTimestamp();
+    }
+    await _farmersCollection.doc(farmer.id).set(map, SetOptions(merge: true));
+
+    final index = _farmers.indexWhere((f) => f.id == farmer.id);
+    if (index >= 0) {
+      _farmers[index] = farmer;
+    } else {
+      _farmers.add(farmer);
+    }
+    notifyListeners();
+  }
+
+  /// Update an existing Farmer in Firestore and cache.
+  Future<void> updateFarmer(Farmer farmer) async {
+    await saveFarmer(farmer);
+  }
+
+  /// Get one farmer from Firestore by ID (updates cache).
   Future<Farmer?> getFarmerById(String id) async {
     final doc = await _farmersCollection.doc(id).get();
 
-    if (!doc.exists) {
+    if (!doc.exists || doc.data() == null) {
       return null;
     }
 
-    final data = doc.data();
-
-    if (data == null) {
-      return null;
-    }
-
-    final farmer = Farmer(
-      id: data['id'] ?? doc.id,
-      name: data['name'] ?? '',
-      phone: data['phone'] ?? '',
-      village: data['village'] ?? '',
-      center: data['center'] ?? '',
-      aadhaarNumber: data['aadhaarNumber'],
-      collectorId: data['collectorId'] ?? 'C-BHN-001',
-      status: data['status'] ?? 'Active',
-    );
+    final farmer = Farmer.fromMap(doc.id, doc.data()!);
 
     final index = _farmers.indexWhere((f) => f.id == farmer.id);
     if (index >= 0) {
@@ -156,8 +146,14 @@ class FarmerRepository extends ChangeNotifier {
     }
 
     notifyListeners();
-
     return farmer;
+  }
+
+  /// Delete a farmer by ID from Firestore and cache.
+  Future<void> deleteFarmer(String id) async {
+    await _farmersCollection.doc(id).delete();
+    _farmers.removeWhere((f) => f.id == id);
+    notifyListeners();
   }
 
   /// Search cached farmers by name, ID or village.
@@ -194,14 +190,13 @@ class FarmerRepository extends ChangeNotifier {
     );
   }
 
-  /// Existing FarmerDetailsScreen expects a synchronous method.
+  /// Existing FarmerDetailsScreen expects a synchronous cached method.
   Farmer? getById(String id) {
     for (final farmer in _farmers) {
       if (farmer.id == id) {
         return farmer;
       }
     }
-
     return null;
   }
 }
