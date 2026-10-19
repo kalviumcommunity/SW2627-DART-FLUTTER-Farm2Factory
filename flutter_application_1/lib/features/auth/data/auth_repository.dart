@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../admin/data/collector_repository.dart';
 import '../../farmers/data/farmer_repository.dart';
 
 enum UserRole { farmer, collector, admin }
@@ -180,6 +181,78 @@ class AuthRepository extends ChangeNotifier {
       center: 'Central Valley Collection Center',
       collectorId: referralCollectorId ?? 'C-BHN-001',
     );
+
+    return null;
+  }
+
+  Future<String?> registerCollector({
+    required String name,
+    required String phone,
+    required String password,
+    required String center,
+    String? location,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    final cleanPhone = phone.trim();
+    if (_accounts.containsKey(cleanPhone)) {
+      return 'This phone number is already registered. Please log in.';
+    }
+    final collectorId =
+        'C-COL-${cleanPhone.length >= 4 ? cleanPhone.substring(cleanPhone.length - 4) : cleanPhone}';
+    final accountCenter =
+        center.trim().isEmpty ? 'Central Valley Collection Center' : center.trim();
+    final account = _Account(
+      id: collectorId,
+      name: name.trim(),
+      identifier: cleanPhone,
+      password: password,
+      role: UserRole.collector,
+      center: accountCenter,
+    );
+    _accounts[cleanPhone] = account;
+    // Also allow logging in with the Collector ID
+    _accounts[collectorId] = account;
+
+    // Synchronize to CollectorRepository so admin sees this collector immediately
+    CollectorRepository.instance.addCollector(
+      id: collectorId,
+      name: name.trim(),
+      phone: cleanPhone,
+      center: accountCenter,
+      location: location ?? accountCenter,
+    );
+
+    return null;
+  }
+
+  Future<String?> registerAdmin({
+    required String name,
+    required String identifier,
+    required String password,
+    required String plantName,
+    String? phone,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    final cleanId = identifier.trim();
+    if (_accounts.containsKey(cleanId)) {
+      return 'This username/phone is already registered. Please log in.';
+    }
+    final adminId =
+        'ADM-${cleanId.length >= 4 ? cleanId.substring(cleanId.length - 4) : cleanId}';
+    final plant =
+        plantName.trim().isEmpty ? 'Jaipur Cooperative Dairy Plant' : plantName.trim();
+    final account = _Account(
+      id: adminId,
+      name: name.trim(),
+      identifier: cleanId,
+      password: password,
+      role: UserRole.admin,
+      center: plant,
+    );
+    _accounts[cleanId] = account;
+    if (phone != null && phone.trim().isNotEmpty && !_accounts.containsKey(phone.trim())) {
+      _accounts[phone.trim()] = account;
+    }
 
     return null;
   }

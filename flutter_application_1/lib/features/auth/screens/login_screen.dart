@@ -11,8 +11,9 @@ enum LoginRole { farmer, collector, admin }
 
 class LoginScreen extends StatefulWidget {
   final String? initialPhone;
+  final LoginRole? initialRole;
 
-  const LoginScreen({super.key, this.initialPhone});
+  const LoginScreen({super.key, this.initialPhone, this.initialRole});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,14 +31,25 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedRole = widget.initialRole ?? LoginRole.farmer;
     if (widget.initialPhone != null) {
-      _selectedRole = LoginRole.farmer;
       _identifierController = TextEditingController(text: widget.initialPhone);
       _passwordController.text = '';
     } else {
-      _selectedRole = LoginRole.farmer;
-      _identifierController = TextEditingController(text: '9876543210');
-      _passwordController.text = '123456';
+      switch (_selectedRole) {
+        case LoginRole.farmer:
+          _identifierController = TextEditingController(text: '9876543210');
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.collector:
+          _identifierController = TextEditingController(text: '123456');
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.admin:
+          _identifierController = TextEditingController(text: 'dairyadmin');
+          _passwordController.text = 'admin123';
+          break;
+      }
     }
   }
 

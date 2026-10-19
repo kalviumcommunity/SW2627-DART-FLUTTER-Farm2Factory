@@ -60,9 +60,18 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => LoginScreen(
-          initialPhone: state.extra is String ? state.extra as String : null,
-        ),
+        builder: (context, state) {
+          if (state.extra is Map<String, dynamic>) {
+            final map = state.extra as Map<String, dynamic>;
+            return LoginScreen(
+              initialPhone: map['phone'] as String?,
+              initialRole: map['role'] as LoginRole?,
+            );
+          }
+          return LoginScreen(
+            initialPhone: state.extra is String ? state.extra as String : null,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.register,
