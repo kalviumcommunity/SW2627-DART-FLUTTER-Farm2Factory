@@ -75,6 +75,18 @@ Aggregates multiple individual collections into a dispatch batch/tanker for tran
 - `testedAt` (Timestamp, optional): Factory laboratory inspection timestamp.
 - `testedBy` (String, optional): Quality inspector identifier.
 
+### `payouts`
+Stores digital reconciliation and disbursal records for billing cycles (10-day or monthly).
+- `statementId` (String, Document ID): Unique reconciliation statement ID (e.g., `REC-202610-F001`).
+- `farmerId` (String): Associated farmer.
+- `farmerName` (String): Farmer name.
+- `totalLitres` (Number): Reconciled total milk volume.
+- `netPayable` (Number): Net monetary disbursal after quality adjustments and deductions.
+- `status` (String): `'PAID'`, `'PENDING'`, or `'DISPUTED'`.
+- `paidAt` (Timestamp): Timestamp when payment was settled.
+- `paymentMethod` (String): e.g., `'Bank NEFT/RTGS'`, `'UPI'`, `'Cash'`.
+- `transactionReference` (String): Bank NEFT/UTR reference code.
+
 ## Batch Traceability Engine
 The system directly addresses the core problem statement: *“late-detected quality shortfalls lead to batch rejections that cannot be traced back to source.”*
 
@@ -84,6 +96,13 @@ When a batch is inspected or rejected at the factory:
 3. It flags suspect collections (e.g., low fat `< 3.5%`, low SNF `< 8.2%`, or high temperature `> 6°C`) that triggered the batch rejection.
 4. The factory manager can view the list of responsible farmers and exact collection timestamps in `BatchTraceabilityScreen`.
 
+## Month-End Reconciliation & Dispute Resolution Engine
+The system eliminates paper-based reconciliation disputes:
+1. `ReconciliationService.getReconciliationForCycle()` aggregates morning and evening shift collections across a 10-day or monthly cycle.
+2. It calculates weighted average Fat % and SNF %, gross earnings, quality variance deductions, and net payable.
+3. Farmers and collectors can audit line-by-line shift readings in `PaymentsScreen` to resolve reading disputes before payment execution.
+4. Generates a bank-ready NEFT reconciliation CSV via `exportReconciliationCsv()` for automated bank transfer uploads.
+
 ## Authentication
 Using Firebase Email/Password authentication.
 - Implemented in `lib/services/auth_service.dart`.
@@ -91,4 +110,3 @@ Using Firebase Email/Password authentication.
 
 ## Security Rules
 All collections require an authenticated user (`request.auth != null`). Role-based access control (RBAC) restricts farmers, collectors, and admins based on custom claims or user profile documents.
-
