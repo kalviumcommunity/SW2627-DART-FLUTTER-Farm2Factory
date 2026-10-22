@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../services/farmer_service.dart';
+import '../../farmers/data/farmer_repository.dart';
 import '../data/milk_entry_service.dart';
 
 class CollectorDashboardScreen extends StatefulWidget {
@@ -36,17 +37,30 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
   }
   
   Future<void> _loadDashboardData() async {
-    final farmers = await _farmerService.getFarmers();
-    final stats = await _milkEntryService.getTodayDashboardStats();
-    
-    setState(() {
-      _farmerCount = farmers.length;
-      _todayTotalLitres = stats['todayTotalLitres'];
-      _activeFarmersCount = stats['activeFarmersCount'];
-      _todayPayout = stats['todayPayout'];
-      _totalEntriesCount = stats['totalEntriesCount'];
-      _isLoading = false;
-    });
+    try {
+      final farmers = await _farmerService.getFarmers();
+      final stats = await _milkEntryService.getTodayDashboardStats();
+      
+      if (!mounted) return;
+      setState(() {
+        _farmerCount = farmers.length;
+        _todayTotalLitres = (stats['todayTotalLitres'] as num?)?.toDouble() ?? 0.0;
+        _activeFarmersCount = (stats['activeFarmersCount'] as num?)?.toInt() ?? 0;
+        _todayPayout = (stats['todayPayout'] as num?)?.toDouble() ?? 0.0;
+        _totalEntriesCount = (stats['totalEntriesCount'] as num?)?.toInt() ?? 0;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _farmerCount = FarmerRepository.instance.farmers.length;
+        _todayTotalLitres = 0.0;
+        _activeFarmersCount = 0;
+        _todayPayout = 0.0;
+        _totalEntriesCount = 0;
+        _isLoading = false;
+      });
+    }
   }
 
   void _showShareInviteDialog(BuildContext context) {
