@@ -496,30 +496,37 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: _loading ? null : _login,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20),
+                                  horizontal: 16),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const SizedBox(width: 28),
-                                  _loading
-                                      ? const SizedBox(
-                                          width: 22,
-                                          height: 22,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5,
-                                          ),
-                                        )
-                                      : Text(
-                                          _loginButtonText,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
+                                  const SizedBox(width: 32),
+                                  Expanded(
+                                    child: Center(
+                                      child: _loading
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                _loginButtonText,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ),
                                   Container(
                                     width: 32,
                                     height: 32,
