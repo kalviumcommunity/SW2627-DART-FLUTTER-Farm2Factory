@@ -7,6 +7,7 @@ import '../data/collector_repository.dart';
 import '../data/dairy_analytics_repository.dart';
 import '../data/dairy_payment_repository.dart';
 import '../data/dispatch_repository.dart';
+import '../data/seller_repository.dart';
 import '../models/dispatch_record.dart';
 import '../widgets/dairy_filter_bar.dart';
 import '../widgets/dairy_portal_scaffold.dart';
@@ -32,6 +33,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
   final _analyticsRepo = DairyAnalyticsRepository.instance;
   final _collectorRepo = CollectorRepository.instance;
   final _dispatchRepo = DispatchRepository.instance;
+  final _sellerRepo = SellerRepository.instance;
   final _paymentRepo = DairyPaymentRepository.instance;
 
   void _showDispatchDialog(BuildContext context) {
@@ -190,7 +192,6 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter & Period Selector Bar
           Row(
             children: [
               Expanded(
@@ -202,21 +203,14 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              // Role Segment Switcher Tabs
               _buildRoleSwitcher(),
             ],
           ),
           const SizedBox(height: 20),
-
-          // Desktop Hero Metric Strip
           _buildDesktopHeroStrip(),
           const SizedBox(height: 24),
-
-          // Live Alerts Ticker
           _buildAlertsSection(),
           const SizedBox(height: 24),
-
-          // Charts Row: Milk Intake vs Dispatch + Quality Composition
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -232,12 +226,8 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             ],
           ),
           const SizedBox(height: 24),
-
-          // Center-wise Procurement Progress Breakdown
           _buildCenterWiseProgressCard(),
           const SizedBox(height: 24),
-
-          // Heavy Daily Tanker Logistics Table
           DesktopDispatchTable(
             onNewDispatch: () => _showDispatchDialog(context),
           ),
@@ -300,6 +290,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     final dispatches = _dispatchRepo.dispatches;
     final totalDispatchedLitres = dispatches.fold(0, (sum, d) => sum + d.loadedLitres);
     final pendingPayout = _paymentRepo.totalPendingPayout;
+    final activeFarms = _sellerRepo.sellers.length;
 
     return Row(
       children: [
@@ -333,6 +324,17 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             icon: Icons.verified,
             iconColor: AppTheme.brandGreen,
             bgColor: AppTheme.cardMint,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: _desktopKpiCard(
+            title: "Commercial Farms",
+            value: "$activeFarms Farms",
+            subtitle: "Direct suppliers connected",
+            icon: Icons.agriculture_outlined,
+            iconColor: const Color(0xFF558B2F),
+            bgColor: AppTheme.cardPeach,
           ),
         ),
         const SizedBox(width: 14),
@@ -507,13 +509,13 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     final dispatches = _dispatchRepo.dispatches;
     final collectors = _collectorRepo.collectors;
     final activeCollectors = collectors.where((c) => c.status != 'Offline').length;
+    final activeFarms = _sellerRepo.sellers.length;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter Bar
           DairyFilterBar(
             selectedDateFilter: _selectedDateFilter,
             selectedCenter: _selectedCenter,
@@ -521,25 +523,17 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             onCenterChanged: (c) => setState(() => _selectedCenter = c),
           ),
           const SizedBox(height: 14),
-
-          // Compact Hero Card for Mobile
           _buildCompactMobileHero(),
           const SizedBox(height: 16),
-
-          // Live Alerts
           _buildAlertsSection(),
           const SizedBox(height: 18),
-
-          // Quick 4-KPI Mobile Grid (No overflow, FittedBox hardened)
           const Text(
             "Today's Overview",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
           ),
           const SizedBox(height: 10),
-          _buildMobileKpiGrid(activeCollectors, dispatches.length),
+          _buildMobileKpiGrid(activeCollectors, dispatches.length, activeFarms),
           const SizedBox(height: 20),
-
-          // Operations Quick Hub (Replaces heavy tables with clean tap cards)
           const Text(
             "Operations Hub",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
@@ -579,8 +573,6 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             onTap: () => context.push('/dairy/payments'),
           ),
           const SizedBox(height: 18),
-
-          // Desktop Web Notice Banner
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -681,7 +673,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     );
   }
 
-  Widget _buildMobileKpiGrid(int activeCollectors, int dispatchCount) {
+  Widget _buildMobileKpiGrid(int activeCollectors, int dispatchCount, int activeFarms) {
     return Row(
       children: [
         Expanded(
@@ -721,12 +713,12 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
               ),
               const SizedBox(height: 10),
               _mobileKpiTile(
-                title: 'Pending Payout',
-                value: '₹ 14.8 Lakh',
-                icon: Icons.payments_outlined,
-                color: const Color(0xFFE65100),
+                title: 'Connected Farms',
+                value: '$activeFarms Farms',
+                icon: Icons.agriculture_outlined,
+                color: const Color(0xFF558B2F),
                 bgColor: AppTheme.cardPeach,
-                onTap: () => context.push('/dairy/payments'),
+                onTap: () => context.push('/dairy/sellers'),
               ),
             ],
           ),
@@ -839,9 +831,6 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     );
   }
 
-  // =========================================================================
-  // SHARED: Operational Alerts
-  // =========================================================================
   Widget _buildAlertsSection() {
     final alerts = _analyticsRepo.metric.activeAlerts;
     if (alerts.isEmpty) return const SizedBox.shrink();
