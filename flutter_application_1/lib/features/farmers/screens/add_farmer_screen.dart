@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/farmer_repository.dart';
 
 class AddFarmerScreen extends StatefulWidget {
@@ -47,6 +48,15 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
             _aadhaarController.text.isNotEmpty ? _aadhaarController.text : null,
       );
 
+      // Synchronize to AuthRepository so this farmer can immediately log into the Farmer Portal
+      AuthRepository.instance.addFarmerAccount(
+        id: farmer.id,
+        name: farmer.name,
+        phone: farmer.phone,
+        center: farmer.center,
+        collectorId: farmer.collectorId,
+      );
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +89,7 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.farmers),
         ),
         title: const Text(
           'Add Farmer',

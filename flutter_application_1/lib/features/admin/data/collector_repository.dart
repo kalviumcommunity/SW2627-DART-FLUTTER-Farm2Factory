@@ -12,6 +12,37 @@ class CollectorRepository extends ChangeNotifier {
 
   List<Collector> get collectors => List.unmodifiable(_collectors);
 
+  void addCollector({
+    required String id,
+    required String name,
+    required String phone,
+    required String center,
+    String? location,
+    String? email,
+  }) {
+    _collectors.insert(
+      0,
+      Collector(
+        id: id,
+        name: name,
+        phone: phone,
+        email: email ?? '${name.toLowerCase().replaceAll(' ', '.')}@dairycoop.in',
+        center: center,
+        location: location ?? center,
+        joiningDate: DateTime.now(),
+        status: 'Active',
+        lastActiveTime: 'Just now',
+        farmersHandled: 0,
+        morningLitresToday: 0.0,
+        eveningLitresToday: 0.0,
+        paymentStatus: 'Paid',
+        avgFat: 4.2,
+        avgSnf: 8.5,
+      ),
+    );
+    notifyListeners();
+  }
+
   Collector? getCollectorById(String id) {
     try {
       return _collectors.firstWhere((c) => c.id == id);
