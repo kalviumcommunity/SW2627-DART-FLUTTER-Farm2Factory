@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/call_helper.dart';
 import '../../../core/widgets/error_message.dart';
 import '../../collector/data/milk_entry_repository.dart';
 import '../data/farmer_repository.dart';
@@ -209,11 +210,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                             icon: const Icon(Icons.call, size: 18, color: AppTheme.brandTeal),
                             label: const Text('Call'),
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Dialing ${farmer.phone}...'),
-                                  backgroundColor: AppTheme.brandTeal,
-                                ),
+                              CallHelper.showCallChooser(
+                                context,
+                                name: farmer.name,
+                                phone: farmer.phone,
                               );
                             },
                           ),
@@ -285,7 +285,16 @@ class FarmerDetailsScreen extends StatelessWidget {
                           const Divider(height: 18),
                           _detailRow(Icons.person_outline, 'Farmer Name', farmer.name),
                           _detailRow(Icons.badge_outlined, 'Farmer Code', farmer.id),
-                          _detailRow(Icons.phone_outlined, 'Mobile Number', farmer.phone),
+                          _detailRow(
+                            Icons.phone_outlined,
+                            'Mobile Number',
+                            farmer.phone,
+                            onTap: () => CallHelper.showCallChooser(
+                              context,
+                              name: farmer.name,
+                              phone: farmer.phone,
+                            ),
+                          ),
                           _detailRow(Icons.holiday_village_outlined, 'Village / Area', farmer.village),
                           _detailRow(Icons.business_outlined, 'Collection Center', farmer.center),
                           _detailRow(Icons.support_agent_outlined, 'Connected Collector', farmer.collectorId),
@@ -468,13 +477,18 @@ class FarmerDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value,
-      {bool highlight = false}) {
-    return Padding(
+  Widget _detailRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool highlight = false,
+    VoidCallback? onTap,
+  }) {
+    final rowContent = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade500),
+          Icon(icon, size: 16, color: onTap != null ? AppTheme.brandGreen : Colors.grey.shade500),
           const SizedBox(width: 10),
           Text(
             label,
@@ -486,11 +500,26 @@ class FarmerDetailsScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: highlight ? AppTheme.brandGreen : const Color(0xFF1E293B),
+              color: highlight
+                  ? AppTheme.brandGreen
+                  : (onTap != null ? AppTheme.brandTeal : const Color(0xFF1E293B)),
             ),
           ),
+          if (onTap != null) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.call_outlined, size: 14, color: AppTheme.brandTeal),
+          ],
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: rowContent,
+      );
+    }
+    return rowContent;
   }
 }

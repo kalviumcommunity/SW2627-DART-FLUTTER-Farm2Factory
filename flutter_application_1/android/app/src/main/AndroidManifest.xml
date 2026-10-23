@@ -41,5 +41,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Allows querying default Phone dialer -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <!-- Allows querying Truecaller app -->
+        <package android:name="com.truecaller" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="truecaller" />
+        </intent>
     </queries>
 </manifest>
