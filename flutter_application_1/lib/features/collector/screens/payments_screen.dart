@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/reconciliation_statement.dart';
 import '../../../services/reconciliation_service.dart';
@@ -313,7 +314,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.collectorDashboard),
         ),
         title: const Text(
           'Reconciliation & Payouts',

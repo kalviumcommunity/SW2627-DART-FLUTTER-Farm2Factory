@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 
 import '../../../services/auth_service.dart';
 import '../../../services/user_service.dart';
+import '../../admin/data/collector_repository.dart';
+import '../../farmers/data/farmer_repository.dart';
 
 enum UserRole { farmer, collector, admin }
 
@@ -54,8 +56,9 @@ class AuthRepository extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
 
-  static const Map<String, _DemoAccount> _demoAccounts = {
-    '9999999999': _DemoAccount(
+  static final Map<String, _DemoAccount> _demoAccounts = {
+    // Admins
+    '9999999999': const _DemoAccount(
       id: 'ADM-001',
       name: 'Demo Admin',
       identifier: '9999999999',
@@ -63,7 +66,7 @@ class AuthRepository extends ChangeNotifier {
       role: UserRole.admin,
       center: 'Jaipur Cooperative Dairy Plant',
     ),
-    'dairyadmin': _DemoAccount(
+    'dairyadmin': const _DemoAccount(
       id: 'ADM-001',
       name: 'Dairy Plant Admin',
       identifier: 'dairyadmin',
@@ -71,7 +74,8 @@ class AuthRepository extends ChangeNotifier {
       role: UserRole.admin,
       center: 'Jaipur Cooperative Dairy Plant',
     ),
-    '123456': _DemoAccount(
+    // Collectors
+    '123456': const _DemoAccount(
       id: 'C-BHN-001',
       name: 'Ramesh Kumar',
       identifier: '123456',
@@ -79,7 +83,7 @@ class AuthRepository extends ChangeNotifier {
       role: UserRole.collector,
       center: 'Central Valley Collection Center',
     ),
-    '8888888888': _DemoAccount(
+    '8888888888': const _DemoAccount(
       id: 'C-BHN-001',
       name: 'Ramesh Kumar',
       identifier: '8888888888',
@@ -87,23 +91,79 @@ class AuthRepository extends ChangeNotifier {
       role: UserRole.collector,
       center: 'Central Valley Collection Center',
     ),
-    '9876543210': _DemoAccount(
-      id: 'F-BHN-0123',
+    // Farmers (pre-seeded from FarmerRepository with default PIN 123456)
+    '9876543210': const _DemoAccount(
+      id: 'F001',
       name: 'Ram Singh',
       identifier: '9876543210',
       password: '123456',
       role: UserRole.farmer,
-      center: 'Central Valley Collection Center',
+      center: 'Jaipur Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9123456780': const _DemoAccount(
+      id: 'F002',
+      name: 'Rahul Kumar',
+      identifier: '9123456780',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Ajmer Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9988776655': const _DemoAccount(
+      id: 'F003',
+      name: 'Sita Devi',
+      identifier: '9988776655',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Sikar Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9812345678': const _DemoAccount(
+      id: 'F004',
+      name: 'Mohan Singh',
+      identifier: '9812345678',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Jaipur Center',
+      collectorId: 'C-BHN-001',
+    ),
+    '9765432109': const _DemoAccount(
+      id: 'F005',
+      name: 'Priya Sharma',
+      identifier: '9765432109',
+      password: '123456',
+      role: UserRole.farmer,
+      center: 'Ajmer Center',
       collectorId: 'C-BHN-001',
     ),
   };
 
+  void addFarmerAccount({
+    required String id,
+    required String name,
+    required String phone,
+    String password = '123456',
+    String center = 'Central Valley Collection Center',
+    String? collectorId,
+  }) {
+    _demoAccounts[phone.trim()] = _DemoAccount(
+      id: id,
+      name: name.trim(),
+      identifier: phone.trim(),
+      password: password,
+      role: UserRole.farmer,
+      center: center,
+      collectorId: collectorId ?? 'C-BHN-001',
+    );
+  }
+
   AppUser? _currentUser;
   AppUser? get currentUser => _currentUser;
+  bool get isAuthenticated => _currentUser != null;
 
   String _formatEmail(String identifier) {
-    final clean = identifier.trim();
-    if (clean.contains('@')) return clean;
+    final clean = identifier.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
     return '$clean@dairy.com';
   }
 
@@ -176,8 +236,32 @@ class AuthRepository extends ChangeNotifier {
     required String password,
     String? referralCollectorId,
   }) async {
+    final cleanPhone = phone.trim();
+    final farmerId = cleanPhone.length >= 4
+        ? 'F-${cleanPhone.substring(cleanPhone.length - 4)}'
+        : 'F-$cleanPhone';
+
+    // Synchronize locally / fallback
+    _demoAccounts[cleanPhone] = _DemoAccount(
+      id: farmerId,
+      name: name.trim(),
+      identifier: cleanPhone,
+      password: password,
+      role: UserRole.farmer,
+      center: 'Central Valley Collection Center',
+      collectorId: referralCollectorId ?? 'C-BHN-001',
+    );
+
+    // Synchronize to FarmerRepository so collector and admin portals immediately reflect the new farmer
+    FarmerRepository.instance.add(
+      name: name.trim(),
+      phone: cleanPhone,
+      village: 'Central Valley',
+      center: 'Central Valley Collection Center',
+      collectorId: referralCollectorId ?? 'C-BHN-001',
+    );
+
     try {
-      final cleanPhone = phone.trim();
       final email = _formatEmail(cleanPhone);
       final credential = await _authService.registerUser(
         email: email,
@@ -186,9 +270,6 @@ class AuthRepository extends ChangeNotifier {
 
       final uid = credential.user?.uid;
       if (uid != null) {
-        final farmerId = cleanPhone.length >= 4
-            ? 'F-${cleanPhone.substring(cleanPhone.length - 4)}'
-            : 'F-$cleanPhone';
         await _userService.createUserProfile(
           uid: uid,
           name: name.trim(),
@@ -212,7 +293,137 @@ class AuthRepository extends ChangeNotifier {
       }
       return e.message ?? 'Registration failed';
     } catch (_) {
-      return 'An unexpected error occurred during registration.';
+      // If offline, registration succeeded locally in demo store
+      return null;
+    }
+  }
+
+  Future<String?> registerCollector({
+    required String name,
+    required String phone,
+    required String password,
+    required String center,
+    String? location,
+  }) async {
+    final cleanPhone = phone.trim();
+    final collectorId =
+        'C-COL-${cleanPhone.length >= 4 ? cleanPhone.substring(cleanPhone.length - 4) : cleanPhone}';
+    final accountCenter =
+        center.trim().isEmpty ? 'Central Valley Collection Center' : center.trim();
+
+    final account = _DemoAccount(
+      id: collectorId,
+      name: name.trim(),
+      identifier: cleanPhone,
+      password: password,
+      role: UserRole.collector,
+      center: accountCenter,
+    );
+    _demoAccounts[cleanPhone] = account;
+    _demoAccounts[collectorId] = account;
+
+    // Synchronize to CollectorRepository so admin sees this collector immediately
+    CollectorRepository.instance.addCollector(
+      id: collectorId,
+      name: name.trim(),
+      phone: cleanPhone,
+      center: accountCenter,
+      location: location ?? accountCenter,
+    );
+
+    try {
+      final email = _formatEmail(cleanPhone);
+      final credential = await _authService.registerUser(
+        email: email,
+        password: password,
+      );
+
+      final uid = credential.user?.uid;
+      if (uid != null) {
+        await _userService.createUserProfile(
+          uid: uid,
+          name: name.trim(),
+          email: email,
+          role: UserRole.collector.name,
+          phone: cleanPhone,
+          center: accountCenter,
+          customId: collectorId,
+        );
+      }
+
+      await _authService.logoutUser();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        return 'This phone number is already registered. Please log in.';
+      }
+      if (e.code == 'weak-password') {
+        return 'Password should be at least 6 characters.';
+      }
+      return e.message ?? 'Registration failed';
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> registerAdmin({
+    required String name,
+    required String identifier,
+    required String password,
+    required String plantName,
+    String? phone,
+  }) async {
+    final cleanId = identifier.trim();
+    final adminId =
+        'ADM-${cleanId.length >= 4 ? cleanId.substring(cleanId.length - 4) : cleanId}';
+    final plant =
+        plantName.trim().isEmpty ? 'Jaipur Cooperative Dairy Plant' : plantName.trim();
+
+    final account = _DemoAccount(
+      id: adminId,
+      name: name.trim(),
+      identifier: cleanId,
+      password: password,
+      role: UserRole.admin,
+      center: plant,
+    );
+    _demoAccounts[cleanId] = account;
+    if (phone != null && phone.trim().isNotEmpty) {
+      _demoAccounts[phone.trim()] = account;
+    }
+
+    try {
+      final email = _formatEmail(cleanId);
+      final credential = await _authService.registerUser(
+        email: email,
+        password: password,
+      );
+
+      final uid = credential.user?.uid;
+      if (uid != null) {
+        await _userService.createUserProfile(
+          uid: uid,
+          name: name.trim(),
+          email: email,
+          role: UserRole.admin.name,
+          phone: phone?.trim().isNotEmpty == true ? phone!.trim() : cleanId,
+          center: plant,
+          customId: adminId,
+        );
+      }
+
+      await _authService.logoutUser();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        return 'This username/phone is already registered. Please log in.';
+      }
+      if (e.code == 'weak-password') {
+        return 'Password should be at least 6 characters.';
+      }
+      return e.message ?? 'Registration failed';
+    } catch (_) {
+      return null;
     }
   }
 
@@ -279,6 +490,19 @@ class AuthRepository extends ChangeNotifier {
       }
       return e.message ?? 'Authentication failed.';
     } catch (_) {
+      // Offline fallback for demo accounts
+      if (demoAccount != null && demoAccount.password == password) {
+        _currentUser = AppUser(
+          id: demoAccount.id,
+          name: demoAccount.name,
+          phone: demoAccount.identifier,
+          role: demoAccount.role,
+          center: demoAccount.center,
+          collectorId: demoAccount.collectorId,
+        );
+        notifyListeners();
+        return null;
+      }
       return 'An error occurred while signing in.';
     }
   }
@@ -291,5 +515,3 @@ class AuthRepository extends ChangeNotifier {
     } catch (_) {}
   }
 }
-
-

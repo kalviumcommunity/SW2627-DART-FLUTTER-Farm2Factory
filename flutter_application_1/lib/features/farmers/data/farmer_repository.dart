@@ -31,7 +31,57 @@ class FarmerRepository extends ChangeNotifier {
     'Tonk Center',
   ];
 
-  final List<Farmer> _farmers = [];
+  final List<Farmer> _farmers = [
+    const Farmer(
+      id: 'F001',
+      name: 'Ram Singh',
+      phone: '9876543210',
+      village: 'Jaipur Rural',
+      center: 'Jaipur Center',
+    ),
+    const Farmer(
+      id: 'F002',
+      name: 'Rahul Kumar',
+      phone: '9123456780',
+      village: 'Ajmer',
+      center: 'Ajmer Center',
+    ),
+    const Farmer(
+      id: 'F003',
+      name: 'Sita Devi',
+      phone: '9988776655',
+      village: 'Sikar',
+      center: 'Sikar Center',
+    ),
+    const Farmer(
+      id: 'F004',
+      name: 'Mohan Singh',
+      phone: '9812345678',
+      village: 'Jaipur',
+      center: 'Jaipur Center',
+    ),
+    const Farmer(
+      id: 'F005',
+      name: 'Priya Sharma',
+      phone: '9765432109',
+      village: 'Ajmer',
+      center: 'Ajmer Center',
+    ),
+    const Farmer(
+      id: 'F006',
+      name: 'Anil Meena',
+      phone: '9654321098',
+      village: 'Sikar',
+      center: 'Sikar Center',
+    ),
+    const Farmer(
+      id: 'F007',
+      name: 'Kavita Yadav',
+      phone: '9543210987',
+      village: 'Jaipur',
+      center: 'Jaipur Center',
+    ),
+  ];
 
   List<Farmer> get farmers => List.unmodifiable(_farmers);
 

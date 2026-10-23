@@ -546,11 +546,22 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
         ),
         child: NavigationBar(
           selectedIndex: _currentNavIndex,
-          onDestinationSelected: (index) {
+          onDestinationSelected: (index) async {
+            if (index == 0) {
+              setState(() => _currentNavIndex = 0);
+              return;
+            }
             setState(() => _currentNavIndex = index);
-            if (index == 1) context.push(AppRoutes.farmers);
-            if (index == 2) context.push(AppRoutes.milkEntries);
-            if (index == 3) context.push(AppRoutes.reports);
+            if (index == 1) {
+              await context.push(AppRoutes.farmers);
+            } else if (index == 2) {
+              await context.push(AppRoutes.milkEntries);
+            } else if (index == 3) {
+              await context.push(AppRoutes.reports);
+            }
+            if (mounted) {
+              setState(() => _currentNavIndex = 0);
+            }
           },
           backgroundColor: AppTheme.scaffoldBg,
           indicatorColor: AppTheme.brandGreen.withOpacity(0.15),

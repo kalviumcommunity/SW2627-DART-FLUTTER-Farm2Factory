@@ -5,6 +5,8 @@ import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../collector/data/milk_entry_repository.dart';
+import '../../collector/models/milk_entry.dart';
 
 class FarmerDashboardScreen extends StatefulWidget {
   const FarmerDashboardScreen({super.key});
@@ -20,7 +22,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
   Widget build(BuildContext context) {
     final user = AuthRepository.instance.currentUser;
     final farmerName = user?.name ?? 'Ram Singh';
-    final farmerId = user?.id ?? 'F-BHN-0123';
+    final farmerId = user?.id ?? 'F001';
     final collectorName = 'Ramesh Kumar (ID: C-BHN-001)';
 
     return Scaffold(
@@ -53,7 +55,11 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           ),
         ],
       ),
-      body: _buildTabBody(farmerName, farmerId, collectorName),
+      body: ListenableBuilder(
+        listenable: MilkEntryRepository.instance,
+        builder: (context, _) =>
+            _buildTabBody(farmerName, farmerId, collectorName),
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppTheme.scaffoldBg,
@@ -95,6 +101,17 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     if (_currentTab == 1) return _buildPaymentTab();
     if (_currentTab == 2) return _buildQualityTab();
     if (_currentTab == 3) return _buildProfileTab(name, id, collector);
+
+    final entries = MilkEntryRepository.instance.getEntriesForFarmer(id);
+    MilkEntry? morningEntry;
+    MilkEntry? eveningEntry;
+    for (final e in entries) {
+      if (morningEntry == null && e.shift.contains('Morning')) {
+        morningEntry = e;
+      } else if (eveningEntry == null && e.shift.contains('Evening')) {
+        eveningEntry = e;
+      }
+    }
 
     // Default: Daily Records / Today's Sell View
     return SingleChildScrollView(
@@ -199,11 +216,21 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                   icon: Icons.wb_sunny_outlined,
                   headerColor: const Color(0xFFFFF3E0),
                   accentColor: const Color(0xFFE65100),
-                  litres: '12.5 L',
-                  fat: '4.2%',
-                  snf: '8.5%',
-                  rate: '₹ 42.00/L',
-                  total: '₹ 525.00',
+                  litres: morningEntry != null
+                      ? '${morningEntry.quantityLitres} L'
+                      : '12.5 L',
+                  fat: morningEntry != null
+                      ? '${morningEntry.fatPercentage}%'
+                      : '4.2%',
+                  snf: morningEntry != null
+                      ? '${morningEntry.snfPercentage}%'
+                      : '8.5%',
+                  rate: morningEntry != null
+                      ? '₹ ${morningEntry.ratePerLitre.toStringAsFixed(2)}/L'
+                      : '₹ 42.00/L',
+                  total: morningEntry != null
+                      ? '₹ ${morningEntry.totalAmount.toStringAsFixed(2)}'
+                      : '₹ 525.00',
                 ),
               ),
               const SizedBox(width: 12),
@@ -213,11 +240,21 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                   icon: Icons.nightlight_outlined,
                   headerColor: const Color(0xFFEDE7F6),
                   accentColor: const Color(0xFF5E35B1),
-                  litres: '11.0 L',
-                  fat: '4.0%',
-                  snf: '8.4%',
-                  rate: '₹ 40.50/L',
-                  total: '₹ 445.50',
+                  litres: eveningEntry != null
+                      ? '${eveningEntry.quantityLitres} L'
+                      : '11.0 L',
+                  fat: eveningEntry != null
+                      ? '${eveningEntry.fatPercentage}%'
+                      : '4.0%',
+                  snf: eveningEntry != null
+                      ? '${eveningEntry.snfPercentage}%'
+                      : '8.4%',
+                  rate: eveningEntry != null
+                      ? '₹ ${eveningEntry.ratePerLitre.toStringAsFixed(2)}/L'
+                      : '₹ 40.50/L',
+                  total: eveningEntry != null
+                      ? '₹ ${eveningEntry.totalAmount.toStringAsFixed(2)}'
+                      : '₹ 445.50',
                 ),
               ),
             ],
@@ -290,9 +327,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Recent 5 Days Summary
+          // Recent Pours & Records
           const Text(
-            'Recent 5 Days Record',
+            'Recent Pours & Records',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -300,10 +337,20 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          _buildDayRow('Yesterday (06 Oct)', '23.0 L', '₹ 958.00'),
-          _buildDayRow('05 Oct 2026', '24.5 L', '₹ 1,029.00'),
-          _buildDayRow('04 Oct 2026', '22.0 L', '₹ 924.00'),
-          _buildDayRow('03 Oct 2026', '23.5 L', '₹ 970.00'),
+          if (entries.isNotEmpty)
+            ...entries.take(4).map(
+                  (e) => _buildDayRow(
+                    '${e.shift} (${e.date.day.toString().padLeft(2, '0')}/${e.date.month.toString().padLeft(2, '0')})',
+                    '${e.quantityLitres} L',
+                    '₹ ${e.totalAmount.toStringAsFixed(2)}',
+                  ),
+                )
+          else ...[
+            _buildDayRow('Yesterday (06 Oct)', '23.0 L', '₹ 958.00'),
+            _buildDayRow('05 Oct 2026', '24.5 L', '₹ 1,029.00'),
+            _buildDayRow('04 Oct 2026', '22.0 L', '₹ 924.00'),
+            _buildDayRow('03 Oct 2026', '23.5 L', '₹ 970.00'),
+          ],
           const SizedBox(height: 30),
         ],
       ),

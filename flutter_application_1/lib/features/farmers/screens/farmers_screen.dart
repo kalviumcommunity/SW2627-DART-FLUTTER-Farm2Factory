@@ -79,7 +79,7 @@ class _FarmersScreenState extends State<FarmersScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.collectorDashboard),
         ),
         title: const Text(
           'Farmers',
