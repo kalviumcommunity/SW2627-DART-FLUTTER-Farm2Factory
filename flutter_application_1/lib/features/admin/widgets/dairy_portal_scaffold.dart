@@ -380,12 +380,13 @@ class DairyPortalScaffold extends StatelessWidget {
   }
 
   Widget _buildMobileBottomBar(BuildContext context) {
-    // 4 quick access items on mobile bottom bar
+    // 5 primary access items on mobile bottom bar
     final quickItems = [
       _navItems[0], // Dashboard
       _navItems[1], // Collectors
+      _navItems[5], // Rate Charts & Pricing
       _navItems[2], // Dispatch
-      _navItems[5], // Payments
+      _navItems[6], // Payments & Payouts
     ];
 
     int currentIndex = quickItems.indexWhere((it) => it.route == activeRoute);
@@ -409,10 +410,13 @@ class DairyPortalScaffold extends StatelessWidget {
           }
         },
         destinations: quickItems.map((it) {
+          final label = it.route == AppRoutes.dairyRates
+              ? 'Rates'
+              : it.title.split(' ').first;
           return NavigationDestination(
             icon: Icon(it.icon, size: 20),
             selectedIcon: Icon(it.activeIcon, color: AppTheme.brandGreen, size: 20),
-            label: it.title.split(' ').first,
+            label: label,
           );
         }).toList(),
       ),

@@ -7,10 +7,13 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../data/auth_repository.dart';
 
+enum LoginRole { farmer, collector, admin }
+
 class LoginScreen extends StatefulWidget {
   final String? initialPhone;
+  final LoginRole? initialRole;
 
-  const LoginScreen({super.key, this.initialPhone});
+  const LoginScreen({super.key, this.initialPhone, this.initialRole});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -23,13 +26,31 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _loading = false;
   String? _error;
-  bool _isAdminTab = false;
+  LoginRole _selectedRole = LoginRole.farmer;
 
   @override
   void initState() {
     super.initState();
-    _identifierController = TextEditingController(text: widget.initialPhone ?? '9999999999');
-    _passwordController.text = '123456';
+    _selectedRole = widget.initialRole ?? LoginRole.farmer;
+    if (widget.initialPhone != null) {
+      _identifierController = TextEditingController(text: widget.initialPhone);
+      _passwordController.text = '';
+    } else {
+      switch (_selectedRole) {
+        case LoginRole.farmer:
+          _identifierController = TextEditingController(text: '9876543210');
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.collector:
+          _identifierController = TextEditingController(text: '123456');
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.admin:
+          _identifierController = TextEditingController(text: 'dairyadmin');
+          _passwordController.text = 'admin123';
+          break;
+      }
+    }
   }
 
   @override
@@ -39,13 +60,169 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _fillDemo(String id, String pwd, {bool isAdmin = false}) {
+  void _selectRole(LoginRole role) {
     setState(() {
-      _isAdminTab = isAdmin;
-      _identifierController.text = id;
-      _passwordController.text = pwd;
+      _selectedRole = role;
       _error = null;
+      switch (role) {
+        case LoginRole.farmer:
+          _identifierController.text = '9876543210';
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.collector:
+          _identifierController.text = '123456';
+          _passwordController.text = '123456';
+          break;
+        case LoginRole.admin:
+          _identifierController.text = 'dairyadmin';
+          _passwordController.text = 'admin123';
+          break;
+      }
     });
+  }
+
+  String get _subtitleText {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return 'Log in to track your milk records, rates & payments';
+      case LoginRole.collector:
+        return 'Log in to collect milk, record entries & view farmers';
+      case LoginRole.admin:
+        return 'Log in to manage plant operations & dairy reports';
+    }
+  }
+
+  String get _identifierLabel {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return 'Farmer Mobile Number';
+      case LoginRole.collector:
+        return 'Collector ID / Mobile';
+      case LoginRole.admin:
+        return 'Admin Username / Mobile';
+    }
+  }
+
+  String get _identifierHint {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return '10-digit mobile (e.g. 9876543210)';
+      case LoginRole.collector:
+        return 'ID or mobile (e.g. 123456)';
+      case LoginRole.admin:
+        return 'Username (dairyadmin) or mobile';
+    }
+  }
+
+  IconData get _identifierIcon {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return Icons.phone_android_outlined;
+      case LoginRole.collector:
+        return Icons.badge_outlined;
+      case LoginRole.admin:
+        return Icons.admin_panel_settings_outlined;
+    }
+  }
+
+  String get _loginButtonText {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return 'Login as Farmer';
+      case LoginRole.collector:
+        return 'Login as Collector';
+      case LoginRole.admin:
+        return 'Login as Dairy Admin';
+    }
+  }
+
+  Gradient get _buttonGradient {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return AppTheme.greenGradient;
+      case LoginRole.collector:
+        return const LinearGradient(
+          colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case LoginRole.admin:
+        return const LinearGradient(
+          colors: [Color(0xFF0F766E), Color(0xFF115E59)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+    }
+  }
+
+  Color get _buttonShadowColor {
+    switch (_selectedRole) {
+      case LoginRole.farmer:
+        return AppTheme.brandGreen;
+      case LoginRole.collector:
+        return const Color(0xFF0284C7);
+      case LoginRole.admin:
+        return const Color(0xFF0F766E);
+    }
+  }
+
+  Widget _buildRoleTab(LoginRole role, String title, IconData icon) {
+    final isSelected = _selectedRole == role;
+    final primaryColor = role == LoginRole.farmer
+        ? AppTheme.brandGreen
+        : role == LoginRole.collector
+            ? const Color(0xFF0284C7)
+            : const Color(0xFF0F766E);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _selectRole(role),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected ? primaryColor : Colors.grey.shade600,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w600,
+                      color: isSelected ? primaryColor : Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _login() async {
@@ -62,20 +239,64 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _loading = false;
+        _error = error;
+      });
+      return;
+    }
+
+    final user = AuthRepository.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _loading = false;
+        _error = 'Unable to log in. Please try again.';
+      });
+      return;
+    }
+
+    // Role safety check: ensure chosen tab matches the account role
+    if (_selectedRole == LoginRole.farmer && user.role != UserRole.farmer) {
+      AuthRepository.instance.logout();
+      setState(() {
+        _loading = false;
+        _error =
+            'This account belongs to a ${user.role == UserRole.admin ? "Dairy Admin" : "Collector"}. Please select the ${user.role == UserRole.admin ? "Dairy Admin" : "Collector"} tab.';
+      });
+      return;
+    } else if (_selectedRole == LoginRole.collector &&
+        user.role != UserRole.collector) {
+      AuthRepository.instance.logout();
+      setState(() {
+        _loading = false;
+        _error =
+            'This account belongs to a ${user.role == UserRole.admin ? "Dairy Admin" : "Farmer"}. Please select the ${user.role == UserRole.admin ? "Dairy Admin" : "Farmer"} tab.';
+      });
+      return;
+    } else if (_selectedRole == LoginRole.admin &&
+        user.role != UserRole.admin) {
+      AuthRepository.instance.logout();
+      setState(() {
+        _loading = false;
+        _error =
+            'This account belongs to a ${user.role == UserRole.collector ? "Collector" : "Farmer"}. Please select the ${user.role == UserRole.collector ? "Collector" : "Farmer"} tab.';
+      });
+      return;
+    }
+
     setState(() {
       _loading = false;
-      _error = error;
+      _error = null;
     });
 
-    if (error == null) {
-      final user = AuthRepository.instance.currentUser;
-      if (user?.role == UserRole.admin) {
-        context.go(AppRoutes.adminDashboard);
-      } else if (user?.role == UserRole.collector) {
-        context.go(AppRoutes.collectorDashboard);
-      } else {
-        context.go(AppRoutes.farmerDashboard);
-      }
+    if (user.role == UserRole.admin) {
+      context.go(AppRoutes.adminDashboard);
+    } else if (user.role == UserRole.collector) {
+      context.go(AppRoutes.collectorDashboard);
+    } else {
+      context.go(AppRoutes.farmerDashboard);
     }
   }
 
@@ -149,9 +370,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _isAdminTab
-                    ? 'Log in with your dairy staff username'
-                    : 'Log in with your mobile number',
+                _subtitleText,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -159,355 +379,265 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-                  // Role Segment Switcher (Farmer/Collector vs Dairy Admin)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isAdminTab = false;
-                                  _identifierController.text = '9999999999';
-                                  _passwordController.text = '123456';
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: !_isAdminTab ? Colors.white : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: !_isAdminTab
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.06),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        ]
-                                      : null,
-                                ),
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'Farmer & Collector',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: !_isAdminTab
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: !_isAdminTab
-                                          ? AppTheme.brandGreen
-                                          : Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isAdminTab = true;
-                                  _identifierController.text = 'dairyadmin';
-                                  _passwordController.text = 'admin123';
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: _isAdminTab ? Colors.white : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: _isAdminTab
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.06),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        ]
-                                      : null,
-                                ),
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'Dairy Admin',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: _isAdminTab
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: _isAdminTab
-                                          ? AppTheme.brandTeal
-                                          : Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+              // 3-Role Segment Switcher: Farmer, Collector, Dairy Admin
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.grey.shade300.withOpacity(0.5),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  child: Row(
+                    children: [
+                      _buildRoleTab(LoginRole.farmer, 'Farmer', Icons.agriculture),
+                      const SizedBox(width: 4),
+                      _buildRoleTab(LoginRole.collector, 'Collector', Icons.local_shipping_outlined),
+                      const SizedBox(width: 4),
+                      _buildRoleTab(LoginRole.admin, 'Dairy Admin', Icons.business_outlined),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
 
-                  // Form Fields
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // Identifier Field
-                          TextFormField(
-                            controller: _identifierController,
-                            keyboardType: _isAdminTab
-                                ? TextInputType.text
-                                : TextInputType.phone,
-                            decoration: InputDecoration(
-                              labelText: _isAdminTab ? 'Username' : 'Mobile number',
-                              hintText: _isAdminTab
-                                  ? 'Enter admin username'
-                                  : '10-digit mobile number',
-                              prefixIcon: Icon(
-                                _isAdminTab
-                                    ? Icons.badge_outlined
-                                    : Icons.phone_outlined,
-                                color: Colors.grey.shade600,
-                                size: 20,
-                              ),
-                            ),
-                            validator: (v) => _isAdminTab
-                                ? Validators.required(v, field: 'Username')
-                                : (v == null || v.trim().isEmpty
-                                    ? 'Mobile number is required'
-                                    : null),
+              // Form Fields
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Identifier Field (dynamic based on role)
+                      TextFormField(
+                        controller: _identifierController,
+                        keyboardType: _selectedRole == LoginRole.admin
+                            ? TextInputType.text
+                            : TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: _identifierLabel,
+                          hintText: _identifierHint,
+                          prefixIcon: Icon(
+                            _identifierIcon,
+                            color: Colors.grey.shade600,
+                            size: 20,
                           ),
-                          const SizedBox(height: 14),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? '$_identifierLabel is required'
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
 
-                          // Password Field
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              hintText: 'Enter password',
-                              prefixIcon: Icon(
-                                Icons.lock_outline,
-                                color: Colors.grey.shade600,
-                                size: 20,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  color: Colors.grey.shade500,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  setState(() =>
-                                      _obscurePassword = !_obscurePassword);
-                                },
-                              ),
-                            ),
-                            validator: (v) =>
-                                Validators.required(v, field: 'Password'),
+                      // Password Field
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter password',
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            color: Colors.grey.shade600,
+                            size: 20,
                           ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              _error!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 13,
-                              ),
-                              textAlign: TextAlign.center,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.grey.shade500,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() =>
+                                  _obscurePassword = !_obscurePassword);
+                            },
+                          ),
+                        ),
+                        validator: (v) =>
+                            Validators.required(v, field: 'Password'),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+
+                      // Login Gradient Action Button with Circular Icon
+                      Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          gradient: _buttonGradient,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _buttonShadowColor.withOpacity(0.35),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
-                          const SizedBox(height: 20),
-
-                          // Login Gradient Action Button with Circular Icon
-                          Container(
-                            width: double.infinity,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.greenGradient,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.brandGreen.withOpacity(0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: _loading ? null : _login,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const SizedBox(width: 28),
-                                      _loading
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2.5,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Login',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                      Container(
-                                        width: 32,
-                                        height: 32,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.25),
-                                          shape: BoxShape.circle,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: _loading ? null : _login,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const SizedBox(width: 28),
+                                  _loading
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.5,
+                                          ),
+                                        )
+                                      : Text(
+                                          _loginButtonText,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
+                                          ),
                                         ),
-                                        child: const Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.25),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
 
-                          // Register link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'New here? ',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () =>
-                                    context.push(AppRoutes.register),
-                                child: const Text(
-                                  'Register',
-                                  style: TextStyle(
-                                    color: AppTheme.brandGreen,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // "OR" Divider
-                          Row(
-                            children: [
-                              Expanded(
-                                  child: Divider(color: Colors.grey.shade300)),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  'OR',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade500,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                  child: Divider(color: Colors.grey.shade300)),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-
-                          // Demo Login Pills from Reference UI
+                      // Register link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Text(
-                            'Demo Login',
+                            'New here? ',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _DemoPill(
-                                  icon: Icons.shield_outlined,
-                                  color: const Color(0xFFE65100),
-                                  title: '9999999999',
-                                  subtitle: '( Admin )',
-                                  onTap: () => _fillDemo(
-                                      '9999999999', '123456',
-                                      isAdmin: true),
-                                ),
+                          GestureDetector(
+                            onTap: () =>
+                                context.push(AppRoutes.register),
+                            child: const Text(
+                              'Register',
+                              style: TextStyle(
+                                color: AppTheme.brandGreen,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _DemoPill(
-                                  icon: Icons.person_outline,
-                                  color: AppTheme.brandGreen,
-                                  title: '123456',
-                                  subtitle: '( Collector )',
-                                  onTap: () => _fillDemo(
-                                      '123456', '123456',
-                                      isAdmin: false),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _DemoPill(
-                                  icon: Icons.grass_outlined,
-                                  color: const Color(0xFF0288D1),
-                                  title: '9876543210',
-                                  subtitle: '( Farmer )',
-                                  onTap: () => _fillDemo(
-                                      '9876543210', '123456',
-                                      isAdmin: false),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+
+                      // "OR" Divider
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Divider(color: Colors.grey.shade300)),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                              child: Divider(color: Colors.grey.shade300)),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Demo Login Pills for the 3 distinct roles
+                      Text(
+                        'Demo Login',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DemoPill(
+                              icon: Icons.agriculture,
+                              color: AppTheme.brandGreen,
+                              title: '9876543210',
+                              subtitle: '( Farmer )',
+                              onTap: () => _selectRole(LoginRole.farmer),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _DemoPill(
+                              icon: Icons.local_shipping_outlined,
+                              color: const Color(0xFF0284C7),
+                              title: '123456',
+                              subtitle: '( Collector )',
+                              onTap: () => _selectRole(LoginRole.collector),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _DemoPill(
+                              icon: Icons.business_outlined,
+                              color: const Color(0xFF0F766E),
+                              title: 'dairyadmin',
+                              subtitle: '( Admin )',
+                              onTap: () => _selectRole(LoginRole.admin),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
+              ),
 
                   const SizedBox(height: 24),
 

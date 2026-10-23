@@ -7,6 +7,7 @@ import '../../../core/widgets/app_logo.dart';
 import '../../../models/reconciliation_statement.dart';
 import '../../../services/reconciliation_service.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../collector/data/milk_entry_repository.dart';
 import '../../collector/data/milk_entry_service.dart';
 import '../../collector/models/milk_entry.dart';
 
@@ -50,6 +51,17 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     try {
       entries = await _milkEntryService.getEntriesForFarmer(farmerId);
     } catch (_) {}
+
+    // Check in-memory repository as well
+    final repoEntries = MilkEntryRepository.instance.getEntriesForFarmer(farmerId);
+    if (repoEntries.isNotEmpty) {
+      final existingIds = entries.map((e) => e.id).toSet();
+      for (final r in repoEntries) {
+        if (!existingIds.contains(r.id)) {
+          entries.add(r);
+        }
+      }
+    }
 
     // If Firestore has no live entries for this farmer yet (demo/offline mode),
     // provide realistic baseline collections so viva examiners see full functionality.
@@ -104,7 +116,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     // Group last 5 distinct days
     final Map<String, List<MilkEntry>> dayMap = {};
     for (final e in entries) {
-      final key = '${e.date.day.toString().padLeft(2, '0')}/${e.date.month.toString().padLeft(2, '0')}/${e.date.year}';
+      final key =
+          '${e.date.day.toString().padLeft(2, '0')}/${e.date.month.toString().padLeft(2, '0')}/${e.date.year}';
       dayMap.putIfAbsent(key, () => []).add(e);
       if (dayMap.length >= 5) break;
     }
@@ -220,9 +233,15 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildTabBody(farmerName, farmerId, collectorName),
+      body: ListenableBuilder(
+        listenable: MilkEntryRepository.instance,
+        builder: (context, _) {
+          if (_isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return _buildTabBody(farmerName, farmerId, collectorName);
+        },
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppTheme.scaffoldBg,

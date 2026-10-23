@@ -12,7 +12,9 @@ import '../data/milk_entry_service.dart';
 import '../models/milk_entry.dart';
 
 class MilkEntriesScreen extends StatefulWidget {
-  const MilkEntriesScreen({super.key});
+  final String? initialFarmerId;
+
+  const MilkEntriesScreen({super.key, this.initialFarmerId});
 
   @override
   State<MilkEntriesScreen> createState() => _MilkEntriesScreenState();
@@ -43,6 +45,9 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialFarmerId != null) {
+      _selectedFarmerId = widget.initialFarmerId;
+    }
     _loadData();
     _rateRepo.addListener(_onRateChanged);
   }
@@ -269,7 +274,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.collectorDashboard),
         ),
         title: const Text(
           'Milk Collection Entries',
