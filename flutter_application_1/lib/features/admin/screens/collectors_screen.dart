@@ -22,6 +22,12 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
 
   final _collectorRepo = CollectorRepository.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    _collectorRepo.fetchLiveCollectors();
+  }
+
   List<Collector> get _filteredCollectors {
     return _collectorRepo.collectors.where((c) {
       if (_selectedCenter != 'All Centers' && !c.center.toLowerCase().contains(_selectedCenter.toLowerCase().replaceAll(' center', ''))) {
@@ -44,12 +50,32 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final list = _filteredCollectors;
-
     return DairyPortalScaffold(
       activeRoute: '/dairy/collectors',
       title: 'Collection Centers & Operators',
-      body: SingleChildScrollView(
+      actions: [
+        IconButton(
+          tooltip: 'Sync Collectors',
+          icon: const Icon(Icons.refresh, color: AppTheme.brandGreen),
+          onPressed: () async {
+            await _collectorRepo.fetchLiveCollectors();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Collector metrics synced with live collections!'),
+                  backgroundColor: AppTheme.brandGreen,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      body: ListenableBuilder(
+        listenable: _collectorRepo,
+        builder: (context, _) {
+          final list = _filteredCollectors;
+          return SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,8 +156,10 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
               ),
           ],
         ),
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 
   Widget _buildCollectorCard(BuildContext context, Collector c) {
