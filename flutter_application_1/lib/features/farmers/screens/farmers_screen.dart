@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/call_helper.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../data/farmer_repository.dart';
 import '../models/farmer.dart';
@@ -327,14 +328,10 @@ class _FarmersScreenState extends State<FarmersScreen> {
                                       onTap: () => context.push(
                                           AppRoutes.farmerDetails(farmer.id)),
                                       onCall: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Calling ${farmer.name} (${farmer.phone})'),
-                                            backgroundColor:
-                                                AppTheme.brandGreen,
-                                            duration: const Duration(seconds: 2),
-                                          ),
+                                        CallHelper.showCallChooser(
+                                          context,
+                                          name: farmer.name,
+                                          phone: farmer.phone,
                                         );
                                       },
                                     );
@@ -442,7 +439,7 @@ class _FarmerItemCard extends StatelessWidget {
                   tooltip: 'Call farmer',
                   icon: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppTheme.cardMint,
                       shape: BoxShape.circle,
                     ),
