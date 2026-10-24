@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/farmer.dart';
+import '../../../services/batch_service.dart';
+import '../../../services/farmer_service.dart';
 import '../../admin/data/rate_chart_repository.dart';
 import '../../admin/models/rate_chart.dart';
-import '../../farmers/data/farmer_repository.dart';
-import '../data/milk_entry_repository.dart';
+import '../data/milk_entry_service.dart';
 import '../models/milk_entry.dart';
 
 class MilkEntriesScreen extends StatefulWidget {
@@ -19,9 +21,14 @@ class MilkEntriesScreen extends StatefulWidget {
 }
 
 class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
-  final _entryRepo = MilkEntryRepository.instance;
-  final _farmerRepo = FarmerRepository.instance;
+  final _milkEntryService = MilkEntryService();
+  final _farmerService = FarmerService();
+  final _batchService = BatchService();
   final _rateRepo = RateChartRepository.instance;
+
+  List<Farmer> _farmers = [];
+  List<MilkEntry> _recentEntries = [];
+  bool _isLoading = true;
 
   String _shift = 'Morning (AM)';
   MilkType _selectedMilkType = MilkType.cow;
@@ -29,6 +36,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   final _litresController = TextEditingController();
   final _fatController = TextEditingController();
   final _snfController = TextEditingController();
+  final _tempController = TextEditingController(text: '4.0');
 
   double _calculatedRate = 0.0;
   double _calculatedAmount = 0.0;
@@ -37,13 +45,24 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialFarmerId != null &&
-        _farmerRepo.farmers.any((f) => f.id == widget.initialFarmerId)) {
+    if (widget.initialFarmerId != null) {
       _selectedFarmerId = widget.initialFarmerId;
-    } else if (_farmerRepo.farmers.isNotEmpty) {
-      _selectedFarmerId = _farmerRepo.farmers.first.id;
     }
+    _loadData();
     _rateRepo.addListener(_onRateChanged);
+  }
+
+  Future<void> _loadData() async {
+    final farmers = await _farmerService.getFarmers();
+    final entries = await _milkEntryService.getEntriesForCenter('C-BHN-001');
+    setState(() {
+      _farmers = farmers;
+      if (_farmers.isNotEmpty && _selectedFarmerId == null) {
+        _selectedFarmerId = _farmers.first.id;
+      }
+      _recentEntries = entries;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -52,6 +71,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     _litresController.dispose();
     _fatController.dispose();
     _snfController.dispose();
+    _tempController.dispose();
     super.dispose();
   }
 
@@ -85,7 +105,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     }
   }
 
-  void _saveEntry() {
+  Future<void> _saveEntry() async {
     final qty = double.tryParse(_litresController.text);
     final fat = double.tryParse(_fatController.text);
     final snf = double.tryParse(_snfController.text);
@@ -97,38 +117,150 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       return;
     }
 
-    final farmer = _farmerRepo.getById(_selectedFarmerId!);
+    final temp = double.tryParse(_tempController.text) ?? 4.0;
+    final isQualityGood = _calcResult.isQualityAcceptable && temp <= 10.0;
+    final status = isQualityGood ? 'ACCEPTED' : 'REJECTED';
+    final reason = !isQualityGood
+        ? (_calcResult.warningMessage ??
+            (temp > 10.0
+                ? 'High Temperature (${temp.toStringAsFixed(1)}°C > 10°C)'
+                : 'Quality below threshold'))
+        : null;
+
+    final farmer = _farmers.firstWhere((f) => f.id == _selectedFarmerId);
     final entry = MilkEntry(
       id: 'ENT-${DateTime.now().millisecondsSinceEpoch % 10000}',
       farmerId: _selectedFarmerId!,
-      farmerName: farmer?.name ?? 'Unknown',
-      farmerCode: farmer?.id ?? 'F000',
+      farmerName: farmer.name,
+      farmerCode: farmer.id,
       collectorId: 'C-BHN-001',
+      centerId: farmer.center.isNotEmpty ? farmer.center : 'Jaipur Center',
       shift: _shift,
       date: DateTime.now(),
+      milkType: _selectedMilkType.name,
       quantityLitres: qty,
       fatPercentage: fat,
       snfPercentage: snf,
+      temperature: temp,
+      qualityStatus: status,
+      qualityGrade: _calcResult.qualityGrade,
+      rejectionReason: reason,
       ratePerLitre: _calculatedRate,
       totalAmount: _calculatedAmount,
     );
 
-    _entryRepo.addEntry(entry);
+    await _milkEntryService.createEntry(entry);
+    _loadData();
 
     final grade = _calcResult.qualityGrade;
     _litresController.clear();
     _fatController.clear();
     _snfController.clear();
+    _tempController.text = '4.0';
     setState(() {
       _calcResult = RateCalculationResult.empty;
       _calculatedRate = 0.0;
       _calculatedAmount = 0.0;
     });
 
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L (₹${entry.totalAmount}) • $grade'),
-        backgroundColor: AppTheme.brandGreen,
+        content: Text(
+            'Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L • $status ($grade)'),
+        backgroundColor:
+            isQualityGood ? AppTheme.brandGreen : Colors.orange.shade800,
+      ),
+    );
+  }
+
+  Future<void> _showDispatchBatchDialog() async {
+    final unbatched =
+        await _milkEntryService.getUnbatchedEntries('Jaipur Center');
+    if (!mounted) return;
+
+    if (unbatched.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No unbatched collections available to dispatch.'),
+        ),
+      );
+      return;
+    }
+
+    final totalLitres =
+        unbatched.fold<double>(0.0, (sum, e) => sum + e.quantityLitres);
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.local_shipping_outlined, color: AppTheme.brandGreen),
+            SizedBox(width: 8),
+            Text('Dispatch Tanker Batch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Ready to package ${unbatched.length} collections into a single dispatch batch.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.cardMint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total Volume:'),
+                  Text('${totalLitres.toStringAsFixed(1)} L',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppTheme.brandGreenDark)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.brandGreen,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              final batch = await _batchService.createBatch(
+                centerId: 'Jaipur Center',
+                centerName: 'Central Valley Center',
+                shift: _shift,
+                entries: unbatched,
+              );
+              await _loadData();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Batch ${batch.id} dispatched successfully!'),
+                  backgroundColor: AppTheme.brandGreen,
+                ),
+              );
+            },
+            child: const Text('Confirm Dispatch'),
+          ),
+        ],
       ),
     );
   }
@@ -153,7 +285,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +518,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                       prefixIcon: Icon(Icons.person_outline,
                           color: Colors.grey.shade600, size: 20),
                     ),
-                    items: _farmerRepo.farmers.map((f) {
+                    items: _farmers.map((f) {
                       return DropdownMenuItem(
                         value: f.id,
                         child: Text(
@@ -399,18 +531,38 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Quantity in Litres
-                  TextField(
-                    controller: _litresController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => _recalculate(),
-                    decoration: InputDecoration(
-                      labelText: 'Quantity (Litres)',
-                      hintText: 'e.g. 15.5',
-                      prefixIcon: Icon(Icons.water_drop_outlined,
-                          color: Colors.grey.shade600, size: 20),
-                    ),
+                  // Quantity and Temperature side-by-side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _litresController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          onChanged: (_) => _recalculate(),
+                          decoration: InputDecoration(
+                            labelText: 'Quantity (Litres)',
+                            hintText: 'e.g. 15.5',
+                            prefixIcon: Icon(Icons.water_drop_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _tempController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: 'Temp (°C)',
+                            hintText: 'e.g. 4.0',
+                            prefixIcon: Icon(Icons.thermostat_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 
@@ -570,22 +722,60 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Recent Collection Entries List
-            const Text(
-              'Recent Recorded Entries',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
+            // Recent Collection Entries List Header & Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Recorded Entries',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => context.push(AppRoutes.dairyBatches),
+                      icon: const Icon(Icons.history, size: 14),
+                      label: const Text('Batches',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 6),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.brandGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: _showDispatchBatchDialog,
+                      icon: const Icon(Icons.local_shipping_outlined, size: 13),
+                      label: const Text('Dispatch Batch',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 10),
 
-            ListenableBuilder(
-              listenable: _entryRepo,
-              builder: (context, _) {
+            Builder(
+              builder: (context) {
                 return Column(
-                  children: _entryRepo.entries.map((entry) {
+                  children: _recentEntries.map((entry) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
@@ -610,11 +800,51 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}%',
+                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}% | ${entry.temperature}°C',
                                   style: TextStyle(
                                       fontSize: 11, color: Colors.grey.shade600),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: entry.isAccepted
+                                            ? Colors.green.shade50
+                                            : Colors.red.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: entry.isAccepted
+                                              ? Colors.green.shade200
+                                              : Colors.red.shade200,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        entry.qualityStatus,
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          color: entry.isAccepted
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                    if (entry.qualityGrade.isNotEmpty) ...[
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        entry.qualityGrade,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),
