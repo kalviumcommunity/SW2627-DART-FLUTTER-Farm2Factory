@@ -2,8 +2,208 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    // Helper functions
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function role() {
+      return getUserData().role;
+    }
+
+    function isStaff() {
+      return signedIn() && role() in ['admin', 'supervisor', 'qc'];
+    }
+
+    function isAdmin() {
+      return signedIn() && role() == 'admin';
+    }
+
+    function isSupervisor() {
+      return signedIn() && role() in ['admin', 'supervisor'];
+    }
+
+    function isCollector() {
+      return signedIn() && role() == 'collector';
+    }
+
+    function isFarmer() {
+      return signedIn() && role() == 'farmer';
+    }
+
+    function sameDairy(d) {
+      return signedIn() && getUserData().dairyId == d;
+    }
+
+    // ==========================================
+    // 1. USERS & NOTIFICATIONS
+    // ==========================================
+    match /users/{uid} {
+      allow read: if signedIn() && (
+        uid == request.auth.uid ||
+        isStaff() ||
+        (isCollector() && resource.data.role == 'farmer')
+      );
+      allow create: if signedIn() && (
+        uid == request.auth.uid ||
+        isAdmin() ||
+        (isCollector() && request.resource.data.role == 'farmer')
+      );
+      allow update: if signedIn() && (
+        uid == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if false;
+
+      // In-app notifications per user (PRD F9, LLD Section 2.1)
+      match /notifications/{nid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow create: if signedIn();
+        allow update: if signedIn() && uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'isRead']);
+        allow delete: if false;
+      }
+    }
+
+    // ==========================================
+    // 2. FARMERS PROFILES
+    // ==========================================
+    match /farmers/{farmerId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && (isAdmin() || isCollector());
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 3. MILK ENTRIES & AUDIT EDITS LOG
+    // ==========================================
+    match /milk_entries/{entryId} {
+      allow read: if signedIn() && (
+        isStaff() ||
+        isCollector() ||
+        (isFarmer() && (resource.data.farmerId == request.auth.uid || resource.data.farmerId == getUserData().customId))
+      );
+
+      // Collectors create daily collections
+      allow create: if signedIn() && (isCollector() || isAdmin());
+
+      // Versioned edits or batch assignments
+      allow update: if signedIn() && (
+        isStaff() ||
+        isCollector()
+      );
+
+      allow delete: if false;
+
+      // Append-only audit history of corrections (PRD F5, LLD Section 2.1)
+      match /edits/{version} {
+        allow read: if signedIn() && (
+          isStaff() ||
+          isCollector() ||
+          (isFarmer() && get(/databases/$(database)/documents/milk_entries/$(entryId)).data.farmerId == request.auth.uid)
+        );
+        allow create: if signedIn() && (isCollector() || isStaff());
+        allow update, delete: if false;
+      }
+    }
+
+    // ==========================================
+    // 4. DISPATCH BATCHES & LOTS
+    // ==========================================
+    match /batches/{batchId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (isCollector() || isStaff());
+      allow update: if signedIn() && isStaff();
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 5. DISPUTES & CONTESTED READINGS
+    // ==========================================
+    match /disputes/{disputeId} {
+      allow read: if signedIn() && (
+        isStaff() ||
+        isCollector() ||
+        (isFarmer() && (resource.data.farmerId == request.auth.uid || resource.data.farmerId == getUserData().customId))
+      );
+      allow create: if signedIn();
+      allow update: if signedIn() && isStaff();
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 6. RATE CHARTS (IMMUTABLE ONCE CREATED)
+    // ==========================================
+    match /rate_charts/{chartId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && isAdmin();
+      allow update: if signedIn() && isAdmin();
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 7. PAYOUTS & RECONCILIATIONS
+    // ==========================================
+    match /payouts/{payoutId} {
+      allow read: if signedIn() && (
+        isStaff() ||
+        (isFarmer() && (resource.data.farmerId == request.auth.uid || resource.data.farmerId == getUserData().customId))
+      );
+      allow write: if signedIn() && isStaff();
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 8. QC TESTS & INSPECTIONS
+    // ==========================================
+    match /qc_tests/{testId} {
+      allow read: if signedIn() && isStaff();
+      allow create: if signedIn() && isStaff();
+      allow update, delete: if false;
+    }
+
+    // ==========================================
+    // 9. NESTED COOPERATIVE DAIRY PATHS (LLD)
+    // ==========================================
+    match /dairies/{d} {
+      allow read: if sameDairy(d) || isAdmin();
+
+      match /centers/{c} {
+        allow read: if sameDairy(d) || isAdmin();
+        allow write: if isAdmin();
+      }
+
+      match /rateCharts/{chartId} {
+        allow read: if sameDairy(d) || isAdmin();
+        allow create: if isAdmin();
+        allow update, delete: if false;
+      }
+
+      match /collections/{entryId} {
+        allow read: if (sameDairy(d) || isAdmin()) && (
+          isStaff() || isCollector() || (isFarmer() && resource.data.farmerId == request.auth.uid)
+        );
+        allow create: if (sameDairy(d) || isAdmin()) && (isCollector() || isAdmin());
+        allow update: if (sameDairy(d) || isAdmin()) && (isCollector() || isStaff());
+        allow delete: if false;
+
+        match /edits/{version} {
+          allow read: if (sameDairy(d) || isAdmin());
+          allow create: if (sameDairy(d) || isAdmin()) && (isCollector() || isStaff());
+          allow update, delete: if false;
+        }
+      }
+
+      match /lots/{id}      { allow read: if sameDairy(d) || isAdmin(); allow write: if isStaff(); }
+      match /tankers/{id}   { allow read: if sameDairy(d) || isAdmin(); allow write: if isAdmin(); }
+      match /qcTests/{id}   { allow read: if isStaff(); allow create: if isStaff(); allow update, delete: if false; }
+      match /payouts/{id}   { allow read: if isStaff() || (isFarmer() && resource.data.farmerId == request.auth.uid); allow write: if isStaff(); }
+      match /disputes/{id}  { allow read, create: if sameDairy(d) || signedIn(); allow update: if isStaff(); allow delete: if false; }
     }
   }
 }

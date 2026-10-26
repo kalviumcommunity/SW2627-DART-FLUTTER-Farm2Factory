@@ -80,7 +80,22 @@ class MilkEntryRepository extends ChangeNotifier {
   }
 
   void addEntry(MilkEntry entry) {
-    _entries.insert(0, entry);
+    final idx = _entries.indexWhere((e) => e.id == entry.id);
+    if (idx != -1) {
+      _entries[idx] = entry;
+    } else {
+      _entries.insert(0, entry);
+    }
+    notifyListeners();
+  }
+
+  void updateEntry(MilkEntry updated) {
+    final idx = _entries.indexWhere((e) => e.id == updated.id);
+    if (idx != -1) {
+      _entries[idx] = updated;
+    } else {
+      _entries.insert(0, updated);
+    }
     notifyListeners();
   }
 }
