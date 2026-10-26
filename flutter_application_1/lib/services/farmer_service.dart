@@ -1,45 +1,37 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../features/farmers/data/farmer_repository.dart';
 import '../models/farmer.dart';
 
+/// Service adapter providing CRUD operations for Farmers.
+/// Delegates directly to [FarmerRepository.instance] to ensure unified state,
+/// shared in-memory caching, and reactive UI notifications across all screens.
 class FarmerService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FarmerRepository _repository;
 
-  CollectionReference get _farmers => _firestore.collection('farmers');
+  FarmerService({FarmerRepository? repository})
+      : _repository = repository ?? FarmerRepository.instance;
 
+  /// Create a new farmer document in Firestore and notify all listeners.
   Future<void> createFarmer(Farmer farmer) async {
-    await _farmers.doc(farmer.id).set({
-      ...farmer.toMap(),
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _repository.saveFarmer(farmer);
   }
 
+  /// Retrieve all farmers from Firestore.
   Future<List<Farmer>> getFarmers() async {
-    final snapshot = await _farmers.get();
-    return snapshot.docs
-        .map(
-          (doc) => Farmer.fromMap(
-            doc.id,
-            doc.data() as Map<String, dynamic>,
-          ),
-        )
-        .toList();
+    return await _repository.getFarmers();
   }
 
+  /// Retrieve a farmer by ID from Firestore (with local cache fallback).
   Future<Farmer?> getFarmerById(String id) async {
-    final doc = await _farmers.doc(id).get();
-    if (!doc.exists) return null;
-    return Farmer.fromMap(
-      doc.id,
-      doc.data() as Map<String, dynamic>,
-    );
+    return await _repository.getFarmerById(id);
   }
 
-  Future<void> updateFarmer(
-    Farmer farmer,
-  ) async {
-    await _farmers.doc(farmer.id).update(
-      farmer.toMap(),
-    );
+  /// Update an existing farmer document in Firestore.
+  Future<void> updateFarmer(Farmer farmer) async {
+    await _repository.updateFarmer(farmer);
+  }
+
+  /// Delete a farmer by ID.
+  Future<void> deleteFarmer(String id) async {
+    await _repository.deleteFarmer(id);
   }
 }
-

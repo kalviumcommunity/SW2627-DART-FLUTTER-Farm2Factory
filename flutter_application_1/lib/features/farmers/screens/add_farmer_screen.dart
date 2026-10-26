@@ -20,6 +20,7 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
   final _phoneController = TextEditingController();
   final _villageController = TextEditingController();
   final _aadhaarController = TextEditingController();
+
   String? _center = 'Jaipur Center';
   bool _saving = false;
 
@@ -32,38 +33,51 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _saving = true);
 
-    final farmer = FarmerRepository.instance.add(
-      name: _nameController.text,
-      phone: _phoneController.text,
-      village: _villageController.text,
-      center: _center!,
-      aadhaarNumber: _aadhaarController.text.isNotEmpty
-          ? _aadhaarController.text
-          : null,
-    );
+    try {
+      final farmer = await FarmerRepository.instance.add(
+        name: _nameController.text,
+        phone: _phoneController.text,
+        village: _villageController.text,
+        center: _center!,
+        aadhaarNumber:
+            _aadhaarController.text.isNotEmpty ? _aadhaarController.text : null,
+      );
 
-    // Synchronize to AuthRepository so this farmer can immediately log into the Farmer Portal
-    AuthRepository.instance.addFarmerAccount(
-      id: farmer.id,
-      name: farmer.name,
-      phone: farmer.phone,
-      center: farmer.center,
-      collectorId: farmer.collectorId,
-    );
+      // Synchronize to AuthRepository so this farmer can immediately log into the Farmer Portal
+      AuthRepository.instance.addFarmerAccount(
+        id: farmer.id,
+        name: farmer.name,
+        phone: farmer.phone,
+        center: farmer.center,
+        collectorId: farmer.collectorId,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Farmer ${farmer.name} registered as ${farmer.id}!'),
-        backgroundColor: AppTheme.brandGreen,
-      ),
-    );
+      if (!mounted) return;
 
-    context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Farmer ${farmer.name} registered as ${farmer.id}!'),
+          backgroundColor: AppTheme.brandGreen,
+        ),
+      );
+
+      context.pushReplacement(AppRoutes.farmerDetails(farmer.id));
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add farmer: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   @override
@@ -94,7 +108,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Banner Card: "Register New Farmer" with Cute Cow Mascot
                 Container(
                   height: 125,
                   width: double.infinity,
@@ -105,8 +118,8 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: AppTheme.brandGreen.withOpacity(0.2)),
+                    border:
+                        Border.all(color: AppTheme.brandGreen.withOpacity(0.2)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.02),
@@ -160,8 +173,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   ),
                 ),
                 const SizedBox(height: 22),
-
-                // Full Name
                 TextFormField(
                   controller: _nameController,
                   textInputAction: TextInputAction.next,
@@ -174,8 +185,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   validator: (v) => Validators.required(v, field: 'Full name'),
                 ),
                 const SizedBox(height: 16),
-
-                // Phone Number
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
@@ -191,8 +200,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   validator: Validators.phone,
                 ),
                 const SizedBox(height: 16),
-
-                // Village
                 TextFormField(
                   controller: _villageController,
                   textInputAction: TextInputAction.next,
@@ -205,8 +212,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   validator: (v) => Validators.required(v, field: 'Village'),
                 ),
                 const SizedBox(height: 16),
-
-                // Collection Center Dropdown
                 DropdownButtonFormField<String>(
                   initialValue: _center,
                   decoration: InputDecoration(
@@ -215,15 +220,18 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                         color: Colors.grey.shade600, size: 20),
                   ),
                   items: FarmerRepository.centers
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .map(
+                        (center) => DropdownMenuItem(
+                          value: center,
+                          child: Text(center),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (val) => setState(() => _center = val),
+                  onChanged: _saving ? null : (val) => setState(() => _center = val),
                   validator: (v) =>
                       Validators.required(v, field: 'Collection Center'),
                 ),
                 const SizedBox(height: 16),
-
-                // Aadhaar Number (Optional)
                 TextFormField(
                   controller: _aadhaarController,
                   keyboardType: TextInputType.number,
@@ -238,8 +246,6 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-
-                // Save Farmer Vibrant Gradient Button matching Screen 4
                 Container(
                   width: double.infinity,
                   height: 54,

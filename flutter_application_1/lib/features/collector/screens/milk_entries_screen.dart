@@ -3,11 +3,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/farmer.dart';
+import '../../../services/batch_service.dart';
+import '../../../services/farmer_service.dart';
 import '../../admin/data/rate_chart_repository.dart';
 import '../../admin/models/rate_chart.dart';
-import '../../farmers/data/farmer_repository.dart';
-import '../data/milk_entry_repository.dart';
+import '../data/milk_entry_service.dart';
 import '../models/milk_entry.dart';
+import '../../farmers/data/farmer_repository.dart';
+import '../widgets/digital_milk_slip_dialog.dart';
 
 class MilkEntriesScreen extends StatefulWidget {
   final String? initialFarmerId;
@@ -19,9 +23,16 @@ class MilkEntriesScreen extends StatefulWidget {
 }
 
 class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
-  final _entryRepo = MilkEntryRepository.instance;
-  final _farmerRepo = FarmerRepository.instance;
+  final _milkEntryService = MilkEntryService();
+  final _farmerService = FarmerService();
+  final _batchService = BatchService();
   final _rateRepo = RateChartRepository.instance;
+
+  List<Farmer> _farmers = [];
+  List<MilkEntry> _recentEntries = [];
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _loadError;
 
   String _shift = 'Morning (AM)';
   MilkType _selectedMilkType = MilkType.cow;
@@ -29,6 +40,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   final _litresController = TextEditingController();
   final _fatController = TextEditingController();
   final _snfController = TextEditingController();
+  final _tempController = TextEditingController(text: '4.0');
 
   double _calculatedRate = 0.0;
   double _calculatedAmount = 0.0;
@@ -37,13 +49,53 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialFarmerId != null &&
-        _farmerRepo.farmers.any((f) => f.id == widget.initialFarmerId)) {
+    if (widget.initialFarmerId != null) {
       _selectedFarmerId = widget.initialFarmerId;
-    } else if (_farmerRepo.farmers.isNotEmpty) {
-      _selectedFarmerId = _farmerRepo.farmers.first.id;
     }
+    _loadData();
     _rateRepo.addListener(_onRateChanged);
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final farmers = await _farmerService.getFarmers();
+      final entries = await _milkEntryService.getEntriesForCenter('C-BHN-001');
+      if (!mounted) return;
+      setState(() {
+        _farmers = farmers;
+        if (_farmers.isNotEmpty) {
+          if (_selectedFarmerId == null ||
+              !_farmers.any((f) => f.id == _selectedFarmerId)) {
+            _selectedFarmerId = _farmers.first.id;
+          }
+        } else {
+          _selectedFarmerId = null;
+        }
+        _recentEntries = entries;
+        _isLoading = false;
+        _loadError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _farmers = FarmerRepository.instance.farmers;
+        if (_farmers.isNotEmpty) {
+          if (_selectedFarmerId == null ||
+              !_farmers.any((f) => f.id == _selectedFarmerId)) {
+            _selectedFarmerId = _farmers.first.id;
+          }
+        } else {
+          _selectedFarmerId = null;
+        }
+        _isLoading = false;
+        _loadError = e.toString();
+      });
+    }
   }
 
   @override
@@ -52,6 +104,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     _litresController.dispose();
     _fatController.dispose();
     _snfController.dispose();
+    _tempController.dispose();
     super.dispose();
   }
 
@@ -85,7 +138,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
     }
   }
 
-  void _saveEntry() {
+  Future<void> _saveEntry() async {
     final qty = double.tryParse(_litresController.text);
     final fat = double.tryParse(_fatController.text);
     final snf = double.tryParse(_snfController.text);
@@ -97,38 +150,168 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
       return;
     }
 
-    final farmer = _farmerRepo.getById(_selectedFarmerId!);
+    final temp = double.tryParse(_tempController.text) ?? 4.0;
+    final isQualityGood = _calcResult.isQualityAcceptable && temp <= 10.0;
+    final status = isQualityGood ? 'ACCEPTED' : 'REJECTED';
+    final reason = !isQualityGood
+        ? (_calcResult.warningMessage ??
+            (temp > 10.0
+                ? 'High Temperature (${temp.toStringAsFixed(1)}°C > 10°C)'
+                : 'Quality below threshold'))
+        : null;
+
+    final farmer = _farmers.firstWhere((f) => f.id == _selectedFarmerId);
     final entry = MilkEntry(
       id: 'ENT-${DateTime.now().millisecondsSinceEpoch % 10000}',
       farmerId: _selectedFarmerId!,
-      farmerName: farmer?.name ?? 'Unknown',
-      farmerCode: farmer?.id ?? 'F000',
+      farmerName: farmer.name,
+      farmerCode: farmer.id,
       collectorId: 'C-BHN-001',
+      centerId: farmer.center.isNotEmpty ? farmer.center : 'Jaipur Center',
       shift: _shift,
       date: DateTime.now(),
+      milkType: _selectedMilkType.name,
       quantityLitres: qty,
       fatPercentage: fat,
       snfPercentage: snf,
+      temperature: temp,
+      qualityStatus: status,
+      qualityGrade: _calcResult.qualityGrade,
+      rejectionReason: reason,
       ratePerLitre: _calculatedRate,
       totalAmount: _calculatedAmount,
     );
 
-    _entryRepo.addEntry(entry);
+    setState(() => _isSaving = true);
 
-    final grade = _calcResult.qualityGrade;
-    _litresController.clear();
-    _fatController.clear();
-    _snfController.clear();
-    setState(() {
-      _calcResult = RateCalculationResult.empty;
-      _calculatedRate = 0.0;
-      _calculatedAmount = 0.0;
-    });
+    try {
+      await _milkEntryService.createEntry(entry);
+      await _loadData();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L (₹${entry.totalAmount}) • $grade'),
-        backgroundColor: AppTheme.brandGreen,
+      _litresController.clear();
+      _fatController.clear();
+      _snfController.clear();
+      _tempController.text = '4.0';
+      setState(() {
+        _calcResult = RateCalculationResult.empty;
+        _calculatedRate = 0.0;
+        _calculatedAmount = 0.0;
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Saved entry for ${entry.farmerName}: ${entry.quantityLitres} L @ ₹${entry.ratePerLitre}/L • $status (${entry.qualityGrade})'),
+          backgroundColor:
+              isQualityGood ? AppTheme.brandGreen : Colors.orange.shade800,
+        ),
+      );
+
+      // Display the Digital Milk Slip modal receipt
+      DigitalMilkSlipDialog.show(context, entry);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save entry: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _showDispatchBatchDialog() async {
+    final unbatched =
+        await _milkEntryService.getUnbatchedEntries('Jaipur Center');
+    if (!mounted) return;
+
+    if (unbatched.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No unbatched collections available to dispatch.'),
+        ),
+      );
+      return;
+    }
+
+    final totalLitres =
+        unbatched.fold<double>(0.0, (sum, e) => sum + e.quantityLitres);
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.local_shipping_outlined, color: AppTheme.brandGreen),
+            SizedBox(width: 8),
+            Text('Dispatch Tanker Batch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Ready to package ${unbatched.length} collections into a single dispatch batch.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.cardMint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total Volume:'),
+                  Text('${totalLitres.toStringAsFixed(1)} L',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppTheme.brandGreenDark)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.brandGreen,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              final batch = await _batchService.createBatch(
+                centerId: 'Jaipur Center',
+                centerName: 'Central Valley Center',
+                shift: _shift,
+                entries: unbatched,
+              );
+              await _loadData();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Batch ${batch.id} dispatched successfully!'),
+                  backgroundColor: AppTheme.brandGreen,
+                ),
+              );
+            },
+            child: const Text('Confirm Dispatch'),
+          ),
+        ],
       ),
     );
   }
@@ -153,7 +336,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,14 +562,41 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
                   // Select Farmer
                   DropdownButtonFormField<String>(
-                    initialValue: _selectedFarmerId,
+                    value: (_selectedFarmerId != null &&
+                            _farmers.any((f) => f.id == _selectedFarmerId))
+                        ? _selectedFarmerId
+                        : null,
                     isExpanded: true,
                     decoration: InputDecoration(
                       labelText: 'Select Farmer',
                       prefixIcon: Icon(Icons.person_outline,
                           color: Colors.grey.shade600, size: 20),
                     ),
-                    items: _farmerRepo.farmers.map((f) {
+                    hint: Text(
+                      _loadError != null
+                          ? 'Error loading farmers'
+                          : (_farmers.isEmpty
+                              ? 'No farmers available'
+                              : 'Select Farmer'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _loadError != null
+                            ? Colors.red.shade700
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    disabledHint: Text(
+                      _loadError != null
+                          ? 'Failed to load farmers (Permission denied)'
+                          : 'No registered farmers found',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _loadError != null
+                            ? Colors.red.shade700
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    items: _farmers.map((f) {
                       return DropdownMenuItem(
                         value: f.id,
                         child: Text(
@@ -395,27 +605,124 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (val) => setState(() => _selectedFarmerId = val),
+                    onChanged: _farmers.isEmpty
+                        ? null
+                        : (val) => setState(() => _selectedFarmerId = val),
                   ),
+                  if (_loadError != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              size: 18, color: Colors.red.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Firestore permissions blocked farmer query. Ensure Email/Password provider is enabled in Firebase Console.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: _loadData,
+                            child: const Text('Retry', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else if (_farmers.isEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline,
+                              size: 18, color: Colors.orange.shade800),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'No registered farmers found for this center.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.orange.shade900,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: () => context.push(AppRoutes.addFarmer),
+                            child: const Text('Add Farmer', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
 
-                  // Quantity in Litres
-                  TextField(
-                    controller: _litresController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => _recalculate(),
-                    decoration: InputDecoration(
-                      labelText: 'Quantity (Litres)',
-                      hintText: 'e.g. 15.5',
-                      prefixIcon: Icon(Icons.water_drop_outlined,
-                          color: Colors.grey.shade600, size: 20),
-                    ),
+                  // Quantity and Temperature side-by-side
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _litresController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          onChanged: (_) => _recalculate(),
+                          decoration: InputDecoration(
+                            labelText: 'Quantity (Litres)',
+                            hintText: 'e.g. 15.5',
+                            helperText: 'Volume in litres',
+                            prefixIcon: Icon(Icons.water_drop_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _tempController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: 'Temp (°C)',
+                            hintText: 'e.g. 4.0',
+                            helperText: 'Acceptable: ≤ 10.0°C',
+                            prefixIcon: Icon(Icons.thermostat_outlined,
+                                color: Colors.grey.shade600, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 
                   // Fat % and SNF % side-by-side
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
@@ -426,6 +733,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'Fat %',
                             hintText: 'e.g. 4.2',
+                            helperText: 'Milk fat content %',
                             prefixIcon: Icon(Icons.opacity,
                                 color: Colors.grey.shade600, size: 20),
                           ),
@@ -441,6 +749,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'SNF %',
                             hintText: 'e.g. 8.5',
+                            helperText: 'Solids-not-fat %',
                             prefixIcon: Icon(Icons.science_outlined,
                                 color: Colors.grey.shade600, size: 20),
                           ),
@@ -558,11 +867,22 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: const Icon(Icons.check_circle_outline, size: 20),
-                      label: const Text('Save Entry',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)),
-                      onPressed: _saveEntry,
+                      icon: _isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.check_circle_outline, size: 20),
+                      label: Text(
+                        _isSaving ? 'Saving Entry...' : 'Save Entry',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: _isSaving ? null : _saveEntry,
                     ),
                   ),
                 ],
@@ -570,78 +890,171 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Recent Collection Entries List
-            const Text(
-              'Recent Recorded Entries',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
+            // Recent Collection Entries List Header & Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Recorded Entries',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => context.push(AppRoutes.dairyBatches),
+                      icon: const Icon(Icons.history, size: 14),
+                      label: const Text('Batches',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 6),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.brandGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: _showDispatchBatchDialog,
+                      icon: const Icon(Icons.local_shipping_outlined, size: 13),
+                      label: const Text('Dispatch Batch',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 10),
 
-            ListenableBuilder(
-              listenable: _entryRepo,
-              builder: (context, _) {
+            Builder(
+              builder: (context) {
                 return Column(
-                  children: _entryRepo.entries.map((entry) {
+                  children: _recentEntries.map((entry) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => DigitalMilkSlipDialog.show(context, entry),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  '${entry.farmerName} (${entry.farmerCode})',
-                                  style: const TextStyle(
-                                      fontSize: 14, fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${entry.farmerName} (${entry.farmerCode})',
+                                        style: const TextStyle(
+                                            fontSize: 14, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}% | ${entry.temperature}°C',
+                                        style: TextStyle(
+                                            fontSize: 11, color: Colors.grey.shade600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: entry.isAccepted
+                                                  ? Colors.green.shade50
+                                                  : Colors.red.shade50,
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(
+                                                color: entry.isAccepted
+                                                    ? Colors.green.shade200
+                                                    : Colors.red.shade200,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              entry.qualityStatus,
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: entry.isAccepted
+                                                    ? Colors.green.shade700
+                                                    : Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ),
+                                          if (entry.qualityGrade.isNotEmpty) ...[
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              entry.qualityGrade,
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey.shade600,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${entry.shift} • Fat ${entry.fatPercentage}% | SNF ${entry.snfPercentage}%',
-                                  style: TextStyle(
-                                      fontSize: 11, color: Colors.grey.shade600),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '${entry.quantityLitres} L',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    Text(
+                                      '₹ ${entry.totalAmount.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.brandGreen,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 18,
+                                  color: Color(0xFF94A3B8),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${entry.quantityLitres} L',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
-                                ),
-                              ),
-                              Text(
-                                '₹ ${entry.totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.brandGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   }).toList(),

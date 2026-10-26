@@ -15,6 +15,12 @@ class QualityAnalyticsScreen extends StatefulWidget {
 class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
   final _analyticsRepo = DairyAnalyticsRepository.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    _analyticsRepo.syncLiveAggregations();
+  }
+
   void _showConfigureThresholdsDialog(BuildContext context) {
     final metric = _analyticsRepo.metric;
     double currentFat = metric.minFatThreshold;
@@ -100,21 +106,39 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final m = _analyticsRepo.metric;
-
     return DairyPortalScaffold(
       activeRoute: '/dairy/quality',
       title: 'Milk Quality & Lab Analytics',
       actions: [
+        IconButton(
+          tooltip: 'Sync Quality Data',
+          icon: const Icon(Icons.refresh, color: AppTheme.brandGreen),
+          onPressed: () async {
+            await _analyticsRepo.syncLiveAggregations();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Quality metrics synced with live Firestore entries!'),
+                  backgroundColor: AppTheme.brandGreen,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
         IconButton(
           tooltip: 'Configure Thresholds',
           icon: const Icon(Icons.tune, color: AppTheme.brandGreen),
           onPressed: () => _showConfigureThresholdsDialog(context),
         ),
       ],
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
+      body: ListenableBuilder(
+        listenable: _analyticsRepo,
+        builder: (context, _) {
+          final m = _analyticsRepo.metric;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Top Stat Cards
@@ -179,10 +203,10 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
                       height: 18,
                       child: Row(
                         children: [
-                          Expanded(flex: (m.gradeAPercent * 10).toInt(), child: Container(color: AppTheme.brandGreen)),
-                          Expanded(flex: (m.gradeBPercent * 10).toInt(), child: Container(color: const Color(0xFFFFA000))),
-                          Expanded(flex: (m.gradeCPercent * 10).toInt(), child: Container(color: const Color(0xFF5C6BC0))),
-                          Expanded(flex: (m.rejectedPercent * 10).toInt(), child: Container(color: const Color(0xFFC62828))),
+                          Expanded(flex: (m.gradeAPercent * 10).toInt().clamp(1, 1000), child: Container(color: AppTheme.brandGreen)),
+                          Expanded(flex: (m.gradeBPercent * 10).toInt().clamp(1, 1000), child: Container(color: const Color(0xFFFFA000))),
+                          Expanded(flex: (m.gradeCPercent * 10).toInt().clamp(1, 1000), child: Container(color: const Color(0xFF5C6BC0))),
+                          Expanded(flex: (m.rejectedPercent * 10).toInt().clamp(1, 1000), child: Container(color: const Color(0xFFC62828))),
                         ],
                       ),
                     ),
@@ -222,13 +246,20 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
                   _centerComparisonRow('Jaipur Central Hub', 4.40, 8.70, 1430),
                   _centerComparisonRow('Behror Chilling Center', 4.30, 8.60, 1000),
                   _centerComparisonRow('Sikar Collection Hub', 4.25, 8.55, 1180),
-                  _centerComparisonRow('Ajmer South Station', 4.10, 8.40, 920),
-                  _centerComparisonRow('Tonk Chilling Yard', 3.65, 8.35, 650, isAlert: true),
+                      ...m.centerStats.map((c) => _centerComparisonRow(
+                    c.centerName,
+                    c.avgFat,
+                    c.avgSnf,
+                    c.totalLitres.toInt(),
+                    isAlert: c.isAlert,
+                  )),
                 ],
               ),
             ),
           ],
         ),
+          );
+        },
       ),
     );
   }
