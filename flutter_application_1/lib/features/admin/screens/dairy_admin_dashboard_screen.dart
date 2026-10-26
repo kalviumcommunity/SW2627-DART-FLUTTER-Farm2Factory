@@ -31,6 +31,25 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
   final _sellerRepo = SellerRepository.instance;
   final _paymentRepo = DairyPaymentRepository.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    _analyticsRepo.syncLiveAggregations();
+    _collectorRepo.fetchLiveCollectors();
+  }
+
+  String _formatLitres(num val) {
+    final intVal = val.toInt();
+    final s = intVal.toString();
+    if (s.length > 3) {
+      return s.replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
+    }
+    return s;
+  }
+
   void _showDispatchDialog(BuildContext context) {
     final vehicleNoCtrl = TextEditingController(text: 'RJ-14-GA-8890');
     final driverCtrl = TextEditingController(text: 'Sanjay Sharma');
@@ -149,6 +168,23 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       title: 'Operations Dashboard',
       actions: [
         IconButton(
+          tooltip: 'Sync Live Data',
+          icon: const Icon(Icons.refresh, color: AppTheme.brandGreen),
+          onPressed: () async {
+            await _analyticsRepo.syncLiveAggregations();
+            await _collectorRepo.fetchLiveCollectors();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Central Dairy Hub synced with live Firestore data!'),
+                  backgroundColor: AppTheme.brandGreen,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+        IconButton(
           tooltip: 'Rate Charts & Pricing',
           icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
           onPressed: () => context.push(AppRoutes.dairyRates),
@@ -159,9 +195,12 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
           onPressed: () => _showDispatchDialog(context),
         ),
       ],
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
+      body: ListenableBuilder(
+        listenable: Listenable.merge([_analyticsRepo, _collectorRepo, _dispatchRepo, _paymentRepo]),
+        builder: (context, _) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Filter Bar
@@ -187,7 +226,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
               subtitle: 'Real-time intake from collection centers and farm supplies',
               icon: Icons.water_drop,
               iconColor: const Color(0xFF0288D1),
-              trailing: '840 Entries',
+              trailing: '${_analyticsRepo.metric.totalEntries} Entries',
             ),
             const SizedBox(height: 12),
             _buildMilkCollectionGrid(),
@@ -254,11 +293,14 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             const SizedBox(height: 30),
           ],
         ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildHeroOperationsBanner(BuildContext context) {
+    final m = _analyticsRepo.metric;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -332,9 +374,9 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  '42,850 Litres',
-                  style: TextStyle(
+                Text(
+                  '${_formatLitres(m.totalQuantity)} Litres',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -343,7 +385,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "Total Milk Received Today (Morning: 23,400 L | Evening: 19,450 L)",
+                  "Total Milk Received Today (Morning: ${_formatLitres(m.morningQuantity)} L | Evening: ${_formatLitres(m.eveningQuantity)} L)",
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
@@ -355,10 +397,10 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _heroChip(icon: Icons.grain, label: 'Avg FAT: 4.25%'),
-                    _heroChip(icon: Icons.opacity, label: 'Avg SNF: 8.55%'),
-                    _heroChip(icon: Icons.thermostat, label: 'Chilled at 4.1°C'),
-                    _heroChip(icon: Icons.check_circle, label: '98.6% Grade A'),
+                    _heroChip(icon: Icons.grain, label: 'Avg FAT: ${m.avgFat.toStringAsFixed(2)}%'),
+                    _heroChip(icon: Icons.opacity, label: 'Avg SNF: ${m.avgSnf.toStringAsFixed(2)}%'),
+                    _heroChip(icon: Icons.thermostat, label: 'Chilled at ${m.avgTemperature.toStringAsFixed(1)}°C'),
+                    _heroChip(icon: Icons.check_circle, label: '${m.gradeAPercent.toStringAsFixed(1)}% Grade A'),
                   ],
                 ),
               ],
@@ -527,6 +569,12 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
   }
 
   Widget _buildMilkCollectionGrid() {
+    final m = _analyticsRepo.metric;
+    final collectorsCount = _collectorRepo.collectors.isNotEmpty ? _collectorRepo.collectors.length : 5;
+    final avgPerCollector = (m.totalQuantity / collectorsCount).round();
+    final morningPct = m.totalQuantity > 0 ? ((m.morningQuantity / m.totalQuantity) * 100).toStringAsFixed(1) : "54.6";
+    final eveningPct = m.totalQuantity > 0 ? ((m.eveningQuantity / m.totalQuantity) * 100).toStringAsFixed(1) : "45.4";
+
     return LayoutBuilder(builder: (context, constraints) {
       final crossAxisCount = constraints.maxWidth > 700 ? 4 : 2;
       return GridView.count(
@@ -536,36 +584,36 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
         childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
-        children: const [
+        children: [
           DairyStatCard(
             icon: Icons.wb_sunny_outlined,
-            iconColor: Color(0xFFF57C00),
+            iconColor: const Color(0xFFF57C00),
             title: 'Morning Shift (AM)',
-            value: '23,400 L',
-            subtitle: '54.6% of day intake',
+            value: '${_formatLitres(m.morningQuantity)} L',
+            subtitle: '$morningPct% of day intake',
             cardBgColor: AppTheme.cardPeach,
           ),
           DairyStatCard(
             icon: Icons.nightlight_round_outlined,
-            iconColor: Color(0xFF5C6BC0),
+            iconColor: const Color(0xFF5C6BC0),
             title: 'Evening Shift (PM)',
-            value: '19,450 L',
-            subtitle: '45.4% of day intake',
+            value: '${_formatLitres(m.eveningQuantity)} L',
+            subtitle: '$eveningPct% of day intake',
             cardBgColor: AppTheme.cardLavender,
           ),
           DairyStatCard(
             icon: Icons.person_search_outlined,
             iconColor: AppTheme.brandGreen,
             title: 'Avg per Collector',
-            value: '1,020 L',
-            subtitle: 'Across 5 centers',
+            value: '${_formatLitres(avgPerCollector)} L',
+            subtitle: 'Across $collectorsCount centers',
             cardBgColor: AppTheme.cardMint,
           ),
           DairyStatCard(
             icon: Icons.receipt_long_outlined,
-            iconColor: Color(0xFF0288D1),
+            iconColor: const Color(0xFF0288D1),
             title: 'Collection Entries',
-            value: '840 entries',
+            value: '${m.totalEntries} entries',
             subtitle: '100% device synced',
             cardBgColor: AppTheme.cardSky,
           ),
