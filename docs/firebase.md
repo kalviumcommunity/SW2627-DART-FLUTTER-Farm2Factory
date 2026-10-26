@@ -87,6 +87,33 @@ Stores digital reconciliation and disbursal records for billing cycles (10-day o
 - `paymentMethod` (String): e.g., `'Bank NEFT/RTGS'`, `'UPI'`, `'Cash'`.
 - `transactionReference` (String): Bank NEFT/UTR reference code.
 
+### `disputes`
+Stores formal dispute tickets raised by farmers or collection centers contesting quantity, FAT, or SNF readings.
+- `id` (String, Document ID): Dispute identifier (e.g., `DSP-20261026-001`).
+- `entryId` (String): ID of the contested `milk_entries` collection record.
+- `farmerId` (String): Reference to the farmer.
+- `farmerName` (String): Farmer's name.
+- `farmerPhone` (String): Contact phone number.
+- `centerId` (String): Collection center identifier.
+- `collectorId` (String): Collection operator ID.
+- `collectionDate` (Timestamp/String): Date and time of the disputed collection.
+- `shift` (String): `'Morning (AM)'` or `'Evening (PM)'`.
+- `disputeType` (String): `'Quantity Mismatch'`, `'Fat/SNF Reading Dispute'`, `'Rate Calculation Error'`, etc.
+- `reason` (String): Detailed justification and evidence from the farmer.
+- `recordedQuantity` (Number): Litres recorded at center.
+- `claimedQuantity` (Number, optional): Litres claimed by farmer.
+- `recordedFat` (Number): FAT % recorded at center.
+- `claimedFat` (Number, optional): FAT % claimed by farmer.
+- `recordedSnf` (Number): SNF % recorded at center.
+- `claimedSnf` (Number, optional): SNF % claimed by farmer.
+- `recordedAmount` (Number): Gross payment calculated originally.
+- `status` (String): `'OPEN'`, `'UNDER_REVIEW'`, `'RESOLVED'`, `'REJECTED'`.
+- `resolutionNote` (String, optional): Supervisor audit notes and justification.
+- `adjustedAmount` (Number): Financial credit or debit applied to farmer's payout reconciliation.
+- `resolvedBy` (String, optional): Name of the dairy auditor/supervisor.
+- `createdAt` (Timestamp): Timestamp when dispute was opened.
+- `resolvedAt` (Timestamp, optional): Timestamp when dispute was resolved/rejected.
+
 ## Batch Traceability Engine
 The system directly addresses the core problem statement: *“late-detected quality shortfalls lead to batch rejections that cannot be traced back to source.”*
 
@@ -102,6 +129,7 @@ The system eliminates paper-based reconciliation disputes:
 2. It calculates weighted average Fat % and SNF %, gross earnings, quality variance deductions, and net payable.
 3. Farmers and collectors can audit line-by-line shift readings in `PaymentsScreen` to resolve reading disputes before payment execution.
 4. Generates a bank-ready NEFT reconciliation CSV via `exportReconciliationCsv()` for automated bank transfer uploads.
+5. `DisputeService` captures contested readings, provides supervisor audit settlement workflows, and adjusts settlement payouts automatically.
 
 ## Authentication
 Using Firebase Email/Password authentication.

@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../models/dispute.dart';
 import '../../../models/reconciliation_statement.dart';
+import '../../../services/dispute_service.dart';
 import '../../../services/reconciliation_service.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../collector/data/milk_entry_repository.dart';
@@ -34,6 +36,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
   double _avgSnf = 0.0;
   List<Map<String, dynamic>> _recentDays = [];
   List<FarmerReconciliationStatement> _payoutStatements = [];
+  List<Dispute> _myDisputes = [];
 
   @override
   void initState() {
@@ -187,8 +190,19 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       _avgSnf = avgSnf;
       _recentDays = recentDays;
       _payoutStatements = statements;
-      _isLoading = false;
     });
+
+    List<Dispute> disputes = [];
+    try {
+      disputes = await DisputeService.instance.getDisputesForFarmer(farmerId);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _myDisputes = disputes;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -391,6 +405,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                     headerColor: const Color(0xFFFFF3E0),
                     accentColor: const Color(0xFFE65100),
                     entry: _morningEntry,
+                    onDispute: (e) => _showRaiseDisputeDialog(context, e),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -401,6 +416,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                     headerColor: const Color(0xFFEDE7F6),
                     accentColor: const Color(0xFF5E35B1),
                     entry: _eveningEntry,
+                    onDispute: (e) => _showRaiseDisputeDialog(context, e),
                   ),
                 ),
               ],
@@ -543,6 +559,315 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     );
   }
 
+  void _showRaiseDisputeDialog(BuildContext context, MilkEntry entry) {
+    String selectedType = 'Quantity Mismatch';
+    final claimedLitresCtrl =
+        TextEditingController(text: entry.quantityLitres.toStringAsFixed(1));
+    final claimedFatCtrl =
+        TextEditingController(text: entry.fatPercentage.toStringAsFixed(1));
+    final reasonCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.gavel, color: Color(0xFFE65100)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Contest Milk Reading',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recorded: ${entry.quantityLitres} L | ${entry.fatPercentage}% FAT',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      Text(
+                        entry.shift,
+                        style: const TextStyle(
+                            color: AppTheme.brandGreen,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text('Dispute Type',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'Quantity Mismatch',
+                        child: Text('Quantity Mismatch (Litres)')),
+                    DropdownMenuItem(
+                        value: 'Fat/SNF Reading Dispute',
+                        child: Text('Fat/SNF Reading Dispute')),
+                    DropdownMenuItem(
+                        value: 'Rate Calculation Error',
+                        child: Text('Rate Calculation Error')),
+                    DropdownMenuItem(
+                        value: 'Incorrect Shift / Missing Entry',
+                        child: Text('Incorrect Shift / Missing Entry')),
+                  ],
+                  onChanged: (val) =>
+                      setModalState(() => selectedType = val ?? selectedType),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: claimedLitresCtrl,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Claimed Litres',
+                          prefixIcon: Icon(Icons.water_drop_outlined),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: claimedFatCtrl,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Claimed FAT %',
+                          prefixIcon: Icon(Icons.grain),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: reasonCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Explanation for Supervisor',
+                    hintText: 'Describe why you are contesting this entry...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.brandGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.send),
+                    label: const Text('Submit Dispute to Cooperative',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold)),
+                    onPressed: () async {
+                      if (reasonCtrl.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Please provide an explanation for the supervisor.')),
+                        );
+                        return;
+                      }
+
+                      final user = AuthRepository.instance.currentUser;
+                      final dispute = Dispute(
+                        id: 'DSP-${DateTime.now().millisecondsSinceEpoch % 100000}',
+                        entryId: entry.id,
+                        farmerId: entry.farmerId,
+                        farmerName: entry.farmerName,
+                        farmerPhone: user?.phone ?? '9876543210',
+                        centerId: entry.centerId,
+                        collectorId: entry.collectorId,
+                        collectionDate: entry.date,
+                        shift: entry.shift,
+                        disputeType: selectedType,
+                        reason: reasonCtrl.text.trim(),
+                        recordedQuantity: entry.quantityLitres,
+                        claimedQuantity:
+                            double.tryParse(claimedLitresCtrl.text.trim()),
+                        recordedFat: entry.fatPercentage,
+                        claimedFat:
+                            double.tryParse(claimedFatCtrl.text.trim()),
+                        recordedSnf: entry.snfPercentage,
+                        recordedAmount: entry.totalAmount,
+                        status: 'OPEN',
+                        createdAt: DateTime.now(),
+                      );
+
+                      await DisputeService.instance.createDispute(dispute);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        _loadFarmerData();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Dispute submitted! Dairy supervisor has been alerted for review.'),
+                            backgroundColor: AppTheme.brandGreen,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisputesSection() {
+    if (_myDisputes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        const Text(
+          'My Contested Readings & Disputes',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        ..._myDisputes.map((d) {
+          Color statusCol;
+          switch (d.status.toUpperCase()) {
+            case 'RESOLVED':
+              statusCol = AppTheme.brandGreen;
+              break;
+            case 'UNDER_REVIEW':
+              statusCol = const Color(0xFF0288D1);
+              break;
+            case 'REJECTED':
+              statusCol = Colors.redAccent;
+              break;
+            case 'OPEN':
+            default:
+              statusCol = const Color(0xFFE65100);
+              break;
+          }
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: statusCol.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${d.id} • ${d.disputeType}',
+                      style: const TextStyle(
+                          fontSize: 12.5, fontWeight: FontWeight.bold),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusCol.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        d.status,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: statusCol),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${d.shift} | Recorded: ${d.recordedQuantity}L (${d.recordedFat}% FAT) vs Claimed: ${d.claimedQuantity ?? d.recordedQuantity}L',
+                  style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
+                ),
+                if (d.resolutionNote != null && d.resolutionNote!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Audit Note: ${d.resolutionNote}${d.adjustedAmount > 0 ? " (+₹${d.adjustedAmount.toStringAsFixed(2)} Credited)" : ""}',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F172A)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _buildPaymentTab() {
     return RefreshIndicator(
       onRefresh: _loadFarmerData,
@@ -569,6 +894,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             )
           else
             ..._payoutStatements.map((s) => _buildPaymentCard(s)),
+          _buildDisputesSection(),
         ],
       ),
     );
@@ -872,6 +1198,7 @@ class _ShiftSellCard extends StatelessWidget {
   final Color headerColor;
   final Color accentColor;
   final MilkEntry? entry;
+  final ValueChanged<MilkEntry>? onDispute;
 
   const _ShiftSellCard({
     required this.shiftTitle,
@@ -879,6 +1206,7 @@ class _ShiftSellCard extends StatelessWidget {
     required this.headerColor,
     required this.accentColor,
     this.entry,
+    this.onDispute,
   });
 
   @override
@@ -970,6 +1298,37 @@ class _ShiftSellCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (hasEntry) ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () => onDispute?.call(entry!),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFFEDD5)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.gavel, size: 11, color: Color(0xFFC2410C)),
+                          SizedBox(width: 4),
+                          Text(
+                            'Contest Reading',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFC2410C),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
