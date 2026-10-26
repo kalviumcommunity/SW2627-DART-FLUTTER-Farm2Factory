@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../data/collector_repository.dart';
 import '../data/dairy_analytics_repository.dart';
 import '../data/dairy_payment_repository.dart';
 import '../data/dispatch_repository.dart';
@@ -30,7 +29,6 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
   DashboardRoleView _selectedRole = DashboardRoleView.owner;
 
   final _analyticsRepo = DairyAnalyticsRepository.instance;
-  final _collectorRepo = CollectorRepository.instance;
   final _dispatchRepo = DispatchRepository.instance;
   final _paymentRepo = DairyPaymentRepository.instance;
 
@@ -157,17 +155,15 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 960;
-
     return DairyPortalScaffold(
       activeRoute: AppRoutes.adminDashboard,
-      title: isDesktop ? 'Dairy Enterprise Console' : 'Operations Dashboard',
+      title: 'Dairy Enterprise Console',
+      portalType: DairyPortalType.admin,
       actions: [
         IconButton(
-          tooltip: 'Rate Charts & Pricing',
-          icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
-          onPressed: () => context.push(AppRoutes.dairyRates),
+          tooltip: 'Reports & Export',
+          icon: const Icon(Icons.assessment_outlined, color: AppTheme.brandGreen),
+          onPressed: () => context.push(AppRoutes.adminReports),
         ),
         IconButton(
           tooltip: 'Dispatch Tanker',
@@ -175,9 +171,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
           onPressed: () => _showDispatchDialog(context),
         ),
       ],
-      body: isDesktop
-          ? _buildDesktopDashboard(context)
-          : _buildMobileDashboard(context),
+      body: _buildDesktopDashboard(context),
     );
   }
 
@@ -252,16 +246,16 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _roleTab('Owner / CEO', Icons.workspace_premium, DashboardRoleView.owner),
-          _roleTab('Logistics', Icons.local_shipping, DashboardRoleView.logistics),
-          _roleTab('Quality (QC)', Icons.science, DashboardRoleView.quality),
-          _roleTab('Accounts', Icons.account_balance, DashboardRoleView.accounts),
+          _roleTab('Logistics', Icons.local_shipping_outlined, DashboardRoleView.logistics),
+          _roleTab('Quality (QC)', Icons.science_outlined, DashboardRoleView.quality),
+          _roleTab('Accounts', Icons.account_balance_outlined, DashboardRoleView.accounts),
         ],
       ),
     );
@@ -271,23 +265,23 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     final isSelected = _selectedRole == role;
     return InkWell(
       onTap: () => setState(() => _selectedRole = role),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.brandGreen : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: isSelected ? Colors.white : Colors.grey.shade700),
+            Icon(icon, size: 15, color: isSelected ? Colors.white : const Color(0xFF64748B)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.grey.shade700,
+                color: isSelected ? Colors.white : const Color(0xFF475569),
               ),
             ),
           ],
@@ -309,8 +303,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             value: "42,850 L",
             subtitle: "Morning: 23,400 L | Evening: 19,450 L",
             icon: Icons.water_drop,
-            iconColor: const Color(0xFF0288D1),
-            bgColor: AppTheme.cardSky,
+            iconColor: const Color(0xFF0284C7),
           ),
         ),
         const SizedBox(width: 14),
@@ -320,8 +313,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             value: "$totalDispatchedLitres L",
             subtitle: "${dispatches.length} active road tankers",
             icon: Icons.local_shipping,
-            iconColor: AppTheme.brandTeal,
-            bgColor: AppTheme.cardMint,
+            iconColor: const Color(0xFF0F766E),
           ),
         ),
         const SizedBox(width: 14),
@@ -331,8 +323,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             value: "${_analyticsRepo.metric.gradeAPercent}%",
             subtitle: "FAT: 4.25% | SNF: 8.55%",
             icon: Icons.verified,
-            iconColor: AppTheme.brandGreen,
-            bgColor: AppTheme.cardMint,
+            iconColor: const Color(0xFF15803D),
           ),
         ),
         const SizedBox(width: 14),
@@ -342,8 +333,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             value: "₹ ${(pendingPayout / 100000).toStringAsFixed(2)} Lakh",
             subtitle: "Next 10-day cycle due soon",
             icon: Icons.payments_outlined,
-            iconColor: const Color(0xFFE65100),
-            bgColor: AppTheme.cardPeach,
+            iconColor: const Color(0xFFB45309),
           ),
         ),
       ],
@@ -356,31 +346,31 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     required String subtitle,
     required IconData icon,
     required Color iconColor,
-    required Color bgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -389,19 +379,28 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.4,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -415,24 +414,24 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
 
   Widget _buildCenterWiseProgressCard() {
     final centers = [
-      {'name': 'Behror Chilling Center', 'litres': 12400, 'target': 14000, 'color': AppTheme.brandGreen},
-      {'name': 'Jaipur Central Hub', 'litres': 14200, 'target': 15000, 'color': const Color(0xFF0288D1)},
-      {'name': 'Ajmer Reception Silo', 'litres': 7850, 'target': 9000, 'color': const Color(0xFF7B1FA2)},
-      {'name': 'Sikar Bulk Unit', 'litres': 5400, 'target': 6000, 'color': const Color(0xFFE65100)},
-      {'name': 'Tonk Center', 'litres': 3000, 'target': 5000, 'color': const Color(0xFF558B2F)},
+      {'name': 'Behror Chilling Center', 'litres': 12400, 'target': 14000, 'color': const Color(0xFF15803D)},
+      {'name': 'Jaipur Central Hub', 'litres': 14200, 'target': 15000, 'color': const Color(0xFF0284C7)},
+      {'name': 'Ajmer Reception Silo', 'litres': 7850, 'target': 9000, 'color': const Color(0xFF7E22CE)},
+      {'name': 'Sikar Bulk Unit', 'litres': 5400, 'target': 6000, 'color': const Color(0xFFD97706)},
+      {'name': 'Tonk Center', 'litres': 3000, 'target': 5000, 'color': const Color(0xFF0F766E)},
     ];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -500,344 +499,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     );
   }
 
-  // =========================================================================
-  // 2. STREAMLINED MOBILE ADMIN DASHBOARD (Viewport < 960px)
-  // =========================================================================
-  Widget _buildMobileDashboard(BuildContext context) {
-    final dispatches = _dispatchRepo.dispatches;
-    final collectors = _collectorRepo.collectors;
-    final activeCollectors = collectors.where((c) => c.status != 'Offline').length;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Filter Bar
-          DairyFilterBar(
-            selectedDateFilter: _selectedDateFilter,
-            selectedCenter: _selectedCenter,
-            onDateFilterChanged: (d) => setState(() => _selectedDateFilter = d),
-            onCenterChanged: (c) => setState(() => _selectedCenter = c),
-          ),
-          const SizedBox(height: 14),
-
-          // Compact Hero Card for Mobile
-          _buildCompactMobileHero(),
-          const SizedBox(height: 16),
-
-          // Live Alerts
-          _buildAlertsSection(),
-          const SizedBox(height: 18),
-
-          // Quick 4-KPI Mobile Grid (No overflow, FittedBox hardened)
-          const Text(
-            "Today's Overview",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 10),
-          _buildMobileKpiGrid(activeCollectors, dispatches.length),
-          const SizedBox(height: 20),
-
-          // Operations Quick Hub (Replaces heavy tables with clean tap cards)
-          const Text(
-            "Operations Hub",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 10),
-          _buildMobileNavTile(
-            icon: Icons.local_shipping_outlined,
-            iconColor: AppTheme.brandTeal,
-            title: 'Tanker Logistics & Dispatch',
-            subtitle: '${dispatches.length} tankers scheduled or en route',
-            badge: '${dispatches.where((d) => d.status == 'En Route').length} En Route',
-            onTap: () => context.push('/dairy/dispatch'),
-          ),
-          const SizedBox(height: 8),
-          _buildMobileNavTile(
-            icon: Icons.badge_outlined,
-            iconColor: AppTheme.brandGreen,
-            title: 'Collectors Network',
-            subtitle: '$activeCollectors of ${collectors.length} active collection centers',
-            onTap: () => context.push('/dairy/collectors'),
-          ),
-          const SizedBox(height: 8),
-          _buildMobileNavTile(
-            icon: Icons.science_outlined,
-            iconColor: const Color(0xFF7B1FA2),
-            title: 'Milk Quality & Lab Tests',
-            subtitle: 'FAT: 4.25% • SNF: 8.55% • 84.5% Grade A',
-            onTap: () => context.push('/dairy/quality'),
-          ),
-          const SizedBox(height: 8),
-          _buildMobileNavTile(
-            icon: Icons.payments_outlined,
-            iconColor: const Color(0xFFE65100),
-            title: 'Payments & Settlement',
-            subtitle: '10-day payout cycle disbursals',
-            badge: 'Pending',
-            onTap: () => context.push('/dairy/payments'),
-          ),
-          const SizedBox(height: 18),
-
-          // Desktop Web Notice Banner
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.computer, color: AppTheme.brandGreen, size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Full Desktop Analytics Console',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'To view monthly/yearly dispatch graphs and download bulk Excel/CSV registers, open this portal on your PC or Desktop browser.',
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600, height: 1.3),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactMobileHero() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF269352), Color(0xFF136836)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1F8A4C).withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.verified, color: Colors.white, size: 12),
-                    SizedBox(width: 4),
-                    Text('Central Dairy Hub Live', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              Text(
-                '$_selectedCenter • $_selectedDateFilter',
-                style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 11),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '42,850 Litres',
-              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Today\'s Received Milk (AM: 23,400 L | PM: 19,450 L)',
-            style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileKpiGrid(int activeCollectors, int dispatchCount) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            children: [
-              _mobileKpiTile(
-                title: 'Active Centers',
-                value: '$activeCollectors Active',
-                icon: Icons.badge_outlined,
-                color: AppTheme.brandGreen,
-                bgColor: AppTheme.cardMint,
-                onTap: () => context.push('/dairy/collectors'),
-              ),
-              const SizedBox(height: 10),
-              _mobileKpiTile(
-                title: 'Dispatched Fleet',
-                value: '$dispatchCount Tankers',
-                icon: Icons.local_shipping_outlined,
-                color: AppTheme.brandTeal,
-                bgColor: AppTheme.cardSky,
-                onTap: () => context.push('/dairy/dispatch'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            children: [
-              _mobileKpiTile(
-                title: 'Quality Grade A',
-                value: '${_analyticsRepo.metric.gradeAPercent}% Purity',
-                icon: Icons.science_outlined,
-                color: const Color(0xFF7B1FA2),
-                bgColor: const Color(0xFFF3E5F5),
-                onTap: () => context.push('/dairy/quality'),
-              ),
-              const SizedBox(height: 10),
-              _mobileKpiTile(
-                title: 'Pending Payout',
-                value: '₹ 14.8 Lakh',
-                icon: Icons.payments_outlined,
-                color: const Color(0xFFE65100),
-                bgColor: AppTheme.cardPeach,
-                onTap: () => context.push('/dairy/payments'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _mobileKpiTile({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.creamBorder),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMobileNavTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    String? badge,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.creamBorder),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: iconColor.withOpacity(0.12),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                      if (badge != null) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: AppTheme.brandGreen.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(badge, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade400),
-          ],
-        ),
-      ),
-    );
-  }
 
   // =========================================================================
   // SHARED: Operational Alerts
@@ -850,23 +512,30 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       children: alerts.map((alt) {
         final isHigh = alt.severity == 'High';
         final isWarning = alt.severity == 'Warning';
-        final bgColor = isHigh ? const Color(0xFFFFEBEE) : (isWarning ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9));
-        final textColor = isHigh ? const Color(0xFFC62828) : (isWarning ? const Color(0xFFE65100) : AppTheme.brandGreenDark);
+        final bgColor = isHigh
+            ? const Color(0xFFFEF2F2)
+            : (isWarning ? const Color(0xFFFFFBEB) : const Color(0xFFF0FDF4));
+        final borderColor = isHigh
+            ? const Color(0xFFFECACA)
+            : (isWarning ? const Color(0xFFFDE68A) : const Color(0xFFBBF7D0));
+        final textColor = isHigh
+            ? const Color(0xFF991B1B)
+            : (isWarning ? const Color(0xFF92400E) : const Color(0xFF166534));
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: textColor.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
               Icon(
                 isHigh ? Icons.warning_rounded : (isWarning ? Icons.info_outline : Icons.check_circle_outline),
                 color: textColor,
-                size: 20,
+                size: 18,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -874,12 +543,14 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(alt.title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: textColor)),
-                    Text(alt.message, style: TextStyle(fontSize: 11, color: textColor.withOpacity(0.85))),
+                    Text(alt.message, style: TextStyle(fontSize: 11, color: textColor.withOpacity(0.9))),
                   ],
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close, size: 16, color: textColor),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                icon: Icon(Icons.close, size: 15, color: textColor),
                 onPressed: () => setState(() => _analyticsRepo.dismissAlert(alt.id)),
               ),
             ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/call_helper.dart';
+import '../../../core/utils/export_helper.dart';
 import '../data/dispatch_repository.dart';
 import '../models/dispatch_record.dart';
 import '../services/report_service.dart';
@@ -32,23 +34,165 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
   }
 
   void _exportDispatches() {
-    final csv = ReportService.generateCsv(
-      reportType: 'Dispatch & Logistics Register',
-      fromDate: DateTime.now().subtract(const Duration(days: 30)),
-      toDate: DateTime.now(),
-      center: 'All Centers',
-    );
-    assert(csv.isNotEmpty);
+    final records = _filteredRecords;
+    final csv = ReportService.generateDispatchRegisterCsv(records);
+    final now = DateTime.now();
+    final filename =
+        'tanker_dispatch_register_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.csv';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Dispatches exported successfully (${_filteredRecords.length} records ready)!'),
-        backgroundColor: AppTheme.brandGreen,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {},
+    // 1. Trigger actual browser / device download
+    ExportHelper.downloadFile(filename: filename, content: csv);
+
+    // 2. Open interactive Download & Share dialog
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.cardMint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.file_download_done, color: AppTheme.brandGreen, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Report Exported Successfully',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.description, size: 16, color: Color(0xFF0284C7)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            filename,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardMint,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${records.length} Records',
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      children: [
+                        Icon(Icons.folder_outlined, size: 14, color: Color(0xFF64748B)),
+                        SizedBox(width: 6),
+                        Text(
+                          'Destination: Saved to your device Downloads folder.',
+                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF64748B)),
+                        SizedBox(width: 6),
+                        Text(
+                          'Includes: Date, Time, Tanker No, Driver, Origin, Destination, Volume & Temp.',
+                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Options for this Export:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.file_download, size: 16),
+                      label: const Text('Download Again'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.brandGreen,
+                        side: const BorderSide(color: AppTheme.brandGreen),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        ExportHelper.downloadFile(filename: filename, content: csv);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Downloading "$filename" again to your device...'),
+                            backgroundColor: AppTheme.brandGreen,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Share / Copy CSV'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: csv));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('CSV report copied to clipboard! Ready to share or paste into Excel/WhatsApp/Email.'),
+                            backgroundColor: AppTheme.brandGreen,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -129,13 +273,13 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -150,10 +294,11 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardSky,
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: const Icon(Icons.local_shipping_outlined, color: AppTheme.brandTeal, size: 20),
+                  child: const Icon(Icons.local_shipping_outlined, color: Color(0xFF0F172A), size: 20),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -162,7 +307,7 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                     const Text(
                       'Tanker Logistics & Dispatch Register',
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
                       ),
@@ -184,11 +329,16 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'Search tanker / driver...',
-                      prefixIcon: const Icon(Icons.search, size: 18),
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                      prefixIcon: const Icon(Icons.search, size: 17, color: Color(0xFF64748B)),
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
                       ),
                     ),
                   ),
@@ -200,13 +350,13 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   height: 38,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedStatus,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
                       items: ['All', 'En Route', 'Delivered', 'Dispatched', 'Loading'].map((s) {
                         return DropdownMenuItem(value: s, child: Text(s));
                       }).toList(),
@@ -224,9 +374,9 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   icon: const Icon(Icons.file_download_outlined, size: 16),
                   label: const Text('Export CSV'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.brandGreen,
-                    side: const BorderSide(color: AppTheme.brandGreen),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    foregroundColor: const Color(0xFF0F172A),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -237,15 +387,15 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('New Tanker Dispatch'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.brandGreen,
+                    backgroundColor: const Color(0xFF0F5132),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
           // Responsive Data Table
           SingleChildScrollView(
@@ -255,18 +405,35 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
               horizontalMargin: 20,
               columnSpacing: 24,
               columns: const [
-                DataColumn(label: Text('TANKER NO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('DRIVER & CONTACT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('ORIGIN CENTER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('DESTINATION PLANT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('LOADED LITRES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('TEMP (°C)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('STATUS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('ACTIONS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('DATE & TIME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('TANKER NO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('DRIVER & CONTACT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('ORIGIN CENTER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('DESTINATION PLANT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('LOADED LITRES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('TEMP (°C)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+                DataColumn(label: Text('ACTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
               ],
               rows: records.map((d) {
                 return DataRow(
                   cells: [
+                    DataCell(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${d.dispatchedAt.day.toString().padLeft(2, '0')}/${d.dispatchedAt.month.toString().padLeft(2, '0')}/${d.dispatchedAt.year}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                          ),
+                          Text(
+                            '${d.dispatchedAt.hour.toString().padLeft(2, '0')}:${d.dispatchedAt.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    ),
                     DataCell(
                       Row(
                         mainAxisSize: MainAxisSize.min,

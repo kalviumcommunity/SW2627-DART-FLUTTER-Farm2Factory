@@ -53,6 +53,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         case UserRole.collector:
           _centerController.text = 'Central Valley Collection Center';
           break;
+        case UserRole.manager:
+          _centerController.text = 'Tonk Chilling Center #3';
+          break;
         case UserRole.admin:
           _centerController.text = 'Jaipur Cooperative Dairy Plant';
           break;
@@ -100,6 +103,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           location: _locationController.text.trim().isNotEmpty
               ? _locationController.text.trim()
               : null,
+        );
+        break;
+
+      case UserRole.manager:
+        matchingLoginRole = LoginRole.manager;
+        error = await AuthRepository.instance.registerManager(
+          name: _nameController.text.trim(),
+          identifier: phoneOrId,
+          password: _passwordController.text,
+          centerName: _centerController.text.trim().isNotEmpty
+              ? _centerController.text.trim()
+              : 'Tonk Chilling Center #3',
+          phone: phoneOrId.length == 10 ? phoneOrId : null,
         );
         break;
 
@@ -157,6 +173,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return AppTheme.brandGreen;
       case UserRole.collector:
         return const Color(0xFF0284C7);
+      case UserRole.manager:
+        return const Color(0xFF0D9488);
       case UserRole.admin:
         return const Color(0xFF0F766E);
     }
@@ -169,6 +187,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       case UserRole.collector:
         return const LinearGradient(
           colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case UserRole.manager:
+        return const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -187,6 +211,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return AppTheme.brandGreen;
       case UserRole.collector:
         return const Color(0xFF0284C7);
+      case UserRole.manager:
+        return const Color(0xFF0D9488);
       case UserRole.admin:
         return const Color(0xFF0F766E);
     }
@@ -198,6 +224,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Create Farmer Account';
       case UserRole.collector:
         return 'Create Collector Account';
+      case UserRole.manager:
+        return 'Create Center Manager Account';
       case UserRole.admin:
         return 'Create Dairy Admin Account';
     }
@@ -209,6 +237,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Track your milk records, daily rates & instant payments';
       case UserRole.collector:
         return 'Record daily milk collections, manage routes & farmers';
+      case UserRole.manager:
+        return 'Manage your center collection, dispatches & quality logs';
       case UserRole.admin:
         return 'Oversee dairy processing operations, dispatches & analytics';
     }
@@ -220,7 +250,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ? AppTheme.brandGreen
         : role == UserRole.collector
             ? const Color(0xFF0284C7)
-            : const Color(0xFF0F766E);
+            : role == UserRole.manager
+                ? const Color(0xFF0D9488)
+                : const Color(0xFF0F766E);
 
     return Expanded(
       child: GestureDetector(
@@ -354,11 +386,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               children: [
                                 _buildRoleTab(
                                     UserRole.farmer, 'Farmer', Icons.agriculture),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 3),
                                 _buildRoleTab(UserRole.collector, 'Collector',
-                                    Icons.local_shipping_outlined),
-                                const SizedBox(width: 4),
-                                _buildRoleTab(UserRole.admin, 'Dairy Admin',
+                                    Icons.badge_outlined),
+                                const SizedBox(width: 3),
+                                _buildRoleTab(UserRole.manager, 'Manager',
+                                    Icons.storefront_outlined),
+                                const SizedBox(width: 3),
+                                _buildRoleTab(UserRole.admin, 'Admin',
                                     Icons.business_outlined),
                               ],
                             ),

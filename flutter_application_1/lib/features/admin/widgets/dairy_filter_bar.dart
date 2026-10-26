@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
-
 /// Reusable interactive filter bar with date, center, and shift chips.
 class DairyFilterBar extends StatelessWidget {
   final String selectedDateFilter;
@@ -51,16 +49,18 @@ class DairyFilterBar extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.creamBorder),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: TextField(
               onChanged: onSearchChanged,
+              style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
                 hintText: searchHint,
-                prefixIcon: const Icon(Icons.search, color: AppTheme.brandGreen, size: 20),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 18),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
           ),
@@ -78,18 +78,18 @@ class DairyFilterBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.brandGreen.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedCenter,
                     isDense: true,
-                    icon: const Icon(Icons.arrow_drop_down, color: AppTheme.brandGreen, size: 18),
+                    icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF64748B), size: 18),
                     style: const TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.brandGreenDark,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF0F172A),
                     ),
                     items: centerOptions.map((c) {
                       return DropdownMenuItem(value: c, child: Text(c));
@@ -108,19 +108,19 @@ class DairyFilterBar extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     selected: isSelected,
+                    showCheckmark: false,
                     label: Text(opt),
                     labelStyle: TextStyle(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.grey.shade700,
+                      color: isSelected ? Colors.white : const Color(0xFF475569),
                     ),
                     backgroundColor: Colors.white,
-                    selectedColor: AppTheme.brandGreen,
-                    checkmarkColor: Colors.white,
+                    selectedColor: const Color(0xFF0F172A), // Slate-900 for high-end feel
                     side: BorderSide(
-                      color: isSelected ? AppTheme.brandGreen : AppTheme.creamBorder,
+                      color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
                     ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onSelected: (_) => onDateFilterChanged(opt),
                   ),
                 );

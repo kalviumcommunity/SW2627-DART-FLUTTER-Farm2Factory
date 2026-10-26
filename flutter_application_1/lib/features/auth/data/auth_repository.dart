@@ -2,23 +2,27 @@ import 'package:flutter/foundation.dart';
 import '../../admin/data/collector_repository.dart';
 import '../../farmers/data/farmer_repository.dart';
 
-enum UserRole { farmer, collector, admin }
+enum UserRole { farmer, collector, admin, manager }
 
 class AppUser {
   final String id;
   final String name;
   final String phone;
+  final String email;
   final UserRole role;
   final String center;
   final String? collectorId;
+  final bool twoFactorEnabled;
 
   const AppUser({
     required this.id,
     required this.name,
     required this.phone,
+    this.email = '',
     required this.role,
     this.center = 'Central Valley Collection Center',
     this.collectorId,
+    this.twoFactorEnabled = false,
   });
 }
 
@@ -26,19 +30,25 @@ class _Account {
   final String id;
   final String name;
   final String identifier; // phone or username
+  final String phone;
+  final String email;
   final String password;
   final UserRole role;
   final String center;
   final String? collectorId;
+  final bool twoFactorEnabled;
 
   const _Account({
     required this.id,
     required this.name,
     required this.identifier,
+    this.phone = '',
+    this.email = '',
     required this.password,
     required this.role,
     this.center = 'Central Valley Collection Center',
     this.collectorId,
+    this.twoFactorEnabled = false,
   });
 }
 
@@ -46,23 +56,61 @@ class AuthRepository extends ChangeNotifier {
   AuthRepository._();
   static final AuthRepository instance = AuthRepository._();
 
+  bool _isAdmin2FAVerified = false;
+  bool get isAdmin2FAVerified => _isAdmin2FAVerified;
+
+  AppUser? _pending2FAUser;
+  AppUser? get pending2FAUser => _pending2FAUser;
+
+  String _current2FAOtp = '246810';
+  String get current2FAOtp => _current2FAOtp;
+
   final Map<String, _Account> _accounts = {
-    // Dairy Admin
+    // Enterprise Dairy Admin (HQ) - 2FA Enforced with Mobile & Email
     '9999999999': const _Account(
       id: 'ADM-001',
       name: 'Demo Admin',
       identifier: '9999999999',
+      phone: '9999999999',
+      email: 'admin.controller@farm2factory.in',
       password: '123456',
       role: UserRole.admin,
-      center: 'Jaipur Cooperative Dairy Plant',
+      center: 'Jaipur Cooperative Dairy (HQ)',
+      twoFactorEnabled: true,
     ),
     'dairyadmin': const _Account(
       id: 'ADM-001',
       name: 'Dairy Plant Admin',
       identifier: 'dairyadmin',
+      phone: '9999999999',
+      email: 'admin.controller@farm2factory.in',
       password: 'admin123',
       role: UserRole.admin,
-      center: 'Jaipur Cooperative Dairy Plant',
+      center: 'Jaipur Cooperative Dairy (HQ)',
+      twoFactorEnabled: true,
+    ),
+    // Center Manager (Branch Operations)
+    '7777777777': const _Account(
+      id: 'MGR-001',
+      name: 'Vikram Patel',
+      identifier: '7777777777',
+      phone: '7777777777',
+      email: 'manager.tonk@farm2factory.in',
+      password: '123456',
+      role: UserRole.manager,
+      center: 'Tonk Chilling Center #3',
+      twoFactorEnabled: false,
+    ),
+    'centermanager': const _Account(
+      id: 'MGR-001',
+      name: 'Vikram Patel',
+      identifier: 'centermanager',
+      phone: '7777777777',
+      email: 'manager.tonk@farm2factory.in',
+      password: '123456',
+      role: UserRole.manager,
+      center: 'Tonk Chilling Center #3',
+      twoFactorEnabled: false,
     ),
     // Collector
     '123456': const _Account(
@@ -257,6 +305,38 @@ class AuthRepository extends ChangeNotifier {
     return null;
   }
 
+  Future<String?> registerManager({
+    required String name,
+    required String identifier,
+    required String password,
+    required String centerName,
+    String? phone,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    final cleanId = identifier.trim();
+    if (_accounts.containsKey(cleanId)) {
+      return 'This username/phone is already registered. Please log in.';
+    }
+    final mgrId =
+        'MGR-${cleanId.length >= 4 ? cleanId.substring(cleanId.length - 4) : cleanId}';
+    final center =
+        centerName.trim().isEmpty ? 'Tonk Chilling Center #3' : centerName.trim();
+    final account = _Account(
+      id: mgrId,
+      name: name.trim(),
+      identifier: cleanId,
+      password: password,
+      role: UserRole.manager,
+      center: center,
+    );
+    _accounts[cleanId] = account;
+    if (phone != null && phone.trim().isNotEmpty && !_accounts.containsKey(phone.trim())) {
+      _accounts[phone.trim()] = account;
+    }
+
+    return null;
+  }
+
   Future<String?> login({
     required String identifier,
     required String password,
@@ -269,20 +349,65 @@ class AuthRepository extends ChangeNotifier {
       return 'Invalid credentials. Please check and try again.';
     }
 
-    _currentUser = AppUser(
+    final loggedInUser = AppUser(
       id: account.id,
       name: account.name,
-      phone: account.identifier,
+      phone: account.phone.isNotEmpty ? account.phone : account.identifier,
+      email: account.email.isNotEmpty ? account.email : 'admin.controller@farm2factory.in',
       role: account.role,
       center: account.center,
       collectorId: account.collectorId,
+      twoFactorEnabled: account.twoFactorEnabled,
     );
+
+    if (account.role == UserRole.admin && account.twoFactorEnabled) {
+      _pending2FAUser = loggedInUser;
+      _current2FAOtp = '246810';
+      _isAdmin2FAVerified = false;
+      _currentUser = null; // Requires 2FA verification to unlock session
+      notifyListeners();
+      return null;
+    }
+
+    _currentUser = loggedInUser;
     notifyListeners();
     return null;
   }
 
+  void prepareAdmin2FA(AppUser user) {
+    _pending2FAUser = user;
+    _current2FAOtp = '246810';
+    _isAdmin2FAVerified = false;
+    notifyListeners();
+  }
+
+  void resendAdmin2FAOtp() {
+    _current2FAOtp = '246810';
+    notifyListeners();
+  }
+
+  bool verifyAdmin2FA(String otp) {
+    if (otp.trim() == _current2FAOtp) {
+      if (_pending2FAUser != null) {
+        _currentUser = _pending2FAUser;
+      }
+      _isAdmin2FAVerified = true;
+      _pending2FAUser = null;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  void lockAdminSession() {
+    _isAdmin2FAVerified = false;
+    notifyListeners();
+  }
+
   void logout() {
     _currentUser = null;
+    _pending2FAUser = null;
+    _isAdmin2FAVerified = false;
     notifyListeners();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
 
 class QualityTrendChart extends StatelessWidget {
   final String period;
@@ -14,32 +13,37 @@ class QualityTrendChart extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Header (responsive wrap to prevent horizontal overflow)
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 10,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3E5F5),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
-                    child: const Icon(Icons.science_outlined, color: Color(0xFF7B1FA2), size: 20),
+                    child: const Icon(Icons.science_outlined, color: Color(0xFF7C3AED), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -62,31 +66,35 @@ class QualityTrendChart extends StatelessWidget {
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _legendIndicator('FAT % (Avg: 4.25%)', const Color(0xFFE65100)),
+                  _legendIndicator('FAT % (Avg: 4.25%)', const Color(0xFFD97706)),
                   const SizedBox(width: 14),
-                  _legendIndicator('SNF % (Avg: 8.55%)', const Color(0xFF7B1FA2)),
+                  _legendIndicator('SNF % (Avg: 8.55%)', const Color(0xFF7C3AED)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 20),
 
-          // Standard Targets Info Banner
+          // Standard Targets Info Banner (Clean regulatory compliance banner)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAF5FF),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE9D5FF)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, size: 16, color: Color(0xFF7B1FA2)),
+                Icon(Icons.verified_outlined, size: 16, color: Color(0xFF0F5132)),
                 SizedBox(width: 8),
-                Text(
-                  'FSSAI Milk Standards: Minimum FAT ≥ 3.8% | Minimum SNF ≥ 8.2% | Temperature ≤ 4.5°C',
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF6B21A8)),
+                Expanded(
+                  child: Text(
+                    'FSSAI Milk Standards: Minimum FAT ≥ 3.8% | Minimum SNF ≥ 8.2% | Temperature ≤ 4.5°C',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                  ),
                 ),
               ],
             ),

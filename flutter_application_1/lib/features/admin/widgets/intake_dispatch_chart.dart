@@ -19,13 +19,13 @@ class IntakeDispatchChart extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.creamBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -41,10 +41,11 @@ class IntakeDispatchChart extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.cardMint,
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
-                    child: const Icon(Icons.bar_chart, color: AppTheme.brandGreen, size: 20),
+                    child: const Icon(Icons.bar_chart, color: Color(0xFF0F5132), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Column(

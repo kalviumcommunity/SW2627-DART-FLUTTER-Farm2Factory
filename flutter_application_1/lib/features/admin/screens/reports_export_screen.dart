@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/export_helper.dart';
 import '../services/report_service.dart';
 import '../widgets/dairy_portal_scaffold.dart';
 
@@ -37,15 +39,82 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
   }
 
   void _downloadCsv() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Report generated: "$_selectedReportType.csv" ready for download!'),
-        backgroundColor: AppTheme.brandGreen,
-        action: SnackBarAction(
-          label: 'View',
-          textColor: Colors.white,
-          onPressed: () {},
+    final cleanName = _selectedReportType.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    final now = DateTime.now();
+    final filename = '${cleanName}_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.csv';
+
+    ExportHelper.downloadFile(filename: filename, content: _generatedCsvPreview);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.cardMint,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.file_download_done, color: AppTheme.brandGreen, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('Report Downloaded', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ],
         ),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('File: $filename', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+              const SizedBox(height: 6),
+              const Text('Location: Saved directly to your device Downloads folder.', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.download, size: 16),
+                      label: const Text('Download Again'),
+                      onPressed: () {
+                        ExportHelper.downloadFile(filename: filename, content: _generatedCsvPreview);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Share / Copy CSV'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: _generatedCsvPreview));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Report copied to clipboard! Ready to paste into Excel or messaging apps.'),
+                            backgroundColor: AppTheme.brandGreen,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
+        ],
       ),
     );
   }
@@ -65,8 +134,15 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,8 +273,15 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,10 +301,11 @@ class _ReportsExportScreenState extends State<ReportsExportScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppTheme.cardMint,
-                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF86EFAC)),
                         ),
-                        child: const Text('Live CSV Stream', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
+                        child: const Text('Live CSV Stream', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF166534))),
                       ),
                     ],
                   ),
