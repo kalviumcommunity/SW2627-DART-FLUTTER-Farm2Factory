@@ -533,6 +533,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
                   // Quantity and Temperature side-by-side
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
@@ -543,6 +544,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'Quantity (Litres)',
                             hintText: 'e.g. 15.5',
+                            helperText: 'Volume in litres',
                             prefixIcon: Icon(Icons.water_drop_outlined,
                                 color: Colors.grey.shade600, size: 20),
                           ),
@@ -557,6 +559,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'Temp (°C)',
                             hintText: 'e.g. 4.0',
+                            helperText: 'Acceptable: ≤ 10.0°C',
                             prefixIcon: Icon(Icons.thermostat_outlined,
                                 color: Colors.grey.shade600, size: 20),
                           ),
@@ -568,6 +571,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
 
                   // Fat % and SNF % side-by-side
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
@@ -578,6 +582,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'Fat %',
                             hintText: 'e.g. 4.2',
+                            helperText: 'Milk fat content %',
                             prefixIcon: Icon(Icons.opacity,
                                 color: Colors.grey.shade600, size: 20),
                           ),
@@ -593,6 +598,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           decoration: InputDecoration(
                             labelText: 'SNF %',
                             hintText: 'e.g. 8.5',
+                            helperText: 'Solids-not-fat %',
                             prefixIcon: Icon(Icons.science_outlined,
                                 color: Colors.grey.shade600, size: 20),
                           ),
