@@ -5,6 +5,7 @@ import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../data/auth_repository.dart';
 
 enum LoginRole { farmer, collector, manager, admin }
@@ -209,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? AppTheme.cardSurface : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
@@ -228,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? primaryColor : Colors.grey.shade600,
+                color: isSelected ? primaryColor : AppTheme.textSecondary,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -241,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontSize: 12.5,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? primaryColor : Colors.grey.shade600,
+                      color: isSelected ? primaryColor : AppTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -365,16 +366,24 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              const SizedBox(height: 8),
+              // Top Bar with Theme Toggle
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: const ThemeModeButton(showLabel: true),
+                ),
+              ),
+              const SizedBox(height: 4),
               // Logo & Brand Header
               const Center(child: AppLogo(size: 64)),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Farm2Factory',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  color: AppTheme.brandGreenDark,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -383,7 +392,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'From farm to factory, every litre counted',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: AppTheme.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -416,12 +425,12 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
 
               // "Welcome Back" Header
-              const Text(
+              Text(
                 'Welcome Back',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -430,21 +439,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: AppTheme.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // 3-Role Segment Switcher: Farmer, Collector, Dairy Admin
+              // 4-Role Segment Switcher: Farmer, Collector, Manager, Admin
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: AppTheme.creamSurface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.grey.shade300.withOpacity(0.5),
+                      color: AppTheme.creamBorder,
                     ),
                   ),
                   child: Row(
@@ -748,7 +757,7 @@ class _DemoPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.cardSurface,
           border: Border.all(color: AppTheme.creamBorder),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
@@ -774,10 +783,10 @@ class _DemoPill extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     child: Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ),
@@ -791,7 +800,7 @@ class _DemoPill extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 8.5,
-                  color: Colors.grey.shade600,
+                  color: AppTheme.textSecondary,
                 ),
               ),
             ),

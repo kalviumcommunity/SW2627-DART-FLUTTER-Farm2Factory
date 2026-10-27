@@ -18,9 +18,9 @@ class IntakeDispatchChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -41,9 +41,9 @@ class IntakeDispatchChart extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: AppTheme.creamSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: AppTheme.creamBorder),
                     ),
                     child: const Icon(Icons.bar_chart, color: Color(0xFF0F5132), size: 20),
                   ),
@@ -53,15 +53,15 @@ class IntakeDispatchChart extends StatelessWidget {
                     children: [
                       Text(
                         'Milk Intake vs. Tanker Dispatch ($period)',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       Text(
                         'Reconciliation between Collection Centers and Factory Dispatches',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                       ),
                     ],
                   ),
@@ -83,23 +83,23 @@ class IntakeDispatchChart extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppTheme.creamSurface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatPill('Total Procured', '${totalIntake.toInt()} L', AppTheme.brandGreenDark),
-                Container(width: 1, height: 28, color: Colors.grey.shade300),
+                Container(width: 1, height: 28, color: AppTheme.creamBorder),
                 _buildStatPill('Total Dispatched', '${totalDispatch.toInt()} L', const Color(0xFF0288D1)),
-                Container(width: 1, height: 28, color: Colors.grey.shade300),
+                Container(width: 1, height: 28, color: AppTheme.creamBorder),
                 _buildStatPill(
                   'Net Buffer / Silo',
                   '${diff >= 0 ? '+' : ''}${diff.toInt()} L',
                   diff >= 0 ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
                 ),
-                Container(width: 1, height: 28, color: Colors.grey.shade300),
+                Container(width: 1, height: 28, color: AppTheme.creamBorder),
                 _buildStatPill('Dispatch Efficiency', '${((totalDispatch / totalIntake) * 100).toStringAsFixed(1)}%', const Color(0xFFE65100)),
               ],
             ),
@@ -176,7 +176,7 @@ class IntakeDispatchChart extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
+                            color: AppTheme.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -205,7 +205,7 @@ class IntakeDispatchChart extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
         ),
       ],
     );
@@ -214,7 +214,7 @@ class IntakeDispatchChart extends StatelessWidget {
   static Widget _buildStatPill(String title, String value, Color valueColor) {
     return Column(
       children: [
-        Text(title, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+        Text(title, style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.w500)),
         const SizedBox(height: 2),
         Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: valueColor)),
       ],

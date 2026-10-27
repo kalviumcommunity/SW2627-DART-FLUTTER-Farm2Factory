@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/farmer_repository.dart';
 
@@ -74,17 +75,21 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.farmers),
         ),
-        title: const Text(
+        title: Text(
           'Add Farmer',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+            color: AppTheme.textPrimary,
           ),
         ),
+        actions: const [
+          ThemeModeButton(),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

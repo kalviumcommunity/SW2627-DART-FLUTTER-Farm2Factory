@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 
 enum DairyPortalType { admin, manager }
@@ -131,9 +133,12 @@ class DairyPortalScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 960;
-    final type = _resolvedPortalType;
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth >= 960;
+        final type = _resolvedPortalType;
 
     // 1. Enterprise Admin Console is restricted to Desktop Only
     if (type == DairyPortalType.admin) {
@@ -194,14 +199,15 @@ class DairyPortalScaffold extends StatelessWidget {
           style: TextStyle(
             fontSize: screenWidth < 380 ? 15 : 17,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF0F172A),
+            color: AppTheme.textPrimary,
           ),
         ),
         actions: [
+          const ThemeModeButton(),
           ...?actions,
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Color(0xFF64748B), size: 20),
+            icon: Icon(Icons.logout, color: AppTheme.textMuted, size: 20),
             onPressed: () {
               AuthRepository.instance.logout();
               context.go(AppRoutes.login);
@@ -214,6 +220,8 @@ class DairyPortalScaffold extends StatelessWidget {
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: _buildManagerMobileBottomBar(context),
     );
+      },
+    );
   }
 
   // =========================================================================
@@ -223,7 +231,7 @@ class DairyPortalScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardSurface,
         elevation: 0,
         title: const Row(
           children: [
@@ -236,9 +244,10 @@ class DairyPortalScaffold extends StatelessWidget {
           ],
         ),
         actions: [
+          const ThemeModeButton(),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Colors.grey, size: 20),
+            icon: Icon(Icons.logout, color: AppTheme.textMuted, size: 20),
             onPressed: () {
               AuthRepository.instance.logout();
               context.go(AppRoutes.login);
@@ -253,9 +262,9 @@ class DairyPortalScaffold extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 440),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppTheme.creamBorder),
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6)),
               ],
@@ -267,14 +276,14 @@ class DairyPortalScaffold extends StatelessWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: AppTheme.creamSurface,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.desktop_windows_outlined,
                     size: 32,
-                    color: Color(0xFF0F172A),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -295,13 +304,13 @@ class DairyPortalScaffold extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Executive Admin Console',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -311,7 +320,7 @@ class DairyPortalScaffold extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.5,
-                    color: Colors.grey.shade600,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 26),
@@ -672,9 +681,9 @@ class DairyPortalScaffold extends StatelessWidget {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        border: Border(bottom: BorderSide(color: AppTheme.creamBorder)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -683,10 +692,10 @@ class DairyPortalScaffold extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: AppTheme.textPrimary,
                   letterSpacing: -0.4,
                 ),
               ),
@@ -694,10 +703,10 @@ class DairyPortalScaffold extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isAdmin ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+                  color: isAdmin ? AppTheme.badgeSkyBg : AppTheme.badgeMintBg,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: isAdmin ? const Color(0xFFBFDBFE) : const Color(0xFFBBF7D0),
+                    color: isAdmin ? AppTheme.badgeSkyBorder : AppTheme.badgeMintBorder,
                   ),
                 ),
                 child: Text(
@@ -705,7 +714,7 @@ class DairyPortalScaffold extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isAdmin ? const Color(0xFF1D4ED8) : const Color(0xFF15803D),
+                    color: isAdmin ? AppTheme.badgeSkyText : AppTheme.badgeMintText,
                   ),
                 ),
               ),
@@ -717,9 +726,9 @@ class DairyPortalScaffold extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: AppTheme.creamSurface,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -728,10 +737,10 @@ class DairyPortalScaffold extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         'Admin: ${user?.phone.isNotEmpty == true ? user!.phone : "9999999999"} • ${user?.email.isNotEmpty == true ? user!.email : "admin.controller@farm2factory.in"}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF334155),
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -755,14 +764,17 @@ class DairyPortalScaffold extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               ...?actions,
+              const SizedBox(width: 8),
+              // Theme Mode Toggle
+              const ThemeModeButton(showLabel: true),
               const SizedBox(width: 12),
               // Live Plant Status Badge with Live Pulsing Dot
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: AppTheme.creamSurface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Row(
                   children: [
@@ -777,10 +789,10 @@ class DairyPortalScaffold extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       isAdmin ? 'Live Plant Intake: 42,850 L' : 'Center Intake: 8,450 L',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F172A),
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ],
@@ -803,7 +815,7 @@ class DairyPortalScaffold extends StatelessWidget {
         : 'Tonk Chilling Center #3';
 
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.cardSurface,
       child: SafeArea(
         child: Column(
           children: [
@@ -823,7 +835,7 @@ class DairyPortalScaffold extends StatelessWidget {
                         ),
                         Text(
                           centerName,
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -844,13 +856,13 @@ class DairyPortalScaffold extends StatelessWidget {
                     tileColor: isSelected ? AppTheme.cardMint : null,
                     leading: Icon(
                       isSelected ? item.activeIcon : item.icon,
-                      color: isSelected ? AppTheme.brandGreenDark : Colors.grey.shade700,
+                      color: isSelected ? AppTheme.brandGreenDark : AppTheme.textSecondary,
                     ),
                     title: Text(
                       item.title,
                       style: TextStyle(
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppTheme.brandGreenDark : const Color(0xFF1E293B),
+                        color: isSelected ? AppTheme.brandGreenDark : AppTheme.textPrimary,
                       ),
                     ),
                     onTap: () {
@@ -864,6 +876,15 @@ class DairyPortalScaffold extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.brightness_medium_outlined),
+              title: Text('Appearance', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+              trailing: const ThemeModeButton(),
+              onTap: () {
+                Navigator.pop(context);
+                showThemeSelectionDialog(context);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text('Logout', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
@@ -894,7 +915,7 @@ class DairyPortalScaffold extends StatelessWidget {
     if (currentIndex == -1) currentIndex = 0;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppTheme.scaffoldBg,
         border: Border(top: BorderSide(color: AppTheme.creamBorder)),
       ),

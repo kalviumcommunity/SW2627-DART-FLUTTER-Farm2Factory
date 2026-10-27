@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_theme.dart';
+
 /// Standard status pill badge for collector, dispatch, payment, and quality states.
 class StatusBadge extends StatelessWidget {
   final String status;
@@ -21,17 +23,17 @@ class StatusBadge extends StatelessWidget {
       case 'completed':
       case 'grade a':
       case 'operating 24/7':
-        return const Color(0xFFDCFCE7); // Emerald-100
+        return AppTheme.badgeMintBg;
       case 'collecting':
       case 'en route':
       case 'dispatched':
       case 'processing':
-        return const Color(0xFFE0F2FE); // Sky-100
+        return AppTheme.badgeSkyBg;
       case 'on duty':
       case 'loading':
       case 'warning':
       case 'grade b':
-        return const Color(0xFFFEF3C7); // Amber-100
+        return AppTheme.badgeAmberBg;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -39,9 +41,9 @@ class StatusBadge extends StatelessWidget {
       case 'high':
       case 'grade c':
       case 'rejected':
-        return const Color(0xFFFEE2E2); // Rose-100
+        return AppTheme.badgeRoseBg;
       default:
-        return const Color(0xFFF1F5F9); // Slate-100
+        return AppTheme.badgeNeutralBg;
     }
   }
 
@@ -53,17 +55,17 @@ class StatusBadge extends StatelessWidget {
       case 'completed':
       case 'grade a':
       case 'operating 24/7':
-        return const Color(0xFF166534); // Emerald-800
+        return AppTheme.badgeMintText;
       case 'collecting':
       case 'en route':
       case 'dispatched':
       case 'processing':
-        return const Color(0xFF0369A1); // Sky-700
+        return AppTheme.badgeSkyText;
       case 'on duty':
       case 'loading':
       case 'warning':
       case 'grade b':
-        return const Color(0xFFB45309); // Amber-700
+        return AppTheme.badgeAmberText;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -71,9 +73,9 @@ class StatusBadge extends StatelessWidget {
       case 'high':
       case 'grade c':
       case 'rejected':
-        return const Color(0xFF991B1B); // Rose-800
+        return AppTheme.badgeRoseText;
       default:
-        return const Color(0xFF475569); // Slate-600
+        return AppTheme.badgeNeutralText;
     }
   }
 
@@ -85,17 +87,17 @@ class StatusBadge extends StatelessWidget {
       case 'completed':
       case 'grade a':
       case 'operating 24/7':
-        return const Color(0xFF86EFAC);
+        return AppTheme.badgeMintBorder;
       case 'collecting':
       case 'en route':
       case 'dispatched':
       case 'processing':
-        return const Color(0xFF7DD3FC);
+        return AppTheme.badgeSkyBorder;
       case 'on duty':
       case 'loading':
       case 'warning':
       case 'grade b':
-        return const Color(0xFFFCD34D);
+        return AppTheme.badgeAmberBorder;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -103,9 +105,9 @@ class StatusBadge extends StatelessWidget {
       case 'high':
       case 'grade c':
       case 'rejected':
-        return const Color(0xFFFCA5A5);
+        return AppTheme.badgeRoseBorder;
       default:
-        return const Color(0xFFCBD5E1);
+        return AppTheme.badgeNeutralBorder;
     }
   }
 

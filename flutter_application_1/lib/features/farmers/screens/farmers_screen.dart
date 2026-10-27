@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/call_helper.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../data/farmer_repository.dart';
 import '../models/farmer.dart';
 
@@ -49,18 +50,20 @@ class _FarmersScreenState extends State<FarmersScreen> {
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.collectorDashboard),
         ),
-        title: const Text(
+        title: Text(
           'Farmers',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+            color: AppTheme.textPrimary,
           ),
         ),
         actions: [
+          const ThemeModeButton(),
+          const SizedBox(width: 4),
           // Circular green "+" button in AppBar matching reference UI
           Padding(
             padding: const EdgeInsets.only(right: 14),
@@ -104,22 +107,23 @@ class _FarmersScreenState extends State<FarmersScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppTheme.cardSurface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppTheme.creamBorder),
                         ),
                         child: TextField(
                           controller: _searchController,
                           onChanged: (val) => setState(() => _query = val),
+                          style: TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                           decoration: InputDecoration(
                             hintText: 'Search farmer by name or ID',
                             hintStyle: TextStyle(
-                                fontSize: 13, color: Colors.grey.shade400),
+                                fontSize: 13, color: AppTheme.textMuted),
                             prefixIcon: Icon(Icons.search,
-                                color: Colors.grey.shade500, size: 20),
+                                color: AppTheme.textMuted, size: 20),
                             suffixIcon: _query.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 16),
+                                    icon: Icon(Icons.clear, size: 16, color: AppTheme.textMuted),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _query = '');
@@ -140,13 +144,13 @@ class _FarmersScreenState extends State<FarmersScreen> {
                       height: 48,
                       width: 48,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.cardSurface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppTheme.creamBorder),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.tune,
-                            size: 20, color: Color(0xFF475569)),
+                        icon: Icon(Icons.tune,
+                            size: 20, color: AppTheme.textSecondary),
                         onPressed: () {
                           // Toggle filter or reset
                           setState(() {
@@ -180,21 +184,21 @@ class _FarmersScreenState extends State<FarmersScreen> {
                           }
                         },
                         selectedColor: AppTheme.brandGreen,
-                        backgroundColor: Colors.white,
+                        backgroundColor: AppTheme.cardSurface,
                         labelStyle: TextStyle(
                           fontSize: 12,
                           fontWeight:
                               isSelected ? FontWeight.bold : FontWeight.w500,
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF475569),
+                              : AppTheme.textSecondary,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(
                             color: isSelected
                                 ? AppTheme.brandGreen
-                                : Colors.grey.shade200,
+                                : AppTheme.creamBorder,
                           ),
                         ),
                         showCheckmark: false,
@@ -324,7 +328,7 @@ class _FarmerItemCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
@@ -368,10 +372,10 @@ class _FarmerItemCard extends StatelessWidget {
                     children: [
                       Text(
                         farmer.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppTheme.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -381,7 +385,7 @@ class _FarmerItemCard extends StatelessWidget {
                         '${farmer.id} • ${farmer.village}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: AppTheme.textMuted,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
@@ -407,7 +411,7 @@ class _FarmerItemCard extends StatelessWidget {
                 ),
 
                 // Chevron to Details
-                Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade400),
+                Icon(Icons.chevron_right, size: 20, color: AppTheme.textMuted),
               ],
             ),
           ),

@@ -31,18 +31,20 @@ class _CenterManagerDashboardScreenState
       activeRoute: AppRoutes.managerDashboard,
       title: isDesktop ? 'Center Operations Portal' : 'Center Dashboard',
       portalType: DairyPortalType.manager,
-      actions: [
-        IconButton(
-          tooltip: 'Rate Charts',
-          icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
-          onPressed: () => context.push(AppRoutes.managerRates),
-        ),
-        IconButton(
-          tooltip: 'Dispatch Logistics',
-          icon: const Icon(Icons.local_shipping_outlined, color: AppTheme.brandTeal),
-          onPressed: () => context.push(AppRoutes.managerDispatch),
-        ),
-      ],
+      actions: isDesktop
+          ? [
+              IconButton(
+                tooltip: 'Rate Charts',
+                icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
+                onPressed: () => context.push(AppRoutes.managerRates),
+              ),
+              IconButton(
+                tooltip: 'Dispatch Logistics',
+                icon: const Icon(Icons.local_shipping_outlined, color: AppTheme.brandTeal),
+                onPressed: () => context.push(AppRoutes.managerDispatch),
+              ),
+            ]
+          : null,
       body: isDesktop
           ? _buildDesktopView(context, centerName)
           : _buildMobileView(context, centerName),
@@ -78,15 +80,15 @@ class _CenterManagerDashboardScreenState
                     children: [
                       Text(
                         centerName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppTheme.textPrimary,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'Single Center Record • Active Procurement Station',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
@@ -96,7 +98,7 @@ class _CenterManagerDashboardScreenState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.creamBorder),
                 ),
@@ -207,17 +209,20 @@ class _CenterManagerDashboardScreenState
                     children: [
                       Text(
                         centerName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.brandGreenDark,
+                          color: AppTheme.accentGreenLight,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Text(
+                      Text(
                         'Live Single Center Record • Today',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF15803D)),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.isDark ? AppTheme.accentGreen : const Color(0xFF15803D),
+                        ),
                       ),
                     ],
                   ),
@@ -225,12 +230,17 @@ class _CenterManagerDashboardScreenState
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.isDark ? AppTheme.surfaceHighlight : Colors.white,
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Online',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.brandGreen),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.accentGreen,
+                    ),
                   ),
                 ),
               ],
@@ -420,7 +430,7 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
@@ -442,11 +452,11 @@ class _CenterManagerDashboardScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                Text(label, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 2),
-                Text(subtext, style: TextStyle(fontSize: 11, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(subtext, style: TextStyle(fontSize: 11, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -464,7 +474,7 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppTheme.creamBorder),
       ),
@@ -473,9 +483,9 @@ class _CenterManagerDashboardScreenState
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
           const SizedBox(height: 2),
-          Text(title, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+          Text(title, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         ],
       ),
     );
@@ -493,7 +503,7 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.creamBorder),
       ),
@@ -505,20 +515,23 @@ class _CenterManagerDashboardScreenState
             children: [
               Text(
                 shiftTitle,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppTheme.cardMint : const Color(0xFFEFF6FF),
+                  color: isCompleted ? AppTheme.badgeMintBg : AppTheme.badgeSkyBg,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isCompleted ? AppTheme.badgeMintBorder : AppTheme.badgeSkyBorder,
+                  ),
                 ),
                 child: Text(
                   isCompleted ? 'Received & Sealed' : 'Intake In Progress',
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.bold,
-                    color: isCompleted ? AppTheme.brandGreenDark : const Color(0xFF1D4ED8),
+                    color: isCompleted ? AppTheme.badgeMintText : AppTheme.badgeSkyText,
                   ),
                 ),
               ),
@@ -527,11 +540,11 @@ class _CenterManagerDashboardScreenState
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _metricColumn('Intake Volume', volume, const Color(0xFF0F172A))),
-              Expanded(child: _metricColumn('Milk Cans', cans, const Color(0xFF475569))),
-              Expanded(child: _metricColumn('Avg FAT', avgFat, const Color(0xFFD97706))),
-              Expanded(child: _metricColumn('Avg SNF', avgSnf, const Color(0xFF7C3AED))),
-              Expanded(child: _metricColumn('Avg Rate', rateAvg, AppTheme.brandGreen)),
+              Expanded(child: _metricColumn('Intake Volume', volume, AppTheme.textPrimary)),
+              Expanded(child: _metricColumn('Milk Cans', cans, AppTheme.textSecondary)),
+              Expanded(child: _metricColumn('Avg FAT', avgFat, const Color(0xFFF59E0B))),
+              Expanded(child: _metricColumn('Avg SNF', avgSnf, const Color(0xFF8B5CF6))),
+              Expanded(child: _metricColumn('Avg Rate', rateAvg, AppTheme.accentGreen)),
             ],
           ),
         ],
@@ -543,7 +556,7 @@ class _CenterManagerDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+        Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
         const SizedBox(height: 3),
         Text(
           value,
@@ -559,54 +572,78 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Tanker Dispatch Preparation',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
-              Icon(Icons.local_shipping, color: AppTheme.brandTeal, size: 20),
+              const Icon(Icons.local_shipping, color: AppTheme.brandTeal, size: 20),
             ],
           ),
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppTheme.creamSurface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Assigned Tanker', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                    Text('RJ-14-GA-8890', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('Assigned Tanker', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'RJ-14-GA-8890',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Driver Contact', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                    Text('Sanjay Sharma (9829001122)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text('Driver Contact', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Sanjay Sharma (9829001122)',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Filled Capacity', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                    Text('3,200 L / 5,000 L (64%)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
+                    Text('Filled Capacity', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        '3,200 L / 5,000 L (64%)',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentGreen),
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -615,11 +652,11 @@ class _CenterManagerDashboardScreenState
           const SizedBox(height: 14),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: const LinearProgressIndicator(
+            child: LinearProgressIndicator(
               value: 0.64,
               minHeight: 8,
-              backgroundColor: Color(0xFFE2E8F0),
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.brandTeal),
+              backgroundColor: AppTheme.creamBorder,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentGreen),
             ),
           ),
           const SizedBox(height: 16),
@@ -646,7 +683,7 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.creamBorder),
       ),
@@ -656,9 +693,9 @@ class _CenterManagerDashboardScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Center Quality & Lab Acceptance',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               TextButton(
                 onPressed: () => context.push(AppRoutes.managerQuality),
@@ -668,9 +705,9 @@ class _CenterManagerDashboardScreenState
           ),
           const SizedBox(height: 10),
           _labTestRow('Batch #TNK-401 (Morning Can 1-40)', 'FAT 4.15%', 'SNF 8.68%', 'PASS - Grade A'),
-          const Divider(height: 16),
+          Divider(height: 16, color: AppTheme.creamBorder),
           _labTestRow('Batch #TNK-402 (Morning Can 41-90)', 'FAT 4.10%', 'SNF 8.62%', 'PASS - Grade A'),
-          const Divider(height: 16),
+          Divider(height: 16, color: AppTheme.creamBorder),
           _labTestRow('Batch #TNK-403 (Evening Initial)', 'FAT 4.08%', 'SNF 8.60%', 'PASS - Grade A'),
         ],
       ),
@@ -684,19 +721,20 @@ class _CenterManagerDashboardScreenState
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
-            Text('$fat | $snf | MBRT 4.5 hrs', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+            Text(title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+            Text('$fat | $snf | MBRT 4.5 hrs', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
           ],
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: AppTheme.cardMint,
+            color: AppTheme.badgeMintBg,
             borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppTheme.badgeMintBorder),
           ),
           child: Text(
             status,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.badgeMintText),
           ),
         ),
       ],
@@ -707,16 +745,16 @@ class _CenterManagerDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Farmers & Field Route Operations',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
           ),
           const SizedBox(height: 14),
           _personnelRow(
@@ -725,14 +763,14 @@ class _CenterManagerDashboardScreenState
             subtitle: '142 poured today (100% active morning turnout)',
             onTap: () => context.push(AppRoutes.managerFarmers),
           ),
-          const Divider(height: 16),
+          Divider(height: 16, color: AppTheme.creamBorder),
           _personnelRow(
             icon: Icons.badge_outlined,
             title: '4 Route Collectors Active',
             subtitle: 'Village collection agents assigned to this center',
             onTap: () => context.push(AppRoutes.managerCollectors),
           ),
-          const Divider(height: 16),
+          Divider(height: 16, color: AppTheme.creamBorder),
           _personnelRow(
             icon: Icons.currency_rupee_outlined,
             title: 'Center Rate Matrix Active',
@@ -760,18 +798,18 @@ class _CenterManagerDashboardScreenState
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: AppTheme.creamSurface,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: const Color(0xFF334155), size: 18),
+              child: Icon(icon, color: AppTheme.brandGreenDark, size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -793,9 +831,9 @@ class _CenterManagerDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Center Operations Quick Access',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
         ),
         const SizedBox(height: 12),
         GridView.builder(
@@ -817,7 +855,7 @@ class _CenterManagerDashboardScreenState
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppTheme.creamBorder),
                 ),
@@ -835,7 +873,7 @@ class _CenterManagerDashboardScreenState
                     Expanded(
                       child: Text(
                         a['title'] as String,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

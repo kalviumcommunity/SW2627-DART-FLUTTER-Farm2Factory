@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../theme/theme_controller.dart';
 
 import '../../features/admin/screens/center_manager_dashboard_screen.dart';
 import '../../features/admin/screens/collector_details_screen.dart';
@@ -70,7 +73,10 @@ class AppRoutes {
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splash,
-    refreshListenable: AuthRepository.instance,
+    refreshListenable: Listenable.merge([
+      AuthRepository.instance,
+      ThemeController.instance,
+    ]),
     redirect: (context, state) {
       final loc = state.matchedLocation;
       // Protect Admin routes with 2FA verification

@@ -7,6 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/brand_footer.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/password_field.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../data/auth_repository.dart';
 import 'login_screen.dart';
 
@@ -261,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? AppTheme.cardSurface : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
@@ -280,7 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? primaryColor : Colors.grey.shade600,
+                color: isSelected ? primaryColor : AppTheme.textMuted,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -293,7 +294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       fontSize: 12.5,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? primaryColor : Colors.grey.shade600,
+                      color: isSelected ? primaryColor : AppTheme.textMuted,
                     ),
                   ),
                 ),
@@ -314,6 +315,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: const Text('Create account'),
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
+        actions: const [
+          ThemeModeButton(),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -335,7 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white,
+                              color: AppTheme.cardSurface,
                               border: Border.all(color: AppTheme.creamBorder, width: 2),
                               boxShadow: [
                                 BoxShadow(
@@ -353,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Join Farm2Factory',
                             style: TextStyle(
                               fontSize: 22,
@@ -365,7 +370,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Text(
                             _roleSubtitle,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               color: AppTheme.textSecondary,
                             ),
@@ -376,10 +381,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: AppTheme.creamSurface,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.grey.shade300.withOpacity(0.6),
+                                color: AppTheme.creamBorder,
                               ),
                             ),
                             child: Row(

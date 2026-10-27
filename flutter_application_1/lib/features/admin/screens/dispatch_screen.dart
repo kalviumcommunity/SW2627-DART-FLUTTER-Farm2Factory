@@ -31,9 +31,9 @@ class _DispatchScreenState extends State<DispatchScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(22),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -46,10 +46,10 @@ class _DispatchScreenState extends State<DispatchScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(d.vehicleNo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(d.vehicleNo, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                       Text(
                         'Driver: ${d.driverName} (+91 ${d.driverPhone})',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -62,7 +62,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
             ),
             const Divider(height: 24),
 
-            const Text('Logistics 6-Stage Timeline', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text('Logistics 6-Stage Timeline', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             const SizedBox(height: 12),
 
             ...List.generate(d.timeline.length, (idx) {
@@ -76,7 +76,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                         width: 16,
                         height: 16,
                         decoration: BoxDecoration(
-                          color: step.isCompleted ? AppTheme.brandGreen : Colors.grey.shade300,
+                          color: step.isCompleted ? AppTheme.brandGreen : AppTheme.creamBorder,
                           shape: BoxShape.circle,
                         ),
                         child: step.isCompleted
@@ -87,7 +87,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                         Container(
                           width: 2,
                           height: 42,
-                          color: step.isCompleted ? AppTheme.brandGreen : Colors.grey.shade300,
+                          color: step.isCompleted ? AppTheme.brandGreen : AppTheme.creamBorder,
                         ),
                     ],
                   ),
@@ -102,15 +102,15 @@ class _DispatchScreenState extends State<DispatchScreen> {
                             Expanded(
                               child: Text(
                                 step.stageName,
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: step.isCompleted ? const Color(0xFF0F172A) : Colors.grey),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: step.isCompleted ? AppTheme.textPrimary : AppTheme.textMuted),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Text(step.time, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                            Text(step.time, style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                           ],
                         ),
-                        Text(step.note, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        Text(step.note, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                         const SizedBox(height: 14),
                       ],
                     ),
@@ -127,10 +127,10 @@ class _DispatchScreenState extends State<DispatchScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Last GPS Ping', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      Text('Last GPS Ping', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       Text(
                         d.lastKnownLocation,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -181,9 +181,9 @@ class _DispatchScreenState extends State<DispatchScreen> {
                       labelStyle: TextStyle(
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.grey.shade700,
+                        color: isSelected ? Colors.white : AppTheme.textSecondary,
                       ),
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppTheme.cardSurface,
                       selectedColor: AppTheme.brandTeal,
                       onSelected: (_) => setState(() => _selectedStatusFilter = st),
                     ),
@@ -199,7 +199,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                 Expanded(
                   child: Text(
                     'Tankers & Fleet (${dispatches.length})',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -232,9 +232,9 @@ class _DispatchScreenState extends State<DispatchScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -267,8 +267,8 @@ class _DispatchScreenState extends State<DispatchScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(d.vehicleNo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                            Text('${d.vehicleType} • ${d.capacityLitres}L Cap', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text(d.vehicleNo, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text('${d.vehicleType} • ${d.capacityLitres}L Cap', style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -289,11 +289,11 @@ class _DispatchScreenState extends State<DispatchScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Driver: ${d.driverName}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text('Driver: ${d.driverName}', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 2),
-                      Text('From: ${d.fromLocation}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text('From: ${d.fromLocation}', style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 2),
-                      Text('To: ${d.toDestination}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text('To: ${d.toDestination}', style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -301,8 +301,8 @@ class _DispatchScreenState extends State<DispatchScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${d.loadedLitres} L', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
-                    Text('${d.containersCount} Containers', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600)),
+                    Text('${d.loadedLitres} L', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
+                    Text('${d.containersCount} Containers', style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary)),
                     Text('Temp: ${d.temperature}°C', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF0288D1))),
                   ],
                 ),
@@ -314,17 +314,22 @@ class _DispatchScreenState extends State<DispatchScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: AppTheme.creamSurface,
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.my_location, size: 14, color: AppTheme.brandTeal),
+                  Icon(Icons.my_location, size: 14, color: AppTheme.accentGreen),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       d.lastKnownLocation,
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textPrimary,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -340,7 +345,11 @@ class _DispatchScreenState extends State<DispatchScreen> {
                 Expanded(
                   child: Text(
                     'Amount: ₹ ${d.dispatchAmount.toInt()}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE65100)),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.isDark ? const Color(0xFFFB923C) : const Color(0xFFE65100),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

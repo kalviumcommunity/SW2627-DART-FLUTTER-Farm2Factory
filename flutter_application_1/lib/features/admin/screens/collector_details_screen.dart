@@ -143,7 +143,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                       children: [
                         Text(
                           c.name,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                         ),
                         StatusBadge(status: c.status),
                       ],
@@ -227,7 +227,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                   _overviewCard('Today Evening', '${c.eveningLitresToday.toInt()} L', AppTheme.cardLavender, const Color(0xFF5C6BC0)),
                   _overviewCard('Today Total', '${c.todayTotalLitres.toInt()} L', AppTheme.cardMint, AppTheme.brandGreen),
                   _overviewCard('Monthly Total', '${c.monthlyTotalLitres.toInt()} L', AppTheme.cardSky, const Color(0xFF0288D1)),
-                  _overviewCard('Daily Average', '${c.avgDailyLitres.toInt()} L/day', AppTheme.cardMint, AppTheme.brandGreenDark),
+                  _overviewCard('Daily Average', '${c.avgDailyLitres.toInt()} L/day', AppTheme.cardMint, AppTheme.accentGreen),
                   _overviewCard('Active Farmers', '${c.farmersHandled} Farmers', AppTheme.cardPeach, const Color(0xFFE65100)),
                   _overviewCard('Average FAT', '${c.avgFat}%', AppTheme.cardSky, const Color(0xFF0288D1)),
                   _overviewCard('Average SNF', '${c.avgSnf}%', AppTheme.cardLavender, const Color(0xFF6A1B9A)),
@@ -249,7 +249,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                       Expanded(
                         child: Text(
                           'Center BMC Chilling Unit: ${c.avgTemp}°C (Optimal Cold Chain)',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.brandGreenDark),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.accentGreen),
                         ),
                       ),
                     ],
@@ -312,7 +312,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(val, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), letterSpacing: -0.4)),
+            child: Text(val, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, letterSpacing: -0.4)),
           ),
         ],
       ),
@@ -417,7 +417,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('${r.totalLitres.toInt()} Litres', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
+                        Text('${r.totalLitres.toInt()} Litres', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
                         Text('FAT: ${r.fat}%  •  SNF: ${r.snf}%', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                       ],
                     ),
@@ -480,7 +480,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('₹ ${p.amount.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F172A))),
+                        Text('₹ ${p.amount.toInt()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textPrimary)),
                         const SizedBox(height: 4),
                         StatusBadge(status: p.status, fontSize: 10),
                       ],
@@ -551,11 +551,11 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('16.5 L / day', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
-                        Text('Grade A (4.2% FAT)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text('16.5 L / day', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
+                        const Text('Grade A (4.2% FAT)', style: TextStyle(fontSize: 11, color: Colors.grey)),
                       ],
                     ),
                   ],
@@ -658,12 +658,12 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A))),
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
           const Divider(height: 20),
           ...children,
         ],

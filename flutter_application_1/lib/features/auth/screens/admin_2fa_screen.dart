@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../data/auth_repository.dart';
 
 class Admin2FAScreen extends StatefulWidget {
@@ -153,37 +155,47 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthRepository.instance.pending2FAUser ??
-        AuthRepository.instance.currentUser;
-    final registeredMobile = user?.phone.isNotEmpty == true
-        ? user!.phone
-        : '9999999999';
-    final registeredEmail = user?.email.isNotEmpty == true
-        ? user!.email
-        : 'admin.controller@farm2factory.in';
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final user = AuthRepository.instance.pending2FAUser ??
+            AuthRepository.instance.currentUser;
+        final registeredMobile = user?.phone.isNotEmpty == true
+            ? user!.phone
+            : '9999999999';
+        final registeredEmail = user?.email.isNotEmpty == true
+            ? user!.email
+            : 'admin.controller@farm2factory.in';
 
-    // Masked versions for security aesthetic
-    final maskedMobile = registeredMobile.length >= 10
-        ? '+91 ${registeredMobile.substring(0, 5)} •••••'
-        : registeredMobile;
-    final emailParts = registeredEmail.split('@');
-    final maskedEmail = emailParts.length == 2 && emailParts[0].length >= 3
-        ? '${emailParts[0].substring(0, 2)}***@${emailParts[1]}'
-        : registeredEmail;
+        // Masked versions for security aesthetic
+        final maskedMobile = registeredMobile.length >= 10
+            ? '+91 ${registeredMobile.substring(0, 5)} •••••'
+            : registeredMobile;
+        final emailParts = registeredEmail.split('@');
+        final maskedEmail = emailParts.length == 2 && emailParts[0].length >= 3
+            ? '${emailParts[0].substring(0, 2)}***@${emailParts[1]}'
+            : registeredEmail;
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 480),
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppTheme.creamBorder),
+        return Scaffold(
+          backgroundColor: AppTheme.scaffoldBg,
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth < 400 ? 12 : 20,
+                  vertical: 20,
+                ),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth < 400 ? 16 : 28,
+                    vertical: screenWidth < 400 ? 20 : 28,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardSurface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppTheme.creamBorder),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
@@ -196,41 +208,52 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // App Brand & Shield Icon
+                  // App Brand & Shield Icon & Theme Switcher
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const AppLogo(size: 32),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Farm2Factory',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.brandGreenDark,
-                          letterSpacing: -0.3,
-                        ),
+                      Row(
+                        children: [
+                          const AppLogo(size: 32),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Farm2Factory',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
                       ),
+                      const ThemeModeButton(),
                     ],
                   ),
                   const SizedBox(height: 20),
 
                   // Shield Icon container
                   Container(
-                    width: 68,
-                    height: 68,
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
+                      color: AppTheme.isDark
+                          ? const Color(0xFF1E3A8A).withOpacity(0.35)
+                          : const Color(0xFFEFF6FF),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        color: AppTheme.isDark
+                            ? const Color(0xFF3B82F6).withOpacity(0.4)
+                            : const Color(0xFF3B82F6).withOpacity(0.3),
                         width: 2,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.security,
-                      size: 34,
-                      color: Color(0xFF1D4ED8),
+                      size: 32,
+                      color: AppTheme.isDark
+                          ? const Color(0xFF60A5FA)
+                          : const Color(0xFF1D4ED8),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -239,27 +262,28 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
+                      color: AppTheme.badgeAmberBg,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.badgeAmberBorder),
                     ),
-                    child: const Text(
+                    child: Text(
                       'RESTRICTED ENTERPRISE PANEL',
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF92400E),
+                        color: AppTheme.badgeAmberText,
                         letterSpacing: 0.6,
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Admin 2-Factor Authentication',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -269,7 +293,7 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                     style: TextStyle(
                       fontSize: 12.5,
                       height: 1.4,
-                      color: Colors.grey.shade600,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -287,16 +311,24 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.verified_user, size: 16, color: AppTheme.brandGreen),
-                            SizedBox(width: 6),
-                            Text(
-                              'Authorized Admin Credentials',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.brandGreenDark,
+                            Icon(
+                              Icons.verified_user,
+                              size: 16,
+                              color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Authorized Admin Credentials',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -318,70 +350,71 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                   ),
                   const SizedBox(height: 22),
 
-                  // 6 Digit OTP Input Boxes
+                  // 6 Digit OTP Input Boxes (Fluid Responsive Layout)
                   Text(
                     'Enter 6-Digit Verification Code',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(_otpLength, (index) {
-                      return SizedBox(
-                        width: 44,
-                        height: 52,
-                        child: RawKeyboardListener(
-                          focusNode: FocusNode(),
-                          onKey: (event) {
-                            if (event is RawKeyDownEvent &&
-                                event.logicalKey ==
-                                    LogicalKeyboardKey.backspace &&
-                                _controllers[index].text.isEmpty &&
-                                index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                          },
-                          child: TextField(
-                            controller: _controllers[index],
-                            focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            maxLength: 1,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            decoration: InputDecoration(
-                              counterText: '',
-                              contentPadding: EdgeInsets.zero,
-                              filled: true,
-                              fillColor: _focusNodes[index].hasFocus
-                                  ? Colors.white
-                                  : const Color(0xFFF8FAFC),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 1.5,
+                      return Expanded(
+                        child: Container(
+                          height: 52,
+                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                          child: RawKeyboardListener(
+                            focusNode: FocusNode(),
+                            onKey: (event) {
+                              if (event is RawKeyDownEvent &&
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.backspace &&
+                                  _controllers[index].text.isEmpty &&
+                                  index > 0) {
+                                _focusNodes[index - 1].requestFocus();
+                              }
+                            },
+                            child: TextField(
+                              controller: _controllers[index],
+                              focusNode: _focusNodes[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: 1,
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: InputDecoration(
+                                counterText: '',
+                                contentPadding: EdgeInsets.zero,
+                                filled: true,
+                                fillColor: _focusNodes[index].hasFocus
+                                    ? AppTheme.cardSurface
+                                    : AppTheme.creamSurface,
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.creamBorder,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: AppTheme.brandGreen,
-                                  width: 2,
-                                ),
-                              ),
+                              onChanged: (val) => _onDigitChanged(index, val),
                             ),
-                            onChanged: (val) => _onDigitChanged(index, val),
                           ),
                         ),
                       );
@@ -424,32 +457,35 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: AppTheme.creamSurface,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                        border: Border.all(color: AppTheme.creamBorder),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.key, size: 15, color: Color(0xFF475569)),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Demo 2FA Code: ${AuthRepository.instance.current2FAOtp}',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF334155),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.key, size: 15, color: AppTheme.textSecondary),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Demo 2FA Code: ${AuthRepository.instance.current2FAOtp}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            '(Tap to auto-fill)',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: Color(0xFF64748B),
+                            const SizedBox(width: 6),
+                            Text(
+                              '(Tap to auto-fill)',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -462,7 +498,7 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                     child: ElevatedButton(
                       onPressed: _loading ? null : _verifyOtp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
+                        backgroundColor: AppTheme.isDark ? const Color(0xFF10B981) : const Color(0xFF0F5132),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -478,19 +514,22 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.lock_open, size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Verify & Unlock Admin Console',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                          : const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.lock_open, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Verify & Unlock Admin Console',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                     ),
                   ),
@@ -500,41 +539,52 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton.icon(
-                        icon: const Icon(Icons.arrow_back, size: 15),
-                        label: const Text('Back to Login'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF64748B),
-                          textStyle: const TextStyle(fontSize: 12),
-                        ),
-                        onPressed: () {
-                          AuthRepository.instance.logout();
-                          context.go(AppRoutes.login);
-                        },
-                      ),
-                      TextButton.icon(
-                        icon: Icon(
-                          Icons.refresh,
-                          size: 15,
-                          color: _secondsRemaining == 0
-                              ? AppTheme.brandGreen
-                              : Colors.grey,
-                        ),
-                        label: Text(
-                          _secondsRemaining > 0
-                              ? 'Resend in ${_secondsRemaining}s'
-                              : 'Resend Code',
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _secondsRemaining == 0
-                              ? AppTheme.brandGreen
-                              : Colors.grey,
-                          textStyle: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.arrow_back, size: 15),
+                          label: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('Back to Login'),
                           ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppTheme.textSecondary,
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                          onPressed: () {
+                            AuthRepository.instance.logout();
+                            context.go(AppRoutes.login);
+                          },
                         ),
-                        onPressed: _secondsRemaining == 0 ? _resendCode : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: TextButton.icon(
+                          icon: Icon(
+                            Icons.refresh,
+                            size: 15,
+                            color: _secondsRemaining == 0
+                                ? AppTheme.accentGreen
+                                : AppTheme.textMuted,
+                          ),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              _secondsRemaining > 0
+                                  ? 'Resend in ${_secondsRemaining}s'
+                                  : 'Resend Code',
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: _secondsRemaining == 0
+                                ? AppTheme.accentGreen
+                                : AppTheme.textMuted,
+                            textStyle: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          onPressed: _secondsRemaining == 0 ? _resendCode : null,
+                        ),
                       ),
                     ],
                   ),
@@ -545,6 +595,8 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
         ),
       ),
     );
+      },
+    );
   }
 
   Widget _buildCredentialRow({
@@ -554,22 +606,30 @@ class _Admin2FAScreenState extends State<Admin2FAScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppTheme.brandGreenDark),
+        Icon(
+          icon,
+          size: 14,
+          color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
+        ),
         const SizedBox(width: 6),
         Text(
           '$label: ',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11.5,
-            color: Color(0xFF334155),
+            color: AppTheme.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 11.5,
-            color: Color(0xFF0F172A),
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

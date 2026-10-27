@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../farmers/data/farmer_repository.dart';
 
@@ -110,13 +112,16 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthRepository.instance.currentUser;
-    final userName = user?.name ?? 'Ramesh Kumar';
-    final userCenter = user?.center ?? 'Central Valley Collection Center';
-    final farmerCount = FarmerRepository.instance.farmers.length;
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final user = AuthRepository.instance.currentUser;
+        final userName = user?.name ?? 'Ramesh Kumar';
+        final userCenter = user?.center ?? 'Central Valley Collection Center';
+        final farmerCount = FarmerRepository.instance.farmers.length;
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+        return Scaffold(
+          backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
@@ -129,12 +134,14 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
               style: TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.w800,
-                color: Colors.grey.shade900,
+                color: AppTheme.textPrimary,
               ),
             ),
           ],
         ),
         actions: [
+          // Theme Switcher Button
+          const ThemeModeButton(),
           // Share Invite Button in AppBar
           IconButton(
             tooltip: 'Share invite link',
@@ -469,7 +476,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                         color: AppTheme.brandGreen, size: 22),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -478,10 +485,10 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: AppTheme.textPrimary,
                           ),
                         ),
-                        Text(
+                        const Text(
                           'Share link to download & login to dashboard',
                           style: TextStyle(fontSize: 11, color: Colors.grey),
                         ),
@@ -509,7 +516,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppTheme.scaffoldBg,
           border: Border(top: BorderSide(color: AppTheme.creamBorder)),
         ),
@@ -560,6 +567,8 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
         ),
       ),
     );
+      },
+    );
   }
 }
 
@@ -605,7 +614,7 @@ class _ActionCard extends StatelessWidget {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.cardSurface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -616,7 +625,7 @@ class _ActionCard extends StatelessWidget {
                     ],
                   ),
                   child: Icon(Icons.chevron_right,
-                      size: 16, color: Colors.grey.shade600),
+                      size: 16, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -626,7 +635,7 @@ class _ActionCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: AppTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
@@ -638,7 +647,7 @@ class _ActionCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isSmallValueText ? 15 : 20,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),
@@ -667,9 +676,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -694,10 +703,10 @@ class _StatCard extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
@@ -708,7 +717,7 @@ class _StatCard extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.grey.shade500,
+                color: AppTheme.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,

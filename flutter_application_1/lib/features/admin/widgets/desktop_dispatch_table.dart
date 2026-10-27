@@ -76,9 +76,9 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: AppTheme.creamSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,9 +272,9 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -294,27 +294,27 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: AppTheme.creamSurface,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
-                  child: const Icon(Icons.local_shipping_outlined, color: Color(0xFF0F172A), size: 20),
+                  child: Icon(Icons.local_shipping_outlined, color: AppTheme.textPrimary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Tanker Logistics & Dispatch Register',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                     Text(
                       'Daily insulated milk road transit records from chilling centers',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                      style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                     ),
                   ],
                 ),
@@ -326,19 +326,19 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   height: 38,
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: const TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: 13, color: AppTheme.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search tanker / driver...',
-                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                      prefixIcon: const Icon(Icons.search, size: 17, color: Color(0xFF64748B)),
+                      hintStyle: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                      prefixIcon: Icon(Icons.search, size: 17, color: AppTheme.textMuted),
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                        borderSide: BorderSide(color: AppTheme.creamBorder),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                        borderSide: BorderSide(color: AppTheme.creamBorder),
                       ),
                     ),
                   ),
@@ -350,13 +350,14 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   height: 38,
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    border: Border.all(color: AppTheme.creamBorder),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedStatus,
-                      style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
+                      dropdownColor: AppTheme.cardSurface,
+                      style: TextStyle(fontSize: 12.5, color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
                       items: ['All', 'En Route', 'Delivered', 'Dispatched', 'Loading'].map((s) {
                         return DropdownMenuItem(value: s, child: Text(s));
                       }).toList(),
@@ -374,8 +375,8 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
                   icon: const Icon(Icons.file_download_outlined, size: 16),
                   label: const Text('Export CSV'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0F172A),
-                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    foregroundColor: AppTheme.textPrimary,
+                    side: BorderSide(color: AppTheme.creamBorder),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
@@ -395,25 +396,25 @@ class _DesktopDispatchTableState extends State<DesktopDispatchTable> {
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: AppTheme.creamBorder),
 
           // Responsive Data Table
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(const Color(0xFFF8FAFC)),
+              headingRowColor: MaterialStateProperty.all(AppTheme.creamSurface),
               horizontalMargin: 20,
               columnSpacing: 24,
-              columns: const [
-                DataColumn(label: Text('DATE & TIME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('TANKER NO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('DRIVER & CONTACT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('ORIGIN CENTER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('DESTINATION PLANT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('LOADED LITRES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('TEMP (°C)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
-                DataColumn(label: Text('ACTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B), letterSpacing: 0.4))),
+              columns: [
+                DataColumn(label: Text('DATE & TIME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('TANKER NO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('DRIVER & CONTACT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('ORIGIN CENTER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('DESTINATION PLANT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('LOADED LITRES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('TEMP (°C)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
+                DataColumn(label: Text('ACTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textMuted, letterSpacing: 0.4))),
               ],
               rows: records.map((d) {
                 return DataRow(

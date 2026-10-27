@@ -124,7 +124,9 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: MediaQuery.of(context).size.width > 700 ? 1.4 : 1.18,
+              childAspectRatio: MediaQuery.of(context).size.width > 700
+                  ? 1.4
+                  : (MediaQuery.of(context).size.width < 380 ? 0.98 : 1.15),
               children: [
                 DairyStatCard(
                   icon: Icons.grain,
@@ -162,14 +164,14 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Intake Quality Grading Distribution', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Intake Quality Grading Distribution', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                   const SizedBox(height: 14),
 
                   // Progress bar
@@ -209,14 +211,14 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Center-Wise FAT & SNF Comparison', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Center-Wise FAT & SNF Comparison', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                   const SizedBox(height: 16),
 
                   _centerComparisonRow('Jaipur Central Hub', 4.40, 8.70, 1430),
@@ -256,7 +258,7 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
               Expanded(
                 child: Text(
                   center,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isAlert ? Colors.redAccent : const Color(0xFF0F172A)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isAlert ? Colors.redAccent : AppTheme.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -264,7 +266,7 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
               const SizedBox(width: 8),
               Text(
                 '$litres L  •  FAT: $fat%  •  SNF: $snf%',
-                style: TextStyle(fontSize: 11.5, color: isAlert ? Colors.redAccent : Colors.grey.shade700, fontWeight: isAlert ? FontWeight.bold : FontWeight.normal),
+                style: TextStyle(fontSize: 11.5, color: isAlert ? Colors.redAccent : AppTheme.textSecondary, fontWeight: isAlert ? FontWeight.bold : FontWeight.normal),
               ),
             ],
           ),
@@ -273,7 +275,7 @@ class _QualityAnalyticsScreenState extends State<QualityAnalyticsScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (fat / 5.0).clamp(0.0, 1.0),
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: AppTheme.creamBorder,
               valueColor: AlwaysStoppedAnimation<Color>(isAlert ? Colors.redAccent : AppTheme.brandGreen),
               minHeight: 6,
             ),

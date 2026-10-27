@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../collector/data/milk_entry_repository.dart';
 import '../../collector/models/milk_entry.dart';
@@ -20,34 +22,38 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthRepository.instance.currentUser;
-    final farmerName = user?.name ?? 'Ram Singh';
-    final farmerId = user?.id ?? 'F001';
-    final collectorName = 'Ramesh Kumar (ID: C-BHN-001)';
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final user = AuthRepository.instance.currentUser;
+        final farmerName = user?.name ?? 'Ram Singh';
+        final farmerId = user?.id ?? 'F001';
+        final collectorName = 'Ramesh Kumar (ID: C-BHN-001)';
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+        return Scaffold(
+          backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
-        title: const Row(
+        title: Row(
           children: [
-            AppLogo(size: 30),
-            SizedBox(width: 8),
+            const AppLogo(size: 30),
+            const SizedBox(width: 8),
             Text(
               'Farmer Portal',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: AppTheme.textPrimary,
               ),
             ),
           ],
         ),
         actions: [
+          const ThemeModeButton(),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Color(0xFF64748B), size: 20),
+            icon: Icon(Icons.logout, color: AppTheme.textMuted, size: 20),
             onPressed: () {
               AuthRepository.instance.logout();
               context.go(AppRoutes.login);
@@ -61,7 +67,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             _buildTabBody(farmerName, farmerId, collectorName),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppTheme.scaffoldBg,
           border: Border(top: BorderSide(color: AppTheme.creamBorder)),
         ),
@@ -95,6 +101,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         ),
       ),
     );
+      },
+    );
   }
 
   Widget _buildTabBody(String name, String id, String collector) {
@@ -123,8 +131,10 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+              gradient: LinearGradient(
+                colors: AppTheme.isDark
+                    ? [const Color(0xFF0F291E), const Color(0xFF1B3D2B)]
+                    : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -151,19 +161,19 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Farmer ID: $id',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.brandGreenDark,
+                          color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -171,7 +181,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                         'Connected Collector: $collector',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade700,
+                          color: AppTheme.textMuted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -197,12 +207,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           const SizedBox(height: 20),
 
           // Today's Sell Heading
-          const Text(
+          Text(
             "Today's Sell",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -214,8 +224,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 child: _ShiftSellCard(
                   shiftTitle: 'Morning (AM)',
                   icon: Icons.wb_sunny_outlined,
-                  headerColor: const Color(0xFFFFF3E0),
-                  accentColor: const Color(0xFFE65100),
+                  headerColor: AppTheme.isDark ? const Color(0xFF2E1C0A) : const Color(0xFFFFF3E0),
+                  accentColor: AppTheme.isDark ? const Color(0xFFFBBF24) : const Color(0xFFE65100),
                   litres: morningEntry != null
                       ? '${morningEntry.quantityLitres} L'
                       : '12.5 L',
@@ -238,8 +248,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 child: _ShiftSellCard(
                   shiftTitle: 'Evening (PM)',
                   icon: Icons.nightlight_outlined,
-                  headerColor: const Color(0xFFEDE7F6),
-                  accentColor: const Color(0xFF5E35B1),
+                  headerColor: AppTheme.isDark ? const Color(0xFF1E1736) : const Color(0xFFEDE7F6),
+                  accentColor: AppTheme.isDark ? const Color(0xFFC084FC) : const Color(0xFF5E35B1),
                   litres: eveningEntry != null
                       ? '${eveningEntry.quantityLitres} L'
                       : '11.0 L',
@@ -328,12 +338,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           const SizedBox(height: 24),
 
           // Recent Pours & Records
-          const Text(
+          Text(
             'Recent Pours & Records',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
@@ -362,37 +372,53 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined,
-                  size: 14, color: AppTheme.brandGreen),
-              const SizedBox(width: 8),
-              Text(date,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          Row(
-            children: [
-              Text(litres,
-                  style: TextStyle(
+          Expanded(
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined,
+                    size: 14, color: AppTheme.brandGreen),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    date,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700)),
-              const SizedBox(width: 14),
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                litres,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 12),
               Text(
                 amount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.brandGreenDark,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
                 ),
               ),
             ],
@@ -406,9 +432,13 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Payment Ledger',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         _buildPaymentCard(
@@ -451,9 +481,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,14 +494,14 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
               Text(
                 period,
                 style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               Text(
                 amount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
-                  color: AppTheme.brandGreen,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
                 ),
               ),
             ],
@@ -481,12 +511,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Total Supplied: $litres',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               Text(date,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
             ],
           ),
-          const Divider(height: 18),
+          Divider(height: 18, color: AppTheme.creamBorder),
           Text(
             status,
             style: TextStyle(
@@ -504,9 +534,13 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Milk Quality Analysis',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         Container(
@@ -515,20 +549,30 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             color: AppTheme.cardMint,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Average Quality Rating',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              SizedBox(height: 6),
-              Text('Grade A (Premium Buffalo Milk)',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.brandGreenDark)),
-              SizedBox(height: 4),
-              Text('Consistently meeting SNF > 8.5% and Fat > 4.0%',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+              Text(
+                'Average Quality Rating',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Grade A (Premium Buffalo Milk)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Consistently meeting SNF > 8.5% and Fat > 4.0%',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              ),
             ],
           ),
         ),
@@ -546,9 +590,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -557,10 +601,10 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
               Text(sub,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
             ],
           ),
           Text(
@@ -592,13 +636,20 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         ),
         const SizedBox(height: 12),
         Center(
-          child: Text(name,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text(
+            name,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
         ),
         Center(
-          child: Text('Farmer ID: $id',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+          child: Text(
+            'Farmer ID: $id',
+            style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
+          ),
         ),
         const SizedBox(height: 24),
         Card(
@@ -619,6 +670,51 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.palette_outlined, size: 20, color: AppTheme.brandGreen),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Theme & Appearance',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                      ],
+                    ),
+                    const ThemeModeButton(showLabel: true),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Switch between Light (crisp day) and Dark (OLED midnight) mode.',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.tune, size: 16),
+                    label: const Text('Change Appearance (Light / Dark / Auto)'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppTheme.creamBorder),
+                      foregroundColor: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
+                    ),
+                    onPressed: () => showThemeSelectionDialog(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -632,7 +728,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
           ),
           const SizedBox(width: 8),
@@ -640,7 +736,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
             ),
           ),
         ],
@@ -676,9 +772,9 @@ class _ShiftSellCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -722,10 +818,10 @@ class _ShiftSellCard extends StatelessWidget {
               children: [
                 Text(
                   litres,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -771,9 +867,9 @@ class _ShiftSellCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         Text(value,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
       ],
     );
   }

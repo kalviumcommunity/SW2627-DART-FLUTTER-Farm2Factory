@@ -98,16 +98,17 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Final Disbursal Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text('₹ ${p.finalAmount.toInt()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.brandGreenDark)),
+                  Text('Final Disbursal Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
+                  Text('₹ ${p.finalAmount.toInt()}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.accentGreen)),
                 ],
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: AppTheme.creamSurface,
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: const Row(
                   children: [
@@ -191,16 +192,16 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Text('Amount Successfully Disbursed', style: TextStyle(fontSize: 11.5, color: AppTheme.brandGreenDark)),
+                    Text('Amount Successfully Disbursed', style: TextStyle(fontSize: 11.5, color: AppTheme.accentGreen)),
                     const SizedBox(height: 4),
                     Text(
                       '₹ ${p.finalAmount.toInt()}',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.brandGreenDark),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.accentGreen),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'UTR: ${p.transactionReference}',
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                     ),
                   ],
                 ),
@@ -302,16 +303,17 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                Text(detail, style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600)),
+                Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                Text(detail, style: TextStyle(fontSize: 10.5, color: AppTheme.textMuted)),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
+              color: AppTheme.badgeMintBg,
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppTheme.badgeMintBorder),
             ),
             child: Text(
               status,
@@ -383,7 +385,9 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: MediaQuery.of(context).size.width > 700 ? 1.4 : 1.18,
+              childAspectRatio: MediaQuery.of(context).size.width > 700
+                  ? 1.4
+                  : (MediaQuery.of(context).size.width < 380 ? 0.98 : 1.15),
               children: [
                 DairyStatCard(
                   icon: Icons.hourglass_empty,
@@ -476,7 +480,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? AppTheme.cardSurface : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
@@ -494,7 +498,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? AppTheme.brandGreenDark : const Color(0xFF64748B),
+              color: isSelected ? AppTheme.brandGreenDark : AppTheme.textMuted,
             ),
             const SizedBox(width: 8),
             Text(
@@ -502,14 +506,14 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                color: isSelected ? AppTheme.textPrimary : AppTheme.textMuted,
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected ? AppTheme.brandGreen : const Color(0xFFCBD5E1),
+                color: isSelected ? AppTheme.brandGreen : AppTheme.creamBorder,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -517,7 +521,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : const Color(0xFF334155),
+                  color: isSelected ? Colors.white : AppTheme.textSecondary,
                 ),
               ),
             ),
@@ -595,22 +599,22 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withOpacity(0.05)),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Icon(Icons.done_all, size: 40, color: AppTheme.brandGreen),
-                SizedBox(height: 10),
+                const Icon(Icons.done_all, size: 40, color: AppTheme.brandGreen),
+                const SizedBox(height: 10),
                 Text(
                   'All Payouts Disbursed!',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'No pending settlements in this cycle. View completed records in Payment History.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                 ),
               ],
             ),
@@ -640,9 +644,9 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.cardSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
+            border: Border.all(color: AppTheme.creamBorder),
           ),
           child: Wrap(
             alignment: WrapAlignment.spaceBetween,
@@ -684,7 +688,8 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: _historySortOption,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        dropdownColor: AppTheme.cardSurface,
                         items: [
                           'Date: Newest First',
                           'Date: Oldest First',
@@ -723,9 +728,9 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withOpacity(0.05)),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: const Center(
               child: Text('No historical disbursements matching current filter.'),
@@ -750,9 +755,9 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         children: [
@@ -768,7 +773,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                         Flexible(
                           child: Text(
                             p.recipientName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5, color: AppTheme.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -777,12 +782,12 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color: AppTheme.creamSurface,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             p.recipientType,
-                            style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.bold),
                           ),
                         ),
                         if (isHistory && p.notified) ...[
@@ -811,7 +816,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                     const SizedBox(height: 2),
                     Text(
                       '${p.recipientId} • ${p.centerOrLocation} • +91 ${p.recipientPhone}',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -822,7 +827,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               StatusBadge(status: p.status),
             ],
           ),
-          const Divider(height: 18),
+          Divider(height: 18, color: AppTheme.creamBorder),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -832,7 +837,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                 children: [
                   Text(
                     '${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L',
-                    style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
+                    style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
                   ),
                   Text(
                     'UTR: ${p.transactionReference}',
@@ -851,7 +856,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: isHistory ? AppTheme.brandGreenDark : const Color(0xFF0F172A),
+                          color: isHistory ? AppTheme.accentGreen : AppTheme.textPrimary,
                         ),
                       ),
                       Text(

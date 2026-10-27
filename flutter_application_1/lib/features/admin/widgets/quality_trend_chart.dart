@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 
 class QualityTrendChart extends StatelessWidget {
   final String period;
@@ -12,9 +13,9 @@ class QualityTrendChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -39,9 +40,9 @@ class QualityTrendChart extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: AppTheme.creamSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: AppTheme.creamBorder),
                     ),
                     child: const Icon(Icons.science_outlined, color: Color(0xFF7C3AED), size: 20),
                   ),
@@ -49,17 +50,17 @@ class QualityTrendChart extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Milk Quality Composition Trends',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       Text(
                         'FAT % and SNF % testing conformance across $period',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                       ),
                     ],
                   ),
@@ -81,19 +82,19 @@ class QualityTrendChart extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppTheme.creamSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.verified_outlined, size: 16, color: Color(0xFF0F5132)),
-                SizedBox(width: 8),
+                const Icon(Icons.verified_outlined, size: 16, color: Color(0xFF0F5132)),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'FSSAI Milk Standards: Minimum FAT ≥ 3.8% | Minimum SNF ≥ 8.2% | Temperature ≤ 4.5°C',
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                   ),
                 ),
               ],
@@ -150,7 +151,7 @@ class QualityTrendChart extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           p.label,
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -172,7 +173,7 @@ class QualityTrendChart extends StatelessWidget {
       children: [
         CircleAvatar(radius: 4, backgroundColor: color),
         const SizedBox(width: 6),
-        Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+        Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
       ],
     );
   }

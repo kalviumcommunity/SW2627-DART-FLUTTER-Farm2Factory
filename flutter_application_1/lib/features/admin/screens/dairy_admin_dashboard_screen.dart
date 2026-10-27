@@ -245,9 +245,9 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -269,19 +269,21 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
+          color: isSelected
+              ? (AppTheme.isDark ? AppTheme.brandGreen : const Color(0xFF0F172A))
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: isSelected ? Colors.white : const Color(0xFF64748B)),
+            Icon(icon, size: 15, color: isSelected ? Colors.white : AppTheme.textSecondary),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : const Color(0xFF475569),
+                color: isSelected ? Colors.white : AppTheme.textSecondary,
               ),
             ),
           ],
@@ -350,9 +352,9 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -366,9 +368,9 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppTheme.creamSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: Icon(icon, color: iconColor, size: 22),
           ),
@@ -379,10 +381,10 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
+                    color: AppTheme.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -390,17 +392,17 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: AppTheme.textPrimary,
                     letterSpacing: -0.4,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -424,9 +426,9 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -441,19 +443,19 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.location_on_outlined, color: AppTheme.brandGreen, size: 20),
-                  SizedBox(width: 8),
+                  const Icon(Icons.location_on_outlined, color: AppTheme.brandGreen, size: 20),
+                  const SizedBox(width: 8),
                   Text(
                     'Center-wise Collection vs Target Capacity',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                   ),
                 ],
               ),
               Text(
                 '42,850 L / 49,000 L (87.4% Capacity Utilized)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -469,14 +471,14 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                     children: [
                       Text(
                         c['name'] as String,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${c['litres']} L / ${c['target']} L',
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
