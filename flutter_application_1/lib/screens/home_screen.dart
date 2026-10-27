@@ -7,6 +7,7 @@ import '../widgets/app_logo.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/user_card.dart';
 import '../widgets/milk_counter_widget.dart';
+import 'batch_list_screen.dart';
 
 /// Full page screen representing the primary home dashboard of the Farm2Factory app.
 ///
@@ -103,6 +104,20 @@ class HomeScreen extends StatelessWidget {
               outlined: true,
               color: const Color(0xFF4F46E5),
               onPressed: () => context.go(AppRoutes.team),
+            ),
+            const SizedBox(height: 10),
+            PrimaryButton(
+              label: 'Browse Milk Batches (Navigation Flow)',
+              icon: Icons.alt_route_outlined,
+              color: const Color(0xFF0F766E),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BatchListScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
