@@ -12,9 +12,11 @@ import '../../features/admin/screens/quality_analytics_screen.dart';
 import '../../features/admin/screens/rate_chart_screen.dart';
 import '../../features/admin/screens/reports_export_screen.dart';
 import '../../features/admin/screens/sellers_screen.dart';
-import '../../features/auth/screens/login_screen.dart';
-import '../../features/auth/screens/register_screen.dart';
-import '../../features/auth/screens/splash_screen.dart';
+import '../../screens/home_screen.dart';
+import '../../screens/login_screen.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/register_screen.dart';
+import '../../screens/splash_screen.dart';
 import '../../features/collector/screens/collector_dashboard_screen.dart';
 import '../../features/collector/screens/milk_entries_screen.dart';
 import '../../features/collector/screens/payments_screen.dart';
@@ -29,6 +31,8 @@ class AppRoutes {
   static const splash = '/';
   static const login = '/login';
   static const register = '/register';
+  static const home = '/home';
+  static const profile = '/profile';
   static const dashboard = '/dashboard';
   static const collectorDashboard = '/collector/dashboard';
   static const farmerDashboard = '/farmer/dashboard';
@@ -80,6 +84,14 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => ProfileScreen(),
       ),
       GoRoute(
         path: AppRoutes.dashboard,
