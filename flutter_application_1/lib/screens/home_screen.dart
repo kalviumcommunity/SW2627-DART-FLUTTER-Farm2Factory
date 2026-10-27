@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/routes/app_router.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/app_logo.dart';
-import '../widgets/custom_button.dart';
+import '../widgets/primary_button.dart';
 import '../widgets/user_card.dart';
 import '../widgets/milk_counter_widget.dart';
 
@@ -77,24 +77,32 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            CustomButton(
+            PrimaryButton(
               label: 'Milk Collection Entries',
               icon: Icons.water_drop_outlined,
               onPressed: () => context.go(AppRoutes.milkEntries),
             ),
             const SizedBox(height: 10),
-            CustomButton(
+            PrimaryButton(
               label: 'Farmers Directory',
               icon: Icons.people_outline,
               outlined: true,
               onPressed: () => context.go(AppRoutes.farmers),
             ),
             const SizedBox(height: 10),
-            CustomButton(
+            PrimaryButton(
               label: 'Reports & Export',
               icon: Icons.bar_chart_outlined,
-              outlined: true,
+              color: const Color(0xFF0284C7),
               onPressed: () => context.go(AppRoutes.reports),
+            ),
+            const SizedBox(height: 10),
+            PrimaryButton(
+              label: 'Cooperative Team Directory',
+              icon: Icons.badge_outlined,
+              outlined: true,
+              color: const Color(0xFF4F46E5),
+              onPressed: () => context.go(AppRoutes.team),
             ),
             const SizedBox(height: 24),
 

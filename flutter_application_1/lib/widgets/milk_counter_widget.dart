@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'primary_button.dart';
 
 /// Interactive Stateful Widget that manages mutable milk collection state.
 ///
@@ -315,17 +316,11 @@ class _MilkCounterWidgetState extends State<MilkCounterWidget> {
                     ),
                   ],
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF16A34A),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text('Log Collection'),
+                PrimaryButton(
+                  label: 'Log Collection',
+                  icon: Icons.check_circle_outline,
+                  fullWidth: false,
+                  height: 42,
                   onPressed: _litres > 0 ? _recordEntry : null,
                 ),
               ],

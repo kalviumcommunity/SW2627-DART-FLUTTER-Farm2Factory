@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/routes/app_router.dart';
 import '../core/theme/app_theme.dart';
 import '../services/auth_service.dart';
-import '../widgets/custom_button.dart';
+import '../widgets/primary_button.dart';
 import '../widgets/user_card.dart';
 
 /// Full page screen displaying the logged-in user's profile and account settings.
@@ -82,17 +82,17 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            CustomButton(
+            PrimaryButton(
               label: 'Return to Home',
               icon: Icons.home_outlined,
               outlined: true,
               onPressed: () => context.go(AppRoutes.home),
             ),
             const SizedBox(height: 12),
-            CustomButton(
+            PrimaryButton(
               label: 'Log Out',
               icon: Icons.logout,
-              outlined: false,
+              color: const Color(0xFFDC2626),
               onPressed: () async {
                 try {
                   final service = authService ?? AuthService();
