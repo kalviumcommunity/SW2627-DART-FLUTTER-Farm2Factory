@@ -8,6 +8,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/user_card.dart';
 
 /// Full page screen displaying the logged-in user's profile and account settings.
+///
+/// Demonstrates reuse of the [UserCard] Stateless Widget with account-specific inputs.
 class ProfileScreen extends StatelessWidget {
   final AuthService? authService;
 
@@ -39,17 +41,38 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Profile Overview',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Reusing UserCard in ProfileScreen with custom trailing action
             UserCard(
               name: name,
-              role: 'Operator',
+              role: 'Cooperative Admin',
               email: email,
+              phone: '+91 98765 43210',
+              avatarColor: const Color(0xFF4F46E5),
+              badgeColor: const Color(0xFFEEF2FF),
+              badgeTextColor: const Color(0xFF4338CA),
+              trailing: const Icon(
+                Icons.verified,
+                color: Color(0xFF16A34A),
+                size: 20,
+              ),
             ),
             const SizedBox(height: 24),
+
             const Text(
               'Account Management',
               style: TextStyle(
@@ -63,7 +86,7 @@ class ProfileScreen extends StatelessWidget {
               label: 'Return to Home',
               icon: Icons.home_outlined,
               outlined: true,
-              onPressed: () => context.go(AppRoutes.dashboard),
+              onPressed: () => context.go(AppRoutes.home),
             ),
             const SizedBox(height: 12),
             CustomButton(

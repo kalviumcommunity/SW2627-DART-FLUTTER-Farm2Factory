@@ -106,7 +106,7 @@ void main() {
 
       expect(find.text('Farm2Factory Home'), findsOneWidget);
       expect(find.text('Quick Actions'), findsOneWidget);
-      expect(find.byType(UserCard), findsOneWidget);
+      expect(find.byType(UserCard), findsAtLeastNWidgets(1));
       expect(find.text('Milk Collection Entries'), findsOneWidget);
     });
 

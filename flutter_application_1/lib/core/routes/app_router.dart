@@ -17,6 +17,7 @@ import '../../screens/login_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../../screens/register_screen.dart';
 import '../../screens/splash_screen.dart';
+import '../../screens/team_screen.dart';
 import '../../features/collector/screens/collector_dashboard_screen.dart';
 import '../../features/collector/screens/milk_entries_screen.dart';
 import '../../features/collector/screens/payments_screen.dart';
@@ -33,6 +34,7 @@ class AppRoutes {
   static const register = '/register';
   static const home = '/home';
   static const profile = '/profile';
+  static const team = '/team';
   static const dashboard = '/dashboard';
   static const collectorDashboard = '/collector/dashboard';
   static const farmerDashboard = '/farmer/dashboard';
@@ -92,6 +94,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.profile,
         builder: (context, state) => ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.team,
+        builder: (context, state) => const TeamScreen(),
       ),
       GoRoute(
         path: AppRoutes.dashboard,
