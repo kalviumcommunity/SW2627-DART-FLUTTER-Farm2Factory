@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/collector/models/milk_entry.dart';
 
 /// Represents a combined milk dispatch batch (e.g., milk tanker or collection batch)
@@ -74,6 +75,18 @@ class Batch {
     };
   }
 
+  static DateTime _parseDate(dynamic val, {DateTime? fallback}) {
+    if (val == null) return fallback ?? DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val) ?? (fallback ?? DateTime.now());
+    try {
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return fallback ?? DateTime.now();
+    }
+  }
+
   factory Batch.fromMap(String documentId, Map<String, dynamic> map) {
     return Batch(
       id: documentId,
@@ -81,9 +94,7 @@ class Batch {
       centerName: map['centerName'] ?? '',
       shift: map['shift'] ?? 'Morning (AM)',
       milkType: map['milkType'] ?? 'cow',
-      date: map['date'] != null
-          ? (map['date'] as dynamic).toDate()
-          : DateTime.now(),
+      date: _parseDate(map['date']),
       totalLitres: (map['totalLitres'] ?? 0).toDouble(),
       averageFat: (map['averageFat'] ?? 0).toDouble(),
       averageSnf: (map['averageSnf'] ?? 0).toDouble(),
@@ -94,12 +105,8 @@ class Batch {
       driverName: map['driverName'] as String?,
       entryIds: List<String>.from(map['entryIds'] ?? []),
       farmerIds: List<String>.from(map['farmerIds'] ?? []),
-      createdAt: map['createdAt'] != null
-          ? (map['createdAt'] as dynamic).toDate()
-          : DateTime.now(),
-      testedAt: map['testedAt'] != null
-          ? (map['testedAt'] as dynamic).toDate()
-          : null,
+      createdAt: _parseDate(map['createdAt']),
+      testedAt: map['testedAt'] != null ? _parseDate(map['testedAt']) : null,
       testedBy: map['testedBy'] as String?,
     );
   }

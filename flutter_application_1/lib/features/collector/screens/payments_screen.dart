@@ -47,16 +47,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Future<void> _loadReconciliation() async {
     setState(() => _isLoading = true);
     final active = _cycles[_selectedCycleIndex];
-    final summary = await _reconciliationService.getReconciliationForCycle(
-      startDate: active['start'] as DateTime,
-      endDate: active['end'] as DateTime,
-    );
+    try {
+      final summary = await _reconciliationService.getReconciliationForCycle(
+        startDate: active['start'] as DateTime,
+        endDate: active['end'] as DateTime,
+      );
 
-    if (!mounted) return;
-    setState(() {
-      _summary = summary;
-      _isLoading = false;
-    });
+      if (!mounted) return;
+      setState(() {
+        _summary = summary;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _showDisputeResolutionDialog(FarmerReconciliationStatement statement) {

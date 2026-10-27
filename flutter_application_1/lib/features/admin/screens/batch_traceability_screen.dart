@@ -28,14 +28,21 @@ class _BatchTraceabilityScreenState extends State<BatchTraceabilityScreen> {
 
   Future<void> _loadBatches() async {
     setState(() => _isLoading = true);
-    final batches = await _batchService.getBatches(
-      status: _filter == 'All' ? null : _filter,
-    );
-    if (!mounted) return;
-    setState(() {
-      _batches = batches;
-      _isLoading = false;
-    });
+    try {
+      final batches = await _batchService.getBatches(
+        status: _filter == 'All' ? null : _filter,
+      );
+      if (!mounted) return;
+      setState(() {
+        _batches = batches;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _showTraceabilityModal(Batch batch) async {
