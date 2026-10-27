@@ -11,6 +11,7 @@ import '../data/seller_repository.dart';
 import '../models/dispatch_record.dart';
 import '../widgets/dairy_filter_bar.dart';
 import '../widgets/dairy_portal_scaffold.dart';
+import '../../../services/dispute_service.dart';
 import '../widgets/dairy_stat_card.dart';
 
 class DairyAdminDashboardScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     super.initState();
     _analyticsRepo.syncLiveAggregations();
     _collectorRepo.fetchLiveCollectors();
+    DisputeService.instance.getAllDisputes();
   }
 
   String _formatLitres(num val) {
@@ -166,7 +168,6 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
     return DairyPortalScaffold(
       activeRoute: AppRoutes.adminDashboard,
       title: 'Dairy Enterprise Console',
-      portalType: DairyPortalType.admin,
       actions: [
         IconButton(
           tooltip: 'Sync Live Data',
@@ -193,7 +194,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
         IconButton(
           tooltip: 'Reports & Export',
           icon: const Icon(Icons.assessment_outlined, color: AppTheme.brandGreen),
-          onPressed: () => context.push(AppRoutes.adminReports),
+          onPressed: () => context.push(AppRoutes.dairyReports),
         ),
         IconButton(
           tooltip: 'Dispatch Tanker',
@@ -296,6 +297,18 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             ),
             const SizedBox(height: 12),
             _buildQualitySummaryGrid(context),
+            const SizedBox(height: 24),
+
+            // SECTION G: Disputes & Audit Resolution
+            _buildSectionHeader(
+              title: 'Disputes & Audit Resolution',
+              subtitle: 'Contested readings, quality variance adjustments, and farmer settlement audits',
+              icon: Icons.gavel_outlined,
+              iconColor: const Color(0xFF7B1FA2),
+              onViewAll: () => context.go(AppRoutes.dairyDisputes),
+            ),
+            const SizedBox(height: 12),
+            _buildDisputesSummaryGrid(context),
             const SizedBox(height: 30),
           ],
         ),
@@ -909,6 +922,65 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             subtitle: 'SNF â‰¥ ${m.minSnfThreshold}% | â‰¤ ${m.maxTempThreshold}Â°C',
             cardBgColor: AppTheme.cardLavender,
             onTap: () => context.go('/dairy/quality'),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildDisputesSummaryGrid(BuildContext context) {
+    final disputes = DisputeService.instance.cachedDisputes;
+    final openCount = disputes.where((d) => d.isOpen || d.isUnderReview).length;
+    final resolvedCount = disputes.where((d) => d.isResolved).length;
+    final totalAdjusted = disputes.fold(0.0, (sum, d) => sum + d.adjustedAmount);
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final crossAxisCount = constraints.maxWidth > 700 ? 4 : 2;
+      return GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: crossAxisCount == 4 ? 1.4 : 1.18,
+        children: [
+          DairyStatCard(
+            icon: Icons.hourglass_top_outlined,
+            iconColor: const Color(0xFFE65100),
+            title: 'Open Inquiries',
+            value: '$openCount Cases',
+            subtitle: 'Awaiting supervisor audit',
+            badgeText: openCount > 0 ? 'Action' : null,
+            badgeColor: const Color(0xFFE65100),
+            cardBgColor: AppTheme.cardPeach,
+            onTap: () => context.go(AppRoutes.dairyDisputes),
+          ),
+          DairyStatCard(
+            icon: Icons.verified_outlined,
+            iconColor: AppTheme.brandGreen,
+            title: 'Resolved Disputes',
+            value: '$resolvedCount Settled',
+            subtitle: 'Reconciled to payouts',
+            cardBgColor: AppTheme.cardMint,
+            onTap: () => context.go(AppRoutes.dairyDisputes),
+          ),
+          DairyStatCard(
+            icon: Icons.currency_rupee,
+            iconColor: const Color(0xFF0288D1),
+            title: 'Payout Adjustments',
+            value: '₹ ${totalAdjusted.toStringAsFixed(0)}',
+            subtitle: 'Credited to farmers',
+            cardBgColor: AppTheme.cardSky,
+            onTap: () => context.go(AppRoutes.dairyDisputes),
+          ),
+          DairyStatCard(
+            icon: Icons.speed,
+            iconColor: const Color(0xFF7B1FA2),
+            title: 'Resolution SLA',
+            value: '< 24 Hours',
+            subtitle: 'Target 100% on-time',
+            cardBgColor: AppTheme.cardLavender,
+            onTap: () => context.go(AppRoutes.dairyDisputes),
           ),
         ],
       );

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/collector/models/milk_entry.dart';
 import '../models/reconciliation_statement.dart';
+import 'dispute_service.dart';
 
 /// Core Reconciliation & Payouts Engine.
 /// Solves the problem statement:
@@ -74,10 +75,27 @@ class ReconciliationService {
         }
       }
 
+      // Check real-time dispute settlements for this farmer
+      final farmerDisputes = DisputeService.instance.cachedDisputes
+          .where((d) => d.farmerId == farmerId)
+          .toList();
+      double disputeCredits = 0.0;
+      for (final d in farmerDisputes) {
+        if (d.isResolved && d.adjustedAmount > 0) {
+          disputeCredits += d.adjustedAmount;
+        } else if (d.isOpen || d.isUnderReview) {
+          disputes++;
+        }
+      }
+
       final avgFat = totalVol > 0 ? (weightedFatSum / totalVol) : 0.0;
       final avgSnf = totalVol > 0 ? (weightedSnfSum / totalVol) : 0.0;
       final farmerName = farmerEntries.first.farmerName;
       final center = farmerEntries.first.collectorId;
+
+      final totalDeductions = (disputes * 15.0).clamp(0.0, grossAmount);
+      final netPayableAmount = double.parse(
+          (grossAmount - totalDeductions + disputeCredits).toStringAsFixed(2));
 
       final statement = FarmerReconciliationStatement(
         id: 'REC-${startDate.year}${startDate.month.toString().padLeft(2, '0')}-$farmerId',
@@ -91,10 +109,10 @@ class ReconciliationService {
         avgFat: double.parse(avgFat.toStringAsFixed(2)),
         avgSnf: double.parse(avgSnf.toStringAsFixed(2)),
         grossPayable: double.parse(grossAmount.toStringAsFixed(2)),
-        deductions: disputes * 15.0, // Quality variance adjustment
-        netPayable: double.parse((grossAmount - (disputes * 15.0)).toStringAsFixed(2)),
+        deductions: double.parse(totalDeductions.toStringAsFixed(2)),
+        netPayable: netPayableAmount,
         disputedCount: disputes,
-        status: disputes > 1 ? 'DISPUTED' : 'PENDING',
+        status: disputes > 0 ? 'DISPUTED' : 'PENDING',
         entries: farmerEntries,
       );
 

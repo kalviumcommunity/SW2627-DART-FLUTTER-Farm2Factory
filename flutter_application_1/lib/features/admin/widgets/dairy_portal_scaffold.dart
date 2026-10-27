@@ -31,6 +31,7 @@ class DairyPortalScaffold extends StatelessWidget {
     _NavItem(title: 'Batch Traceability', route: AppRoutes.dairyBatches, icon: Icons.hub_outlined, activeIcon: Icons.hub),
     _NavItem(title: 'Rate Charts & Pricing', route: AppRoutes.dairyRates, icon: Icons.currency_rupee_outlined, activeIcon: Icons.currency_rupee),
     _NavItem(title: 'Payments & Payouts', route: '/dairy/payments', icon: Icons.payments_outlined, activeIcon: Icons.payments),
+    _NavItem(title: 'Disputes & Audit', route: AppRoutes.dairyDisputes, icon: Icons.gavel_outlined, activeIcon: Icons.gavel),
     _NavItem(title: 'Reports & Export', route: '/dairy/reports', icon: Icons.assessment_outlined, activeIcon: Icons.assessment),
     _NavItem(title: 'Locations & Fleet', route: '/dairy/locations', icon: Icons.map_outlined, activeIcon: Icons.map),
   ];

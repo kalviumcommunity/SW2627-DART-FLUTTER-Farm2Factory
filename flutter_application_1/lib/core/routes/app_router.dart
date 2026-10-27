@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/screens/batch_traceability_screen.dart';
+import '../../features/admin/screens/dispute_management_screen.dart';
 import '../../features/admin/screens/collector_details_screen.dart';
 import '../../features/admin/screens/collectors_screen.dart';
 import '../../features/admin/screens/dairy_admin_dashboard_screen.dart';
@@ -50,6 +51,7 @@ class AppRoutes {
   static const dairyLocations = '/dairy/locations';
   static const dairyRates = '/dairy/rates';
   static const dairyBatches = '/dairy/batches';
+  static const dairyDisputes = '/dairy/disputes';
 }
 
 class AppRouter {
@@ -168,6 +170,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.dairyBatches,
         builder: (context, state) => const BatchTraceabilityScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dairyDisputes,
+        builder: (context, state) => const DisputeManagementScreen(),
       ),
     ],
   );
