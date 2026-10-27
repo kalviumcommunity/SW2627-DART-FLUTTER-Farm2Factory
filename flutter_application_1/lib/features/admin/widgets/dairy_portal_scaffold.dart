@@ -122,6 +122,20 @@ class DairyPortalScaffold extends StatelessWidget {
       icon: Icons.currency_rupee_outlined,
       activeIcon: Icons.currency_rupee,
     ),
+    _NavItem(
+      title: 'Disputes & Audit',
+      route: AppRoutes.dairyDisputes,
+      aliases: ['/dairy/disputes'],
+      icon: Icons.gavel_outlined,
+      activeIcon: Icons.gavel,
+    ),
+    _NavItem(
+      title: 'Batch Traceability',
+      route: AppRoutes.dairyBatches,
+      aliases: ['/dairy/batches'],
+      icon: Icons.hub_outlined,
+      activeIcon: Icons.hub,
+    ),
   ];
 
   bool _isItemActive(_NavItem item) {
