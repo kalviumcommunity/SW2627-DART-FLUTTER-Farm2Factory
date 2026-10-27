@@ -7,7 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../data/auth_repository.dart';
 
-enum LoginRole { farmer, collector, admin }
+enum LoginRole { farmer, collector, manager, admin }
 
 class LoginScreen extends StatefulWidget {
   final String? initialPhone;
@@ -45,6 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
           _identifierController = TextEditingController(text: '123456');
           _passwordController.text = '123456';
           break;
+        case LoginRole.manager:
+          _identifierController = TextEditingController(text: 'centermanager');
+          _passwordController.text = '123456';
+          break;
         case LoginRole.admin:
           _identifierController = TextEditingController(text: 'dairyadmin');
           _passwordController.text = 'admin123';
@@ -73,6 +77,10 @@ class _LoginScreenState extends State<LoginScreen> {
           _identifierController.text = '123456';
           _passwordController.text = '123456';
           break;
+        case LoginRole.manager:
+          _identifierController.text = 'centermanager';
+          _passwordController.text = '123456';
+          break;
         case LoginRole.admin:
           _identifierController.text = 'dairyadmin';
           _passwordController.text = 'admin123';
@@ -87,8 +95,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return 'Log in to track your milk records, rates & payments';
       case LoginRole.collector:
         return 'Log in to collect milk, record entries & view farmers';
+      case LoginRole.manager:
+        return 'Log in to manage your center collection, dispatches & quality';
       case LoginRole.admin:
-        return 'Log in to manage plant operations & dairy reports';
+        return 'Log in to manage enterprise financials, graphs & fleet';
     }
   }
 
@@ -98,6 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return 'Farmer Mobile Number';
       case LoginRole.collector:
         return 'Collector ID / Mobile';
+      case LoginRole.manager:
+        return 'Center Manager Username / Phone';
       case LoginRole.admin:
         return 'Admin Username / Mobile';
     }
@@ -109,6 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return '10-digit mobile (e.g. 9876543210)';
       case LoginRole.collector:
         return 'ID or mobile (e.g. 123456)';
+      case LoginRole.manager:
+        return 'Username (centermanager) or phone';
       case LoginRole.admin:
         return 'Username (dairyadmin) or mobile';
     }
@@ -120,6 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return Icons.phone_android_outlined;
       case LoginRole.collector:
         return Icons.badge_outlined;
+      case LoginRole.manager:
+        return Icons.storefront_outlined;
       case LoginRole.admin:
         return Icons.admin_panel_settings_outlined;
     }
@@ -131,8 +147,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return 'Login as Farmer';
       case LoginRole.collector:
         return 'Login as Collector';
+      case LoginRole.manager:
+        return 'Login as Center Manager';
       case LoginRole.admin:
-        return 'Login as Dairy Admin';
+        return 'Login as Enterprise Admin';
     }
   }
 
@@ -146,9 +164,15 @@ class _LoginScreenState extends State<LoginScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
+      case LoginRole.manager:
+        return const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
       case LoginRole.admin:
         return const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF115E59)],
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -161,8 +185,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return AppTheme.brandGreen;
       case LoginRole.collector:
         return const Color(0xFF0284C7);
+      case LoginRole.manager:
+        return const Color(0xFF0D9488);
       case LoginRole.admin:
-        return const Color(0xFF0F766E);
+        return const Color(0xFF1E293B);
     }
   }
 
@@ -172,7 +198,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ? AppTheme.brandGreen
         : role == LoginRole.collector
             ? const Color(0xFF0284C7)
-            : const Color(0xFF0F766E);
+            : role == LoginRole.manager
+                ? const Color(0xFF0D9488)
+                : const Color(0xFF1E293B);
 
     return Expanded(
       child: GestureDetector(
@@ -248,6 +276,25 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // 2FA Security Gate: Admin credentials trigger 2FA verification screen
+    final pending2FA = AuthRepository.instance.pending2FAUser;
+    if (pending2FA != null) {
+      if (_selectedRole != LoginRole.admin) {
+        AuthRepository.instance.logout();
+        setState(() {
+          _loading = false;
+          _error = 'This account is an Enterprise Admin account. Please select the Admin role tab.';
+        });
+        return;
+      }
+      setState(() {
+        _loading = false;
+        _error = null;
+      });
+      context.go(AppRoutes.admin2FA);
+      return;
+    }
+
     final user = AuthRepository.instance.currentUser;
     if (user == null) {
       setState(() {
@@ -262,26 +309,28 @@ class _LoginScreenState extends State<LoginScreen> {
       AuthRepository.instance.logout();
       setState(() {
         _loading = false;
-        _error =
-            'This account belongs to a ${user.role == UserRole.admin ? "Dairy Admin" : "Collector"}. Please select the ${user.role == UserRole.admin ? "Dairy Admin" : "Collector"} tab.';
+        _error = 'This account is not a Farmer account. Please select the matching role tab.';
       });
       return;
-    } else if (_selectedRole == LoginRole.collector &&
-        user.role != UserRole.collector) {
+    } else if (_selectedRole == LoginRole.collector && user.role != UserRole.collector) {
       AuthRepository.instance.logout();
       setState(() {
         _loading = false;
-        _error =
-            'This account belongs to a ${user.role == UserRole.admin ? "Dairy Admin" : "Farmer"}. Please select the ${user.role == UserRole.admin ? "Dairy Admin" : "Farmer"} tab.';
+        _error = 'This account is not a Collector account. Please select the matching role tab.';
       });
       return;
-    } else if (_selectedRole == LoginRole.admin &&
-        user.role != UserRole.admin) {
+    } else if (_selectedRole == LoginRole.manager && user.role != UserRole.manager && user.role != UserRole.admin) {
       AuthRepository.instance.logout();
       setState(() {
         _loading = false;
-        _error =
-            'This account belongs to a ${user.role == UserRole.collector ? "Collector" : "Farmer"}. Please select the ${user.role == UserRole.collector ? "Collector" : "Farmer"} tab.';
+        _error = 'This account is not a Center Manager account. Please select the matching role tab.';
+      });
+      return;
+    } else if (_selectedRole == LoginRole.admin && user.role != UserRole.admin) {
+      AuthRepository.instance.logout();
+      setState(() {
+        _loading = false;
+        _error = 'This account is not an Enterprise Admin account. Please select the matching role tab.';
       });
       return;
     }
@@ -292,7 +341,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (user.role == UserRole.admin) {
-      context.go(AppRoutes.adminDashboard);
+      if (!AuthRepository.instance.isAdmin2FAVerified) {
+        AuthRepository.instance.prepareAdmin2FA(user);
+        context.go(AppRoutes.admin2FA);
+      } else {
+        context.go(AppRoutes.adminDashboard);
+      }
+    } else if (user.role == UserRole.manager) {
+      context.go(AppRoutes.managerDashboard);
     } else if (user.role == UserRole.collector) {
       context.go(AppRoutes.collectorDashboard);
     } else {
@@ -394,10 +450,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     children: [
                       _buildRoleTab(LoginRole.farmer, 'Farmer', Icons.agriculture),
-                      const SizedBox(width: 4),
-                      _buildRoleTab(LoginRole.collector, 'Collector', Icons.local_shipping_outlined),
-                      const SizedBox(width: 4),
-                      _buildRoleTab(LoginRole.admin, 'Dairy Admin', Icons.business_outlined),
+                      const SizedBox(width: 3),
+                      _buildRoleTab(LoginRole.collector, 'Collector', Icons.badge_outlined),
+                      const SizedBox(width: 3),
+                      _buildRoleTab(LoginRole.manager, 'Manager', Icons.storefront_outlined),
+                      const SizedBox(width: 3),
+                      _buildRoleTab(LoginRole.admin, 'Admin', Icons.admin_panel_settings_outlined),
                     ],
                   ),
                 ),
@@ -496,30 +554,37 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: _loading ? null : _login,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20),
+                                  horizontal: 16),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const SizedBox(width: 28),
-                                  _loading
-                                      ? const SizedBox(
-                                          width: 22,
-                                          height: 22,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5,
-                                          ),
-                                        )
-                                      : Text(
-                                          _loginButtonText,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
+                                  const SizedBox(width: 32),
+                                  Expanded(
+                                    child: Center(
+                                      child: _loading
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                _loginButtonText,
+                                                maxLines: 1,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ),
                                   Container(
                                     width: 32,
                                     height: 32,

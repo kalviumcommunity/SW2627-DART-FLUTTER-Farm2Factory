@@ -8,6 +8,7 @@ import '../models/dairy_payment.dart';
 import '../widgets/dairy_portal_scaffold.dart';
 import '../widgets/dairy_stat_card.dart';
 import '../widgets/status_badge.dart';
+import '../../../core/routes/app_router.dart';
 
 class DairyPaymentsScreen extends StatefulWidget {
   const DairyPaymentsScreen({super.key});
@@ -82,16 +83,16 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             const Divider(height: 18),
             _dialogRow('Total Milk Supplied', '${p.totalLitres.toInt()} Litres'),
-            _dialogRow('Base Rate per Litre', '₹ ${p.ratePerLitre}'),
-            _dialogRow('Gross Calculation', '₹ ${p.grossAmount.toInt()}'),
-            _dialogRow('Adjustments / Bonus', '₹ ${p.adjustments.toInt()}'),
+            _dialogRow('Base Rate per Litre', 'â‚¹ ${p.ratePerLitre}'),
+            _dialogRow('Gross Calculation', 'â‚¹ ${p.grossAmount.toInt()}'),
+            _dialogRow('Adjustments / Bonus', 'â‚¹ ${p.adjustments.toInt()}'),
             const Divider(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Final Disbursal Amount',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('₹ ${p.finalAmount.toInt()}',
+                Text('â‚¹ ${p.finalAmount.toInt()}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 17,
@@ -136,7 +137,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                      'Payment of ₹ ${p.finalAmount.toInt()} settled successfully!'),
+                      'Payment of â‚¹ ${p.finalAmount.toInt()} settled successfully!'),
                   backgroundColor: AppTheme.brandGreen,
                 ),
               );
@@ -173,15 +174,15 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
             _dialogRow('Total Volume', '${s.totalLitres} Litres'),
             _dialogRow('Average Quality', 'FAT ${s.avgFat}%  |  SNF ${s.avgSnf}%'),
             _dialogRow('Collections Recorded', '${s.totalCollections} Shifts'),
-            _dialogRow('Gross Payout', '₹ ${s.grossPayable}'),
-            _dialogRow('Deductions / Penalties', '₹ ${s.deductions}'),
+            _dialogRow('Gross Payout', 'â‚¹ ${s.grossPayable}'),
+            _dialogRow('Deductions / Penalties', 'â‚¹ ${s.deductions}'),
             const Divider(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Net Disbursal Amount',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('₹ ${s.netPayable.toStringAsFixed(0)}',
+                Text('â‚¹ ${s.netPayable.toStringAsFixed(0)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 17,
@@ -206,7 +207,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Disbursed ₹ ${s.netPayable.toInt()} to ${s.farmerName}!'),
+                  content: Text('Disbursed â‚¹ ${s.netPayable.toInt()} to ${s.farmerName}!'),
                   backgroundColor: AppTheme.brandGreen,
                 ),
               );
@@ -288,8 +289,9 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
     final isFarmersTab = _selectedTypeFilter == 'Farmers';
 
     return DairyPortalScaffold(
-      activeRoute: '/dairy/payments',
+      activeRoute: AppRoutes.adminPayments,
       title: 'Payments & Settlement',
+      portalType: DairyPortalType.admin,
       actions: [
         IconButton(
           tooltip: 'Export Bank NEFT CSV',
@@ -326,8 +328,8 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                   iconColor: const Color(0xFFE65100),
                   title: isFarmersTab ? 'Farmer Pending' : 'Pending Payout',
                   value: isFarmersTab
-                      ? '₹ ${_farmerSummary?.totalPayable.toInt() ?? 0}'
-                      : '₹ ${_paymentRepo.totalPendingPayout.toInt()}',
+                      ? 'â‚¹ ${_farmerSummary?.totalPayable.toInt() ?? 0}'
+                      : 'â‚¹ ${_paymentRepo.totalPendingPayout.toInt()}',
                   subtitle: isFarmersTab
                       ? '${_farmerSummary?.farmerCount ?? 0} farmers reconciled'
                       : '${_paymentRepo.pendingCollectorsCount} pending settlements',
@@ -341,7 +343,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                   title: isFarmersTab ? 'Reconciled Volume' : 'Paid This Week',
                   value: isFarmersTab
                       ? '${_farmerSummary?.totalLitres.toInt() ?? 0} L'
-                      : '₹ ${_paymentRepo.totalPaidThisWeek.toInt()}',
+                      : 'â‚¹ ${_paymentRepo.totalPaidThisWeek.toInt()}',
                   subtitle: isFarmersTab ? '10-Day Cycle' : 'Direct NEFT RTGS',
                   cardBgColor: AppTheme.cardMint,
                 ),
@@ -361,7 +363,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                   title: 'Total Collections',
                   value: isFarmersTab
                       ? '${_farmerSummary?.totalCollections ?? 0}'
-                      : '₹ ${_paymentRepo.totalPaidThisMonth.toInt()}',
+                      : 'â‚¹ ${_paymentRepo.totalPaidThisMonth.toInt()}',
                   subtitle: '100% verified payouts',
                   cardBgColor: AppTheme.cardLavender,
                 ),
@@ -498,7 +500,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${s.farmerId} • ${s.center}',
+                                      '${s.farmerId} â€¢ ${s.center}',
                                       style: TextStyle(
                                           fontSize: 11,
                                           color: Colors.grey.shade600),
@@ -533,7 +535,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    '₹ ${s.netPayable.toStringAsFixed(0)}',
+                                    'â‚¹ ${s.netPayable.toStringAsFixed(0)}',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
@@ -627,7 +629,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${p.recipientId} • ${p.centerOrLocation}',
+                                    '${p.recipientId} â€¢ ${p.centerOrLocation}',
                                     style: TextStyle(
                                         fontSize: 11,
                                         color: Colors.grey.shade600),
@@ -649,7 +651,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    '${p.totalLitres.toInt()} L @ ₹${p.ratePerLitre}/L',
+                                    '${p.totalLitres.toInt()} L @ â‚¹${p.ratePerLitre}/L',
                                     style: TextStyle(
                                         fontSize: 11.5,
                                         color: Colors.grey.shade700)),
@@ -670,7 +672,7 @@ class _DairyPaymentsScreenState extends State<DairyPaymentsScreen> {
                                       ? CrossAxisAlignment.start
                                       : CrossAxisAlignment.end,
                                   children: [
-                                    Text('₹ ${p.finalAmount.toInt()}',
+                                    Text('â‚¹ ${p.finalAmount.toInt()}',
                                         style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,

@@ -167,7 +167,8 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
   Widget build(BuildContext context) {
     return DairyPortalScaffold(
       activeRoute: AppRoutes.adminDashboard,
-      title: 'Operations Dashboard',
+      title: 'Dairy Enterprise Console',
+      portalType: DairyPortalType.admin,
       actions: [
         IconButton(
           tooltip: 'Sync Live Data',
@@ -190,6 +191,11 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
           tooltip: 'Rate Charts & Pricing',
           icon: const Icon(Icons.currency_rupee, color: AppTheme.brandGreen),
           onPressed: () => context.push(AppRoutes.dairyRates),
+        ),
+        IconButton(
+          tooltip: 'Reports & Export',
+          icon: const Icon(Icons.assessment_outlined, color: AppTheme.brandGreen),
+          onPressed: () => context.push(AppRoutes.adminReports),
         ),
         IconButton(
           tooltip: 'Dispatch Tanker',
@@ -413,7 +419,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
                   children: [
                     _heroChip(icon: Icons.grain, label: 'Avg FAT: ${m.avgFat.toStringAsFixed(2)}%'),
                     _heroChip(icon: Icons.opacity, label: 'Avg SNF: ${m.avgSnf.toStringAsFixed(2)}%'),
-                    _heroChip(icon: Icons.thermostat, label: 'Chilled at ${m.avgTemperature.toStringAsFixed(1)}°C'),
+                    _heroChip(icon: Icons.thermostat, label: 'Chilled at ${m.avgTemperature.toStringAsFixed(1)}Â°C'),
                     _heroChip(icon: Icons.check_circle, label: '${m.gradeAPercent.toStringAsFixed(1)}% Grade A'),
                   ],
                 ),
@@ -829,7 +835,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             icon: Icons.hourglass_top_outlined,
             iconColor: const Color(0xFFE65100),
             title: 'Pending Payout',
-            value: '₹ ${(pendingTotal / 100000).toStringAsFixed(2)} Lakh',
+            value: 'â‚¹ ${(pendingTotal / 100000).toStringAsFixed(2)} Lakh',
             subtitle: '$pendingCount centers pending',
             badgeText: 'Due Soon',
             badgeColor: const Color(0xFFE65100),
@@ -840,7 +846,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             icon: Icons.check_circle_outline,
             iconColor: AppTheme.brandGreen,
             title: 'Paid This Week',
-            value: '₹ ${(paidWeek / 100000).toStringAsFixed(2)} Lakh',
+            value: 'â‚¹ ${(paidWeek / 100000).toStringAsFixed(2)} Lakh',
             subtitle: 'Processed via Bank RTGS',
             cardBgColor: AppTheme.cardMint,
             onTap: () => context.go('/dairy/payments'),
@@ -858,7 +864,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             icon: Icons.account_balance_outlined,
             iconColor: const Color(0xFF5C6BC0),
             title: 'Monthly Disbursal',
-            value: '₹ 98.4 Lakh',
+            value: 'â‚¹ 98.4 Lakh',
             subtitle: '100% on-time record',
             cardBgColor: AppTheme.cardLavender,
             onTap: () => context.go('/dairy/payments'),
@@ -914,7 +920,7 @@ class _DairyAdminDashboardScreenState extends State<DairyAdminDashboardScreen> {
             iconColor: const Color(0xFF7B1FA2),
             title: 'Thresholds Config',
             value: 'Min ${m.minFatThreshold}% FAT',
-            subtitle: 'SNF ≥ ${m.minSnfThreshold}% | ≤ ${m.maxTempThreshold}°C',
+            subtitle: 'SNF â‰¥ ${m.minSnfThreshold}% | â‰¤ ${m.maxTempThreshold}Â°C',
             cardBgColor: AppTheme.cardLavender,
             onTap: () => context.go('/dairy/quality'),
           ),
