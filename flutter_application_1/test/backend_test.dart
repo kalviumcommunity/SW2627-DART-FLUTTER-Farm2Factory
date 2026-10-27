@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_application_1/core/utils/validators.dart';
 import 'package:flutter_application_1/features/admin/models/rate_chart.dart';
+import 'package:flutter_application_1/features/collector/data/milk_entry_repository.dart';
 import 'package:flutter_application_1/features/collector/models/milk_entry.dart';
 import 'package:flutter_application_1/models/batch.dart';
 import 'package:flutter_application_1/models/dispute.dart';
 import 'package:flutter_application_1/models/notification_item.dart';
+import 'package:flutter_application_1/models/reconciliation_statement.dart';
 import 'package:flutter_application_1/services/sync_service.dart';
 
 void main() {
@@ -262,6 +266,200 @@ void main() {
       expect(dispute.claimedQuantity! - dispute.recordedQuantity, 2.5);
       expect(dispute.adjustedAmount, 105.0);
       expect(dispute.status, 'RESOLVED');
+    });
+  });
+
+  group('Backend Serialization & Date Parsing Tests (Bug Fix Verification)', () {
+    test('MilkEntry.fromMap parses DateTime, Timestamp, and ISO String correctly', () {
+      final now = DateTime(2026, 10, 27, 10, 30);
+      final timestamp = Timestamp.fromDate(now);
+      final isoString = now.toIso8601String();
+
+      // Case 1: Timestamp (from Firestore)
+      final entryFromTimestamp = MilkEntry.fromMap('E01', {
+        'farmerId': 'F01',
+        'farmerName': 'Ram',
+        'farmerCode': 'C01',
+        'collectorId': 'COL01',
+        'shift': 'Morning',
+        'date': timestamp,
+        'quantityLitres': 25.0,
+        'fatPercentage': 4.5,
+        'snfPercentage': 8.5,
+        'ratePerLitre': 45.0,
+        'totalAmount': 1125.0,
+      });
+      expect(entryFromTimestamp.date.year, 2026);
+      expect(entryFromTimestamp.date.month, 10);
+
+      // Case 2: DateTime (local / memory)
+      final entryFromDateTime = MilkEntry.fromMap('E02', {
+        'farmerId': 'F01',
+        'farmerName': 'Ram',
+        'farmerCode': 'C01',
+        'collectorId': 'COL01',
+        'shift': 'Morning',
+        'date': now,
+        'quantityLitres': 25.0,
+        'fatPercentage': 4.5,
+        'snfPercentage': 8.5,
+        'ratePerLitre': 45.0,
+        'totalAmount': 1125.0,
+      });
+      expect(entryFromDateTime.date, now);
+
+      // Case 3: ISO String
+      final entryFromString = MilkEntry.fromMap('E03', {
+        'farmerId': 'F01',
+        'farmerName': 'Ram',
+        'farmerCode': 'C01',
+        'collectorId': 'COL01',
+        'shift': 'Morning',
+        'date': isoString,
+        'quantityLitres': 25.0,
+        'fatPercentage': 4.5,
+        'snfPercentage': 8.5,
+        'ratePerLitre': 45.0,
+        'totalAmount': 1125.0,
+      });
+      expect(entryFromString.date.year, 2026);
+    });
+
+    test('Batch.fromMap parses DateTime, Timestamp, and ISO String for date fields', () {
+      final testDate = DateTime(2026, 10, 27, 8, 0);
+      final timestamp = Timestamp.fromDate(testDate);
+
+      // With DateTime
+      final batchWithDate = Batch.fromMap('B01', {
+        'batchNumber': 'BATCH-001',
+        'centerId': 'CTR-01',
+        'collectorId': 'COL-01',
+        'shift': 'Morning',
+        'date': testDate,
+        'createdAt': testDate,
+        'testedAt': testDate,
+        'totalLitres': 500.0,
+        'averageFat': 4.2,
+        'averageSnf': 8.6,
+      });
+      expect(batchWithDate.date, testDate);
+      expect(batchWithDate.createdAt, testDate);
+      expect(batchWithDate.testedAt, testDate);
+
+      // With Timestamp
+      final batchWithTimestamp = Batch.fromMap('B02', {
+        'batchNumber': 'BATCH-002',
+        'centerId': 'CTR-01',
+        'collectorId': 'COL-01',
+        'shift': 'Morning',
+        'date': timestamp,
+        'createdAt': timestamp,
+        'testedAt': timestamp,
+        'totalLitres': 500.0,
+        'averageFat': 4.2,
+        'averageSnf': 8.6,
+      });
+      expect(batchWithTimestamp.date.year, 2026);
+      expect(batchWithTimestamp.createdAt.year, 2026);
+      expect(batchWithTimestamp.testedAt?.year, 2026);
+    });
+
+    test('NotificationItem and ReconciliationStatement preserve DateTime in parseDate', () {
+      final explicitDate = DateTime(2026, 9, 15, 14, 0);
+
+      final notif = NotificationItem.fromMap('N01', {
+        'title': 'Test Notice',
+        'body': 'Payout issued',
+        'type': 'payment',
+        'createdAt': explicitDate,
+        'isRead': false,
+      });
+      expect(notif.createdAt, explicitDate);
+
+      final stmt = FarmerReconciliationStatement.fromMap('ST01', {
+        'farmerId': 'F01',
+        'farmerName': 'Ram',
+        'center': 'Test Center',
+        'cycleStart': explicitDate,
+        'cycleEnd': explicitDate,
+        'totalLitres': 100.0,
+        'totalCollections': 10,
+        'avgFat': 4.0,
+        'avgSnf': 8.5,
+        'grossPayable': 4000.0,
+        'deductions': 0.0,
+        'netPayable': 4000.0,
+        'disputedCount': 0,
+        'status': 'SETTLED',
+      });
+      expect(stmt.cycleStart, explicitDate);
+      expect(stmt.cycleEnd, explicitDate);
+    });
+
+    test('RateChart.fromMap preserves DateTime in effectiveFrom', () {
+      final effectiveDate = DateTime(2026, 8, 1);
+      final chart = RateChart.fromMap('RC01', {
+        'title': 'Monsoon Chart',
+        'milkType': 'cow',
+        'fatRate': 6.5,
+        'snfRate': 2.0,
+        'baseRate': 0.0,
+        'minFat': 3.2,
+        'minSnf': 8.3,
+        'effectiveFrom': effectiveDate,
+        'isActive': true,
+      });
+      expect(chart.effectiveFrom, effectiveDate);
+    });
+
+    test('MilkEntryRepository todayTotalLitres getter correctly adds entry quantityLitres', () {
+      final repo = MilkEntryRepository.instance;
+      final initialTotal = repo.todayTotalLitres;
+
+      final testEntry = MilkEntry(
+        id: 'TEST-FOLD-ENTRY-999',
+        farmerId: 'F999',
+        farmerName: 'Fold Test Farmer',
+        farmerCode: 'FT99',
+        collectorId: 'COL1',
+        shift: 'Morning (AM)',
+        date: DateTime.now(),
+        quantityLitres: 45.5,
+        fatPercentage: 4.0,
+        snfPercentage: 8.5,
+        ratePerLitre: 40.0,
+        totalAmount: 1820.0,
+      );
+
+      repo.addEntry(testEntry);
+      expect(repo.todayTotalLitres, initialTotal + 45.5);
+    });
+  });
+
+  group('Core Utility Validators Tests', () {
+    test('phone requires 10 digits starting with 6-9', () {
+      expect(Validators.phone(null), 'Mobile number is required');
+      expect(Validators.phone(''), 'Mobile number is required');
+      expect(Validators.phone('12345'), 'Enter a valid 10-digit mobile number');
+      expect(Validators.phone('abcdefghij'), 'Enter a valid 10-digit mobile number');
+      expect(Validators.phone('9876543210'), isNull);
+    });
+
+    test('password enforces minimum 6 characters', () {
+      expect(Validators.password(null), 'Password is required');
+      expect(Validators.password('12345'), 'Use at least 6 characters');
+      expect(Validators.password('123456'), isNull);
+    });
+
+    test('required validates field presence', () {
+      expect(Validators.required(null, field: 'Name'), 'Name is required');
+      expect(Validators.required('  ', field: 'Name'), 'Name is required');
+      expect(Validators.required('John Doe', field: 'Name'), isNull);
+    });
+
+    test('confirmPassword ensures matching passwords', () {
+      expect(Validators.confirmPassword('pass123', 'pass456'), 'Passwords do not match');
+      expect(Validators.confirmPassword('pass123', 'pass123'), isNull);
     });
   });
 }
