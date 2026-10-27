@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/user_card.dart';
+import '../widgets/milk_counter_widget.dart';
 
 /// Full page screen representing the primary home dashboard of the Farm2Factory app.
 ///
@@ -95,6 +96,19 @@ class HomeScreen extends StatelessWidget {
               outlined: true,
               onPressed: () => context.go(AppRoutes.reports),
             ),
+            const SizedBox(height: 24),
+
+            // Interactive Stateful Counter (Lesson 3.12)
+            const Text(
+              'Interactive Collection Calculator',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const MilkCounterWidget(initialLitres: 15.0),
             const SizedBox(height: 24),
 
             // Team & Duty Roster demonstrating UserCard reuse with different inputs
