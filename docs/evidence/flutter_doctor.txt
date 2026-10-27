@@ -1,7 +1,7 @@
 [√] Flutter (Channel stable, 3.47.6, on Microsoft Windows [Version 10.0.28000.3231], locale en-IN)
     • Flutter version 3.47.6 on channel stable at C:\Flutter\flutter
     • Upstream repository https://github.com/flutter/flutter.git
-    • Framework revision 5fc346839b (2 weeks ago), 2026-09-30 15:02:49 -0700
+    • Framework revision 5fc346839b (4 weeks ago), 2026-09-30 15:02:49 -0700
     • Engine revision 692136cb65
     • Dart version 3.13.5
     • DevTools version 2.60.0
@@ -12,6 +12,8 @@
 [√] Android toolchain - develop for Android devices (Android SDK version 36.0.0)
     • Android SDK at C:\Android\android-sdk
     • Platform android-36, build-tools 36.0.0
+    • ANDROID_HOME = C:\Android\android-sdk
+    • ANDROID_SDK_ROOT = C:\Android\android-sdk
     • Java binary at: C:\Android\jdk-17\bin\java
       This JDK is specified in your Flutter configuration.
       To change the current JDK, run: `flutter config --jdk-dir="path/to/jdk"`.
@@ -28,8 +30,8 @@
 
 [√] Connected device (3 available)
     • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.28000.3231]
-    • Chrome (web)      • chrome  • web-javascript • Google Chrome 155.0.8059.41
-    • Edge (web)        • edge    • web-javascript • Microsoft Edge 155.0.4283.45
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 156.0.8078.48
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 156.0.4314.42
 
 [√] Network resources
     • All expected network resources are available.
