@@ -68,7 +68,7 @@ class MilkEntryRepository extends ChangeNotifier {
   List<MilkEntry> get entries => List.unmodifiable(_entries);
 
   double get todayTotalLitres {
-    return _entries.fold(1248.0, (sum, e) => sum); // baseline 1,248 L from design
+    return _entries.fold(1248.0, (sum, e) => sum + e.quantityLitres); // baseline 1,248 L + local collections
   }
 
   int get activeFarmersCount => 84;
@@ -80,7 +80,22 @@ class MilkEntryRepository extends ChangeNotifier {
   }
 
   void addEntry(MilkEntry entry) {
-    _entries.insert(0, entry);
+    final idx = _entries.indexWhere((e) => e.id == entry.id);
+    if (idx != -1) {
+      _entries[idx] = entry;
+    } else {
+      _entries.insert(0, entry);
+    }
+    notifyListeners();
+  }
+
+  void updateEntry(MilkEntry updated) {
+    final idx = _entries.indexWhere((e) => e.id == updated.id);
+    if (idx != -1) {
+      _entries[idx] = updated;
+    } else {
+      _entries.insert(0, updated);
+    }
     notifyListeners();
   }
 }

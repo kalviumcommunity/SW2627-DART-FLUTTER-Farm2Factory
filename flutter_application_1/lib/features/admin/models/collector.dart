@@ -55,6 +55,52 @@ class Collector {
     if (dailyRecords.isEmpty) return todayTotalLitres;
     return monthlyTotalLitres / dailyRecords.length;
   }
+
+  Collector copyWith({
+    String? id,
+    String? name,
+    String? phone,
+    String? email,
+    String? center,
+    String? location,
+    DateTime? joiningDate,
+    String? status,
+    String? lastActiveTime,
+    int? farmersHandled,
+    double? morningLitresToday,
+    double? eveningLitresToday,
+    String? paymentStatus,
+    double? avgFat,
+    double? avgSnf,
+    double? avgTemp,
+    List<CollectorDailyRecord>? dailyRecords,
+    List<CollectorPaymentTransaction>? payments,
+    List<String>? assignedFarmerIds,
+    List<CollectorActivityLog>? activities,
+  }) {
+    return Collector(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      center: center ?? this.center,
+      location: location ?? this.location,
+      joiningDate: joiningDate ?? this.joiningDate,
+      status: status ?? this.status,
+      lastActiveTime: lastActiveTime ?? this.lastActiveTime,
+      farmersHandled: farmersHandled ?? this.farmersHandled,
+      morningLitresToday: morningLitresToday ?? this.morningLitresToday,
+      eveningLitresToday: eveningLitresToday ?? this.eveningLitresToday,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      avgFat: avgFat ?? this.avgFat,
+      avgSnf: avgSnf ?? this.avgSnf,
+      avgTemp: avgTemp ?? this.avgTemp,
+      dailyRecords: dailyRecords ?? this.dailyRecords,
+      payments: payments ?? this.payments,
+      assignedFarmerIds: assignedFarmerIds ?? this.assignedFarmerIds,
+      activities: activities ?? this.activities,
+    );
+  }
 }
 
 class CollectorDailyRecord {
