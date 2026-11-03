@@ -1,16 +1,84 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../collector/models/milk_entry.dart';
 import '../models/collector.dart';
 
 class CollectorRepository extends ChangeNotifier {
   CollectorRepository._() {
     _initMockCollectors();
+    _startLiveSubscription();
   }
+
   static final CollectorRepository instance = CollectorRepository._();
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription? _usersSubscription;
+  StreamSubscription? _entriesSubscription;
+
   final List<Collector> _collectors = [];
+  bool _isLoading = false;
 
   List<Collector> get collectors => List.unmodifiable(_collectors);
+  bool get isLoading => _isLoading;
+
+  /// Manually trigger a refresh of collector profiles and live milk stats from Firestore.
+  Future<void> fetchLiveCollectors() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final userSnap = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'collector')
+          .get();
+
+      for (final doc in userSnap.docs) {
+        final data = doc.data();
+        final id = (data['customId'] as String?) ?? doc.id;
+        final name = (data['name'] as String?) ?? 'Collector';
+        final phone = (data['phone'] as String?) ?? '';
+        final email = (data['email'] as String?) ?? '$phone@dairycoop.in';
+        final center = (data['center'] as String?) ?? 'Jaipur Center';
+        final location = (data['location'] as String?) ?? center;
+
+        final existingIndex = _collectors.indexWhere((c) => c.id == id || c.phone == phone);
+        if (existingIndex == -1) {
+          _collectors.add(
+            Collector(
+              id: id,
+              name: name,
+              phone: phone,
+              email: email,
+              center: center,
+              location: location,
+              joiningDate: DateTime.now(),
+              status: 'Active',
+              lastActiveTime: 'Just now',
+              farmersHandled: 0,
+              morningLitresToday: 0.0,
+              eveningLitresToday: 0.0,
+              paymentStatus: 'Paid',
+              avgFat: 4.2,
+              avgSnf: 8.5,
+            ),
+          );
+        }
+      }
+
+      final entriesSnap = await _firestore.collection('milk_entries').get();
+      final entries = entriesSnap.docs
+          .map((doc) => MilkEntry.fromMap(doc.id, doc.data()))
+          .toList();
+      _syncCollectorStatsFromEntries(entries);
+    } catch (_) {
+      // Graceful offline fallback: baseline collectors remain intact
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   void addCollector({
     required String id,
@@ -20,27 +88,41 @@ class CollectorRepository extends ChangeNotifier {
     String? location,
     String? email,
   }) {
-    _collectors.insert(
-      0,
-      Collector(
-        id: id,
-        name: name,
-        phone: phone,
-        email: email ?? '${name.toLowerCase().replaceAll(' ', '.')}@dairycoop.in',
-        center: center,
-        location: location ?? center,
-        joiningDate: DateTime.now(),
-        status: 'Active',
-        lastActiveTime: 'Just now',
-        farmersHandled: 0,
-        morningLitresToday: 0.0,
-        eveningLitresToday: 0.0,
-        paymentStatus: 'Paid',
-        avgFat: 4.2,
-        avgSnf: 8.5,
-      ),
+    final newCollector = Collector(
+      id: id,
+      name: name,
+      phone: phone,
+      email: email ?? '${name.toLowerCase().replaceAll(' ', '.')}@dairycoop.in',
+      center: center,
+      location: location ?? center,
+      joiningDate: DateTime.now(),
+      status: 'Active',
+      lastActiveTime: 'Just now',
+      farmersHandled: 0,
+      morningLitresToday: 0.0,
+      eveningLitresToday: 0.0,
+      paymentStatus: 'Paid',
+      avgFat: 4.2,
+      avgSnf: 8.5,
     );
+
+    _collectors.insert(0, newCollector);
     notifyListeners();
+
+    // Asynchronously synchronize to Firestore users collection
+    try {
+      _firestore.collection('users').doc(id).set({
+        'customId': id,
+        'name': name,
+        'phone': phone,
+        'email': newCollector.email,
+        'role': 'collector',
+        'center': center,
+        'location': newCollector.location,
+        'status': 'Active',
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
   }
 
   Collector? getCollectorById(String id) {
@@ -48,6 +130,135 @@ class CollectorRepository extends ChangeNotifier {
       return _collectors.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
+    }
+  }
+
+  void _startLiveSubscription() {
+    try {
+      _usersSubscription = _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'collector')
+          .snapshots()
+          .listen(
+            (snapshot) {
+              for (final doc in snapshot.docs) {
+                final data = doc.data();
+                final id = (data['customId'] as String?) ?? doc.id;
+                final phone = (data['phone'] as String?) ?? '';
+                final existingIdx = _collectors.indexWhere((c) => c.id == id || c.phone == phone);
+                if (existingIdx == -1) {
+                  _collectors.add(
+                    Collector(
+                      id: id,
+                      name: (data['name'] as String?) ?? 'Collector',
+                      phone: phone,
+                      email: (data['email'] as String?) ?? '$phone@dairycoop.in',
+                      center: (data['center'] as String?) ?? 'Jaipur Center',
+                      location: (data['location'] as String?) ?? 'Jaipur Hub',
+                      joiningDate: DateTime.now(),
+                      status: 'Active',
+                      lastActiveTime: 'Just now',
+                      farmersHandled: 0,
+                      morningLitresToday: 0.0,
+                      eveningLitresToday: 0.0,
+                      paymentStatus: 'Paid',
+                    ),
+                  );
+                }
+              }
+              notifyListeners();
+            },
+            onError: (_) {},
+          );
+
+      _entriesSubscription = _firestore
+          .collection('milk_entries')
+          .snapshots()
+          .listen(
+            (snapshot) {
+              final entries = snapshot.docs
+                  .map((doc) => MilkEntry.fromMap(doc.id, doc.data()))
+                  .toList();
+              _syncCollectorStatsFromEntries(entries);
+              notifyListeners();
+            },
+            onError: (_) {},
+          );
+    } catch (_) {}
+  }
+
+  void _syncCollectorStatsFromEntries(List<MilkEntry> entries) {
+    if (entries.isEmpty) return;
+
+    final now = DateTime.now();
+
+    for (int i = 0; i < _collectors.length; i++) {
+      final c = _collectors[i];
+      // Match entries by collectorId or center
+      final matching = entries.where((e) {
+        if (e.collectorId == c.id) return true;
+        final cleanCenter = c.center.toLowerCase().replaceAll(' center', '');
+        return e.centerId.toLowerCase().contains(cleanCenter);
+      }).toList();
+
+      if (matching.isEmpty) continue;
+
+      double morningLitres = 0;
+      double eveningLitres = 0;
+      double weightedFatSum = 0;
+      double weightedSnfSum = 0;
+      double totalMatchingLitres = 0;
+      final Set<String> farmerIds = {};
+      DateTime? latestEntryDate;
+
+      for (final e in matching) {
+        totalMatchingLitres += e.quantityLitres;
+        weightedFatSum += (e.fatPercentage * e.quantityLitres);
+        weightedSnfSum += (e.snfPercentage * e.quantityLitres);
+        farmerIds.add(e.farmerId);
+
+        final isMorning = e.shift.toLowerCase().contains('morning') || e.shift.contains('AM');
+        if (isMorning) {
+          morningLitres += e.quantityLitres;
+        } else {
+          eveningLitres += e.quantityLitres;
+        }
+
+        if (latestEntryDate == null || e.date.isAfter(latestEntryDate)) {
+          latestEntryDate = e.date;
+        }
+      }
+
+      final avgFat = totalMatchingLitres > 0
+          ? double.parse((weightedFatSum / totalMatchingLitres).toStringAsFixed(2))
+          : c.avgFat;
+      final avgSnf = totalMatchingLitres > 0
+          ? double.parse((weightedSnfSum / totalMatchingLitres).toStringAsFixed(2))
+          : c.avgSnf;
+
+      String status = c.status;
+      String lastActive = c.lastActiveTime;
+
+      if (latestEntryDate != null) {
+        final diff = now.difference(latestEntryDate);
+        if (diff.inHours < 2) {
+          status = 'Collecting';
+          lastActive = diff.inMinutes < 5 ? 'Just now' : '${diff.inMinutes} mins ago';
+        } else if (diff.inHours < 12) {
+          status = 'Active';
+          lastActive = '${diff.inHours} hours ago';
+        }
+      }
+
+      _collectors[i] = c.copyWith(
+        morningLitresToday: morningLitres > 0 ? morningLitres : c.morningLitresToday,
+        eveningLitresToday: eveningLitres > 0 ? eveningLitres : c.eveningLitresToday,
+        farmersHandled: farmerIds.isNotEmpty ? farmerIds.length : c.farmersHandled,
+        avgFat: avgFat,
+        avgSnf: avgSnf,
+        status: status,
+        lastActiveTime: lastActive,
+      );
     }
   }
 
@@ -234,5 +445,12 @@ class CollectorRepository extends ChangeNotifier {
         activities: generateActivities('Kailash Choudhary'),
       ),
     ]);
+  }
+
+  @override
+  void dispose() {
+    _usersSubscription?.cancel();
+    _entriesSubscription?.cancel();
+    super.dispose();
   }
 }

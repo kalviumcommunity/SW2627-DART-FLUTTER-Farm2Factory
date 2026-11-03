@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function getUserRole() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isStaff() {
+      return signedIn() && getUserRole() in ['admin', 'supervisor', 'qc'];
+    }
+
+    // 1. Digital milk slips & receipts
+    match /slips/{farmerId}/{file} {
+      allow read: if signedIn() && (request.auth.uid == farmerId || isStaff());
+      allow write: if signedIn();
+    }
+
+    // 2. Billing statements & PDF payment summaries
+    match /bills/{farmerId}/{file} {
+      allow read: if signedIn() && (request.auth.uid == farmerId || isStaff());
+      allow write: if signedIn() && isStaff();
+    }
+
+    match /dairies/{d}/bills/{farmerUid}/{file} {
+      allow read: if signedIn() && (request.auth.uid == farmerUid || isStaff());
+      allow write: if signedIn() && isStaff();
+    }
+
+    // 3. Exported reports (PDF / Excel)
+    match /exports/{file=**} {
+      allow read, write: if signedIn() && isStaff();
+    }
+
+    match /dairies/{d}/exports/{file=**} {
+      allow read, write: if signedIn() && isStaff();
+    }
+
+    // 4. QC Inspection photos & laboratory evidence
+    match /qc/{lotId}/{file} {
+      allow read: if signedIn();
+      allow write: if signedIn() && isStaff()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /dairies/{d}/qc/{lotId}/{file} {
+      allow read: if signedIn();
+      allow write: if signedIn() && isStaff()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
