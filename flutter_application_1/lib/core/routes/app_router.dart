@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/admin/screens/batch_traceability_screen.dart';
-import '../../features/admin/screens/dispute_management_screen.dart';
+import '../theme/theme_controller.dart';
+
+import '../../features/admin/screens/center_manager_dashboard_screen.dart';
 import '../../features/admin/screens/collector_details_screen.dart';
 import '../../features/admin/screens/collectors_screen.dart';
 import '../../features/admin/screens/dairy_admin_dashboard_screen.dart';
@@ -12,6 +14,8 @@ import '../../features/admin/screens/quality_analytics_screen.dart';
 import '../../features/admin/screens/rate_chart_screen.dart';
 import '../../features/admin/screens/reports_export_screen.dart';
 import '../../features/admin/screens/sellers_screen.dart';
+import '../../features/auth/data/auth_repository.dart';
+import '../../features/auth/screens/admin_2fa_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
@@ -32,7 +36,6 @@ class AppRoutes {
   static const dashboard = '/dashboard';
   static const collectorDashboard = '/collector/dashboard';
   static const farmerDashboard = '/farmer/dashboard';
-  static const adminDashboard = '/admin/dashboard';
   static const farmers = '/farmers';
   static const addFarmer = '/farmers/add';
   static String farmerDetails(String id) => '/farmers/$id';
@@ -40,7 +43,22 @@ class AppRoutes {
   static const reports = '/reports';
   static const payments = '/payments';
 
-  // Dairy Operations Portal routes
+  // Enterprise Admin Console (Desktop Only & 2FA Protected)
+  static const admin2FA = '/admin/2fa';
+  static const adminDashboard = '/admin/dashboard'; // Intake & Graphs
+  static const adminPayments = '/admin/payments';
+  static const adminReports = '/admin/reports';
+  static const adminLocations = '/admin/locations';
+
+  // Center Manager Portal (Mobile + Desktop)
+  static const managerDashboard = '/manager/dashboard';
+  static const managerDispatch = '/manager/dispatch';
+  static const managerQuality = '/manager/quality';
+  static const managerFarmers = '/manager/farmers';
+  static const managerCollectors = '/manager/collectors';
+  static const managerRates = '/manager/rates';
+
+  // Legacy & Alias Dairy Portal routes
   static const dairyCollectors = '/dairy/collectors';
   static String dairyCollectorDetails(String id) => '/dairy/collectors/$id';
   static const dairyDispatch = '/dairy/dispatch';
@@ -50,13 +68,25 @@ class AppRoutes {
   static const dairyReports = '/dairy/reports';
   static const dairyLocations = '/dairy/locations';
   static const dairyRates = '/dairy/rates';
-  static const dairyBatches = '/dairy/batches';
-  static const dairyDisputes = '/dairy/disputes';
 }
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: Listenable.merge([
+      AuthRepository.instance,
+      ThemeController.instance,
+    ]),
+    redirect: (context, state) {
+      final loc = state.matchedLocation;
+      // Protect Admin routes with 2FA verification
+      if (loc.startsWith('/admin') && loc != AppRoutes.admin2FA) {
+        if (!AuthRepository.instance.isAdmin2FAVerified) {
+          return AppRoutes.admin2FA;
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -94,10 +124,6 @@ class AppRouter {
         builder: (context, state) => const FarmerDashboardScreen(),
       ),
       GoRoute(
-        path: AppRoutes.adminDashboard,
-        builder: (context, state) => const DairyAdminDashboardScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.milkEntries,
         builder: (context, state) => MilkEntriesScreen(
           initialFarmerId: state.extra as String?,
@@ -126,7 +152,58 @@ class AppRouter {
           ),
         ],
       ),
-      // Dairy Operations Portal Routes
+      // Enterprise Admin Console Routes (Desktop Only & 2FA Protected)
+      GoRoute(
+        path: AppRoutes.admin2FA,
+        builder: (context, state) {
+          final target = state.extra is String ? state.extra as String : null;
+          return Admin2FAScreen(targetRoute: target);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.adminDashboard,
+        builder: (context, state) => const DairyAdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminPayments,
+        builder: (context, state) => const DairyPaymentsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminReports,
+        builder: (context, state) => const ReportsExportScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminLocations,
+        builder: (context, state) => const LocationsScreen(),
+      ),
+
+      // Center Manager Portal Routes (Mobile & Desktop)
+      GoRoute(
+        path: AppRoutes.managerDashboard,
+        builder: (context, state) => const CenterManagerDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.managerDispatch,
+        builder: (context, state) => const DispatchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.managerQuality,
+        builder: (context, state) => const QualityAnalyticsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.managerFarmers,
+        builder: (context, state) => const SellersScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.managerCollectors,
+        builder: (context, state) => const CollectorsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.managerRates,
+        builder: (context, state) => const RateChartScreen(),
+      ),
+
+      // Legacy / Alias Dairy Portal Routes
       GoRoute(
         path: AppRoutes.dairyCollectors,
         builder: (context, state) => const CollectorsScreen(),
@@ -166,14 +243,6 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.dairyRates,
         builder: (context, state) => const RateChartScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dairyBatches,
-        builder: (context, state) => const BatchTraceabilityScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dairyDisputes,
-        builder: (context, state) => const DisputeManagementScreen(),
       ),
     ],
   );

@@ -177,9 +177,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: AppTheme.creamBorder),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.02),
@@ -210,7 +210,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   ),
                   Text(
                     value,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                   ),
                 ],
               ),
@@ -451,13 +451,13 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   selected: isSelected,
                   selectedColor: AppTheme.brandGreen,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : AppTheme.textSecondary,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 12.5,
                   ),
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppTheme.cardSurface,
                   side: BorderSide(
-                    color: isSelected ? AppTheme.brandGreen : const Color(0xFFE2E8F0),
+                    color: isSelected ? AppTheme.brandGreen : AppTheme.creamBorder,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -473,20 +473,21 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
         final searchBox = TextField(
           onChanged: (val) => setState(() => _searchQuery = val),
+          style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: 'Search city, facility, contact...',
-            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
+            hintStyle: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+            prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textMuted),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppTheme.cardSurface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: AppTheme.creamBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: AppTheme.creamBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -582,9 +583,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -634,10 +635,10 @@ class _LocationsScreenState extends State<LocationsScreen> {
           // Name and ID
           Text(
             loc.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
+              color: AppTheme.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -681,7 +682,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     const SizedBox(height: 2),
                     Text(
                       loc.contactPerson,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

@@ -35,9 +35,9 @@ class _SellersScreenState extends State<SellersScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(22),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -51,9 +51,9 @@ class _SellersScreenState extends State<SellersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.farmName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(s.farmName, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 2),
-                        Text('${s.id}  •  ${s.name}  •  +91 ${s.phone}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text('${s.id}  •  ${s.name}  •  +91 ${s.phone}', style: TextStyle(fontSize: 12, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -93,7 +93,7 @@ class _SellersScreenState extends State<SellersScreen> {
               ),
               const SizedBox(height: 20),
 
-              const Text('Recent Milk Supply Logs', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('Recent Milk Supply Logs', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 10),
 
               ...s.supplies.take(5).map((sup) {
@@ -101,9 +101,9 @@ class _SellersScreenState extends State<SellersScreen> {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
+                    color: AppTheme.creamSurface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,8 +112,8 @@ class _SellersScreenState extends State<SellersScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${sup.date.day}/${sup.date.month}/${sup.date.year}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            Text('FAT: ${sup.fat}% • SNF: ${sup.snf}% • ${sup.temperature}°C', style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text('${sup.date.day}/${sup.date.month}/${sup.date.year}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
+                            Text('FAT: ${sup.fat}% • SNF: ${sup.snf}% • ${sup.temperature}°C', style: TextStyle(fontSize: 11, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -121,7 +121,7 @@ class _SellersScreenState extends State<SellersScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('${sup.quantityLitres.toInt()} Litres', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
+                          Text('${sup.quantityLitres.toInt()} Litres', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
                           StatusBadge(status: sup.grade, fontSize: 10),
                         ],
                       ),
@@ -141,10 +141,10 @@ class _SellersScreenState extends State<SellersScreen> {
       children: [
         Icon(icon, size: 18, color: AppTheme.brandGreen),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(fontSize: 10.5, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+        Text(title, style: TextStyle(fontSize: 10.5, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(val, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+          child: Text(val, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
         ),
       ],
     );
@@ -165,17 +165,19 @@ class _SellersScreenState extends State<SellersScreen> {
             // Search Input
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: TextField(
                 onChanged: (q) => setState(() => _searchQuery = q),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
                   hintText: 'Search farm name, seller ID or location...',
-                  prefixIcon: Icon(Icons.search, color: AppTheme.brandGreen, size: 20),
+                  hintStyle: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                  prefixIcon: const Icon(Icons.search, color: AppTheme.brandGreen, size: 20),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
@@ -187,7 +189,7 @@ class _SellersScreenState extends State<SellersScreen> {
                 Expanded(
                   child: Text(
                     'Bulk Suppliers (${sellers.length})',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -195,7 +197,7 @@ class _SellersScreenState extends State<SellersScreen> {
                 const SizedBox(width: 8),
                 Text(
                   'Total Cattle: ${sellers.fold(0, (sum, s) => sum + s.cattleCount)}',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.accentGreen),
                 ),
               ],
             ),
@@ -220,9 +222,9 @@ class _SellersScreenState extends State<SellersScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -257,8 +259,8 @@ class _SellersScreenState extends State<SellersScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(s.farmName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                Text('${s.id} • ${s.location}', style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(s.farmName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text('${s.id} • ${s.location}', style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                               ],
                             ),
                           ),
@@ -274,8 +276,9 @@ class _SellersScreenState extends State<SellersScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardMint,
+                    color: AppTheme.isDark ? AppTheme.surfaceHighlight : AppTheme.cardMint,
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
                   child: Row(
                     children: [
@@ -294,7 +297,7 @@ class _SellersScreenState extends State<SellersScreen> {
                     Expanded(
                       child: Text(
                         'Contact: ${s.name} (+91 ${s.phone})',
-                        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -314,9 +317,9 @@ class _SellersScreenState extends State<SellersScreen> {
   Widget _metricCol(String title, String val) {
     return Column(
       children: [
-        Text(title, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+        Text(title, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         const SizedBox(height: 2),
-        Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+        Text(val, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
       ],
     );
   }

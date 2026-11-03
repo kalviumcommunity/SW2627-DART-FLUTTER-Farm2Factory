@@ -3,14 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../../../models/dispute.dart';
-import '../../../models/reconciliation_statement.dart';
-import '../../../services/dispute_service.dart';
-import '../../../services/reconciliation_service.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../collector/data/milk_entry_repository.dart';
-import '../../collector/data/milk_entry_service.dart';
 import '../../collector/models/milk_entry.dart';
 
 class FarmerDashboardScreen extends StatefulWidget {
@@ -21,225 +18,42 @@ class FarmerDashboardScreen extends StatefulWidget {
 }
 
 class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
-  final MilkEntryService _milkEntryService = MilkEntryService();
-  final ReconciliationService _reconciliationService = ReconciliationService();
-
   int _currentTab = 0;
-  bool _isLoading = true;
-
-  List<MilkEntry> _farmerEntries = [];
-  MilkEntry? _morningEntry;
-  MilkEntry? _eveningEntry;
-  double _monthlyLitres = 0.0;
-  double _monthlyEarnings = 0.0;
-  double _avgFat = 0.0;
-  double _avgSnf = 0.0;
-  List<Map<String, dynamic>> _recentDays = [];
-  List<FarmerReconciliationStatement> _payoutStatements = [];
-  List<Dispute> _myDisputes = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFarmerData();
-  }
-
-  Future<void> _loadFarmerData() async {
-    setState(() => _isLoading = true);
-
-    final user = AuthRepository.instance.currentUser;
-    final farmerId = user?.id ?? 'F001';
-
-    List<MilkEntry> entries = [];
-    try {
-      entries = await _milkEntryService.getEntriesForFarmer(farmerId);
-    } catch (_) {}
-
-    // Check in-memory repository as well
-    final repoEntries = MilkEntryRepository.instance.getEntriesForFarmer(farmerId);
-    if (repoEntries.isNotEmpty) {
-      final existingIds = entries.map((e) => e.id).toSet();
-      for (final r in repoEntries) {
-        if (!existingIds.contains(r.id)) {
-          entries.add(r);
-        }
-      }
-    }
-
-    // If Firestore has no live entries for this farmer yet (demo/offline mode),
-    // provide realistic baseline collections so viva examiners see full functionality.
-    if (entries.isEmpty) {
-      entries = _getFarmerDemoEntries(farmerId, user?.name ?? 'Ram Singh');
-    }
-
-    // Sort descending by date
-    entries.sort((a, b) => b.date.compareTo(a.date));
-
-    // Identify latest available date or today
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    MilkEntry? morning;
-    MilkEntry? evening;
-
-    // Look for entries from today, or latest date if today is empty
-    final latestDate = entries.isNotEmpty
-        ? DateTime(entries.first.date.year, entries.first.date.month, entries.first.date.day)
-        : today;
-
-    for (final e in entries) {
-      final eDate = DateTime(e.date.year, e.date.month, e.date.day);
-      if (eDate == latestDate) {
-        if (e.shift.contains('Morning') && morning == null) morning = e;
-        if (e.shift.contains('Evening') && evening == null) evening = e;
-      }
-    }
-
-    // Monthly aggregates
-    double mVol = 0.0;
-    double mEarn = 0.0;
-    double totalVol = 0.0;
-    double fatVol = 0.0;
-    double snfVol = 0.0;
-
-    for (final e in entries) {
-      totalVol += e.quantityLitres;
-      fatVol += (e.fatPercentage * e.quantityLitres);
-      snfVol += (e.snfPercentage * e.quantityLitres);
-
-      if (e.date.month == now.month && e.date.year == now.year) {
-        mVol += e.quantityLitres;
-        mEarn += e.totalAmount;
-      }
-    }
-
-    final avgFat = totalVol > 0 ? fatVol / totalVol : 4.2;
-    final avgSnf = totalVol > 0 ? snfVol / totalVol : 8.5;
-
-    // Group last 5 distinct days
-    final Map<String, List<MilkEntry>> dayMap = {};
-    for (final e in entries) {
-      final key =
-          '${e.date.day.toString().padLeft(2, '0')}/${e.date.month.toString().padLeft(2, '0')}/${e.date.year}';
-      dayMap.putIfAbsent(key, () => []).add(e);
-      if (dayMap.length >= 5) break;
-    }
-
-    final List<Map<String, dynamic>> recentDays = [];
-    dayMap.forEach((dateStr, dEntries) {
-      double dVol = 0.0;
-      double dAmount = 0.0;
-      for (final e in dEntries) {
-        dVol += e.quantityLitres;
-        dAmount += e.totalAmount;
-      }
-      recentDays.add({
-        'date': dateStr,
-        'litres': '${dVol.toStringAsFixed(1)} L',
-        'amount': '₹ ${dAmount.toStringAsFixed(2)}',
-      });
-    });
-
-    // Payout Statements from Reconciliation Service
-    List<FarmerReconciliationStatement> statements = [];
-    try {
-      final cycle1 = await _reconciliationService.getReconciliationForCycle(
-        startDate: DateTime(2026, 10, 11),
-        endDate: DateTime(2026, 10, 20),
-      );
-      final cycle2 = await _reconciliationService.getReconciliationForCycle(
-        startDate: DateTime(2026, 10, 1),
-        endDate: DateTime(2026, 10, 10),
-      );
-      statements = [
-        ...cycle1.statements.where((s) => s.farmerId == farmerId),
-        ...cycle2.statements.where((s) => s.farmerId == farmerId),
-      ];
-    } catch (_) {}
-
-    if (statements.isEmpty) {
-      statements = [
-        FarmerReconciliationStatement(
-          id: 'REC-202610-02-$farmerId',
-          farmerId: farmerId,
-          farmerName: user?.name ?? 'Ram Singh',
-          center: user?.center ?? 'Central Valley Collection Center',
-          cycleStart: DateTime(2026, 10, 11),
-          cycleEnd: DateTime(2026, 10, 20),
-          totalLitres: mVol > 0 ? mVol : 235.0,
-          totalCollections: entries.length,
-          avgFat: double.parse(avgFat.toStringAsFixed(2)),
-          avgSnf: double.parse(avgSnf.toStringAsFixed(2)),
-          grossPayable: mEarn > 0 ? mEarn : 9870.0,
-          netPayable: mEarn > 0 ? mEarn : 9870.0,
-          status: 'DISBURSED',
-          paidAt: DateTime(2026, 10, 21),
-          transactionRef: 'NEFT-8849204',
-        ),
-      ];
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _farmerEntries = entries;
-      _morningEntry = morning;
-      _eveningEntry = evening;
-      _monthlyLitres = mVol > 0 ? mVol : 235.0;
-      _monthlyEarnings = mEarn > 0 ? mEarn : 9870.0;
-      _avgFat = avgFat;
-      _avgSnf = avgSnf;
-      _recentDays = recentDays;
-      _payoutStatements = statements;
-    });
-
-    List<Dispute> disputes = [];
-    try {
-      disputes = await DisputeService.instance.getDisputesForFarmer(farmerId);
-    } catch (_) {}
-
-    if (mounted) {
-      setState(() {
-        _myDisputes = disputes;
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthRepository.instance.currentUser;
-    final farmerName = user?.name ?? 'Ram Singh';
-    final farmerId = user?.id ?? 'F001';
-    final collectorName = user?.collectorId ?? 'Ramesh Kumar (ID: C-BHN-001)';
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final user = AuthRepository.instance.currentUser;
+        final farmerName = user?.name ?? 'Ram Singh';
+        final farmerId = user?.id ?? 'F001';
+        final collectorName = 'Ramesh Kumar (ID: C-BHN-001)';
 
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldBg,
+        return Scaffold(
+          backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
-        title: const Row(
+        title: Row(
           children: [
-            AppLogo(size: 30),
-            SizedBox(width: 8),
+            const AppLogo(size: 30),
+            const SizedBox(width: 8),
             Text(
               'Farmer Portal',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: AppTheme.textPrimary,
               ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh, color: Color(0xFF64748B), size: 20),
-            onPressed: _loadFarmerData,
-          ),
+          const ThemeModeButton(),
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Color(0xFF64748B), size: 20),
+            icon: Icon(Icons.logout, color: AppTheme.textMuted, size: 20),
             onPressed: () {
               AuthRepository.instance.logout();
               context.go(AppRoutes.login);
@@ -249,15 +63,11 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       ),
       body: ListenableBuilder(
         listenable: MilkEntryRepository.instance,
-        builder: (context, _) {
-          if (_isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _buildTabBody(farmerName, farmerId, collectorName);
-        },
+        builder: (context, _) =>
+            _buildTabBody(farmerName, farmerId, collectorName),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppTheme.scaffoldBg,
           border: Border(top: BorderSide(color: AppTheme.creamBorder)),
         ),
@@ -291,6 +101,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         ),
       ),
     );
+      },
+    );
   }
 
   Widget _buildTabBody(String name, String id, String collector) {
@@ -298,218 +110,259 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     if (_currentTab == 2) return _buildQualityTab();
     if (_currentTab == 3) return _buildProfileTab(name, id, collector);
 
+    final entries = MilkEntryRepository.instance.getEntriesForFarmer(id);
+    MilkEntry? morningEntry;
+    MilkEntry? eveningEntry;
+    for (final e in entries) {
+      if (morningEntry == null && e.shift.contains('Morning')) {
+        morningEntry = e;
+      } else if (eveningEntry == null && e.shift.contains('Evening')) {
+        eveningEntry = e;
+      }
+    }
+
     // Default: Daily Records / Today's Sell View
-    return RefreshIndicator(
-      onRefresh: _loadFarmerData,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Profile Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.brandGreen.withOpacity(0.15)),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Profile Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: AppTheme.isDark
+                    ? [const Color(0xFF0F291E), const Color(0xFF1B3D2B)]
+                    : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppTheme.brandGreen,
-                    child: Text(
-                      name.isNotEmpty ? name[0] : 'R',
-                      style: const TextStyle(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.brandGreen.withOpacity(0.15)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: AppTheme.brandGreen,
+                  child: Text(
+                    name.isNotEmpty ? name[0] : 'R',
+                    style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Farmer ID: $id',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.brandGreenDark,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Connected Center: ${AuthRepository.instance.currentUser?.center ?? "Central Valley Center"}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/images/cow_mascot.png',
-                      height: 56,
-                      width: 56,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox.shrink(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Today's Sell Heading
-            const Text(
-              "Today's Collections",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Morning (AM) & Evening (PM) Live Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _ShiftSellCard(
-                    shiftTitle: 'Morning (AM)',
-                    icon: Icons.wb_sunny_outlined,
-                    headerColor: const Color(0xFFFFF3E0),
-                    accentColor: const Color(0xFFE65100),
-                    entry: _morningEntry,
-                    onDispute: (e) => _showRaiseDisputeDialog(context, e),
+                        color: Colors.white),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
-                  child: _ShiftSellCard(
-                    shiftTitle: 'Evening (PM)',
-                    icon: Icons.nightlight_outlined,
-                    headerColor: const Color(0xFFEDE7F6),
-                    accentColor: const Color(0xFF5E35B1),
-                    entry: _eveningEntry,
-                    onDispute: (e) => _showRaiseDisputeDialog(context, e),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Farmer ID: $id',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Connected Collector: $collector',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/cow_mascot.png',
+                    height: 56,
+                    width: 56,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+          ),
+          const SizedBox(height: 20),
 
-            // Monthly Earnings Banner
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0288D1), Color(0xFF01579B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          // Today's Sell Heading
+          Text(
+            "Today's Sell",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Morning (AM) & Evening (PM) Cards
+          Row(
+            children: [
+              Expanded(
+                child: _ShiftSellCard(
+                  shiftTitle: 'Morning (AM)',
+                  icon: Icons.wb_sunny_outlined,
+                  headerColor: AppTheme.isDark ? const Color(0xFF2E1C0A) : const Color(0xFFFFF3E0),
+                  accentColor: AppTheme.isDark ? const Color(0xFFFBBF24) : const Color(0xFFE65100),
+                  litres: morningEntry != null
+                      ? '${morningEntry.quantityLitres} L'
+                      : '12.5 L',
+                  fat: morningEntry != null
+                      ? '${morningEntry.fatPercentage}%'
+                      : '4.2%',
+                  snf: morningEntry != null
+                      ? '${morningEntry.snfPercentage}%'
+                      : '8.5%',
+                  rate: morningEntry != null
+                      ? '₹ ${morningEntry.ratePerLitre.toStringAsFixed(2)}/L'
+                      : '₹ 42.00/L',
+                  total: morningEntry != null
+                      ? '₹ ${morningEntry.totalAmount.toStringAsFixed(2)}'
+                      : '₹ 525.00',
                 ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0288D1).withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'This Month Earnings',
-                        style: TextStyle(fontSize: 12, color: Colors.white70),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ShiftSellCard(
+                  shiftTitle: 'Evening (PM)',
+                  icon: Icons.nightlight_outlined,
+                  headerColor: AppTheme.isDark ? const Color(0xFF1E1736) : const Color(0xFFEDE7F6),
+                  accentColor: AppTheme.isDark ? const Color(0xFFC084FC) : const Color(0xFF5E35B1),
+                  litres: eveningEntry != null
+                      ? '${eveningEntry.quantityLitres} L'
+                      : '11.0 L',
+                  fat: eveningEntry != null
+                      ? '${eveningEntry.fatPercentage}%'
+                      : '4.0%',
+                  snf: eveningEntry != null
+                      ? '${eveningEntry.snfPercentage}%'
+                      : '8.4%',
+                  rate: eveningEntry != null
+                      ? '₹ ${eveningEntry.ratePerLitre.toStringAsFixed(2)}/L'
+                      : '₹ 40.50/L',
+                  total: eveningEntry != null
+                      ? '₹ ${eveningEntry.totalAmount.toStringAsFixed(2)}'
+                      : '₹ 445.50',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Monthly Earnings Banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0288D1), Color(0xFF01579B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0288D1).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This Month Earnings',
+                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '₹ 14,850',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
                       ),
-                      const SizedBox(height: 4),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.trending_up, color: Colors.white, size: 16),
+                      SizedBox(width: 4),
                       Text(
-                        '₹ ${_monthlyEarnings.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
+                        '520 Litres',
+                        style: TextStyle(
                           color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.trending_up, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_monthlyLitres.toStringAsFixed(0)} Litres',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Recent Pours & Records
+          Text(
+            'Recent Pours & Records',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (entries.isNotEmpty)
+            ...entries.take(4).map(
+                  (e) => _buildDayRow(
+                    '${e.shift} (${e.date.day.toString().padLeft(2, '0')}/${e.date.month.toString().padLeft(2, '0')})',
+                    '${e.quantityLitres} L',
+                    '₹ ${e.totalAmount.toStringAsFixed(2)}',
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Recent Days Summary
-            const Text(
-              'Recent Collection History',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            if (_recentDays.isEmpty)
-              Text('No recent collections logged yet.',
-                  style: TextStyle(color: Colors.grey.shade600))
-            else
-              ..._recentDays.map(
-                (d) => _buildDayRow(d['date']!, d['litres']!, d['amount']!),
-              ),
-            const SizedBox(height: 30),
+                )
+          else ...[
+            _buildDayRow('Yesterday (06 Oct)', '23.0 L', '₹ 958.00'),
+            _buildDayRow('05 Oct 2026', '24.5 L', '₹ 1,029.00'),
+            _buildDayRow('04 Oct 2026', '22.0 L', '₹ 924.00'),
+            _buildDayRow('03 Oct 2026', '23.5 L', '₹ 970.00'),
           ],
-        ),
+          const SizedBox(height: 30),
+        ],
       ),
     );
   }
@@ -519,401 +372,118 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined,
-                  size: 14, color: AppTheme.brandGreen),
-              const SizedBox(width: 8),
-              Text(date,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          Row(
-            children: [
-              Text(litres,
-                  style: TextStyle(
+          Expanded(
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined,
+                    size: 14, color: AppTheme.brandGreen),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    date,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700)),
-              const SizedBox(width: 14),
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                litres,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 12),
               Text(
                 amount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.brandGreenDark,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  void _showRaiseDisputeDialog(BuildContext context, MilkEntry entry) {
-    String selectedType = 'Quantity Mismatch';
-    final claimedLitresCtrl =
-        TextEditingController(text: entry.quantityLitres.toStringAsFixed(1));
-    final claimedFatCtrl =
-        TextEditingController(text: entry.fatPercentage.toStringAsFixed(1));
-    final reasonCtrl = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.gavel, color: Color(0xFFE65100)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Contest Milk Reading',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Recorded: ${entry.quantityLitres} L | ${entry.fatPercentage}% FAT',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        entry.shift,
-                        style: const TextStyle(
-                            color: AppTheme.brandGreen,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const Text('Dispute Type',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  value: selectedType,
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'Quantity Mismatch',
-                        child: Text('Quantity Mismatch (Litres)')),
-                    DropdownMenuItem(
-                        value: 'Fat/SNF Reading Dispute',
-                        child: Text('Fat/SNF Reading Dispute')),
-                    DropdownMenuItem(
-                        value: 'Rate Calculation Error',
-                        child: Text('Rate Calculation Error')),
-                    DropdownMenuItem(
-                        value: 'Incorrect Shift / Missing Entry',
-                        child: Text('Incorrect Shift / Missing Entry')),
-                  ],
-                  onChanged: (val) =>
-                      setModalState(() => selectedType = val ?? selectedType),
-                  decoration:
-                      const InputDecoration(border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: claimedLitresCtrl,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                          labelText: 'Claimed Litres',
-                          prefixIcon: Icon(Icons.water_drop_outlined),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: claimedFatCtrl,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                          labelText: 'Claimed FAT %',
-                          prefixIcon: Icon(Icons.grain),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: reasonCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Explanation for Supervisor',
-                    hintText: 'Describe why you are contesting this entry...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.brandGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    icon: const Icon(Icons.send),
-                    label: const Text('Submit Dispute to Cooperative',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold)),
-                    onPressed: () async {
-                      if (reasonCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'Please provide an explanation for the supervisor.')),
-                        );
-                        return;
-                      }
-
-                      final user = AuthRepository.instance.currentUser;
-                      final dispute = Dispute(
-                        id: 'DSP-${DateTime.now().millisecondsSinceEpoch % 100000}',
-                        entryId: entry.id,
-                        farmerId: entry.farmerId,
-                        farmerName: entry.farmerName,
-                        farmerPhone: user?.phone ?? '9876543210',
-                        centerId: entry.centerId,
-                        collectorId: entry.collectorId,
-                        collectionDate: entry.date,
-                        shift: entry.shift,
-                        disputeType: selectedType,
-                        reason: reasonCtrl.text.trim(),
-                        recordedQuantity: entry.quantityLitres,
-                        claimedQuantity:
-                            double.tryParse(claimedLitresCtrl.text.trim()),
-                        recordedFat: entry.fatPercentage,
-                        claimedFat:
-                            double.tryParse(claimedFatCtrl.text.trim()),
-                        recordedSnf: entry.snfPercentage,
-                        recordedAmount: entry.totalAmount,
-                        status: 'OPEN',
-                        createdAt: DateTime.now(),
-                      );
-
-                      await DisputeService.instance.createDispute(dispute);
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        _loadFarmerData();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Dispute submitted! Dairy supervisor has been alerted for review.'),
-                            backgroundColor: AppTheme.brandGreen,
-                            duration: Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDisputesSection() {
-    if (_myDisputes.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        const Text(
-          'My Contested Readings & Disputes',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        ..._myDisputes.map((d) {
-          Color statusCol;
-          switch (d.status.toUpperCase()) {
-            case 'RESOLVED':
-              statusCol = AppTheme.brandGreen;
-              break;
-            case 'UNDER_REVIEW':
-              statusCol = const Color(0xFF0288D1);
-              break;
-            case 'REJECTED':
-              statusCol = Colors.redAccent;
-              break;
-            case 'OPEN':
-            default:
-              statusCol = const Color(0xFFE65100);
-              break;
-          }
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: statusCol.withValues(alpha: 0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${d.id} • ${d.disputeType}',
-                      style: const TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.bold),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: statusCol.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        d.status,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: statusCol),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${d.shift} | Recorded: ${d.recordedQuantity}L (${d.recordedFat}% FAT) vs Claimed: ${d.claimedQuantity ?? d.recordedQuantity}L',
-                  style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
-                ),
-                if (d.resolutionNote != null && d.resolutionNote!.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Audit Note: ${d.resolutionNote}${d.adjustedAmount > 0 ? " (+₹${d.adjustedAmount.toStringAsFixed(2)} Credited)" : ""}',
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A)),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          );
-        }),
-      ],
     );
   }
 
   Widget _buildPaymentTab() {
-    return RefreshIndicator(
-      onRefresh: _loadFarmerData,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Digital Payment Statements',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Payment Ledger',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Reconciled from collection center readings with zero paper disputes.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 14),
-          if (_payoutStatements.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text('No statements available yet.',
-                    style: TextStyle(color: Colors.grey.shade600)),
-              ),
-            )
-          else
-            ..._payoutStatements.map((s) => _buildPaymentCard(s)),
-          _buildDisputesSection(),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        _buildPaymentCard(
+          period: '21 Sep - 30 Sep 2026',
+          litres: '235.0 L',
+          amount: '₹ 9,870.00',
+          status: 'PAID (Bank Transfer)',
+          statusColor: Colors.green,
+          date: '02 Oct 2026',
+        ),
+        _buildPaymentCard(
+          period: '11 Sep - 20 Sep 2026',
+          litres: '240.5 L',
+          amount: '₹ 10,101.00',
+          status: 'PAID (Cash Handover)',
+          statusColor: Colors.green,
+          date: '22 Sep 2026',
+        ),
+        _buildPaymentCard(
+          period: '01 Oct - 10 Oct 2026',
+          litres: '162.0 L',
+          amount: '₹ 6,804.00',
+          status: 'PROCESSING (Due 12 Oct)',
+          statusColor: Colors.orange,
+          date: 'Expected in 3 days',
+        ),
+      ],
     );
   }
 
-  Widget _buildPaymentCard(FarmerReconciliationStatement s) {
-    final bool isPaid = s.isDisbursed;
-    final period =
-        '${s.cycleStart.day}/${s.cycleStart.month} - ${s.cycleEnd.day}/${s.cycleEnd.month}/${s.cycleEnd.year}';
-
+  Widget _buildPaymentCard({
+    required String period,
+    required String litres,
+    required String amount,
+    required String status,
+    required Color statusColor,
+    required String date,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isPaid ? Colors.green.shade200 : Colors.orange.shade200,
-        ),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -922,15 +492,16 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Cycle: $period',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                period,
+                style:
+                    TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               Text(
-                '₹ ${s.netPayable.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontSize: 18,
+                amount,
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.w900,
-                  color: AppTheme.brandGreenDark,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
                 ),
               ),
             ],
@@ -939,41 +510,20 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${s.totalLitres} L (${s.totalCollections} collections)',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              Text(
-                'Avg FAT: ${s.avgFat}%  |  SNF: ${s.avgSnf}%',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-              ),
+              Text('Total Supplied: $litres',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              Text(date,
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
             ],
           ),
-          const Divider(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isPaid ? Colors.green.shade50 : Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  isPaid ? 'PAID (Direct Bank NEFT)' : 'PROCESSING',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isPaid ? Colors.green.shade800 : Colors.orange.shade800,
-                  ),
-                ),
-              ),
-              if (s.transactionRef != null)
-                Text(
-                  s.transactionRef!,
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                ),
-            ],
+          Divider(height: 18, color: AppTheme.creamBorder),
+          Text(
+            status,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: statusColor,
+            ),
           ),
         ],
       ),
@@ -984,9 +534,13 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Milk Quality Analysis',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         Container(
@@ -998,43 +552,35 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Average Quality Rating',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                'Average Quality Rating',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
-                _avgFat >= 4.0 && _avgSnf >= 8.5
-                    ? 'Grade A (Premium Quality)'
-                    : 'Grade B (Standard Quality)',
-                style: const TextStyle(
+                'Grade A (Premium Buffalo Milk)',
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.brandGreenDark,
+                  color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreenDark,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Calculated across ${_farmerEntries.length} verified collections',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
+                'Consistently meeting SNF > 8.5% and Fat > 4.0%',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
+        _buildQualityMetricTile('Fat Percentage', '4.2 % avg', 'Target: 4.0%'),
+        _buildQualityMetricTile('SNF Percentage', '8.5 % avg', 'Target: 8.5%'),
         _buildQualityMetricTile(
-          'Fat Percentage',
-          '${_avgFat.toStringAsFixed(2)} % avg',
-          'Target: 4.0%',
-        ),
-        _buildQualityMetricTile(
-          'SNF Percentage',
-          '${_avgSnf.toStringAsFixed(2)} % avg',
-          'Target: 8.5%',
-        ),
-        _buildQualityMetricTile(
-          'Total Recorded Batches',
-          '${_farmerEntries.length} Collections',
-          '100% digitally verified readings',
-        ),
+            'Water Adulteration Check', 'Zero (Pure)', 'Passed all 30 tests'),
       ],
     );
   }
@@ -1044,9 +590,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1055,10 +601,10 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
               Text(sub,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
             ],
           ),
           Text(
@@ -1075,8 +621,6 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
   }
 
   Widget _buildProfileTab(String name, String id, String collector) {
-    final user = AuthRepository.instance.currentUser;
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -1092,13 +636,20 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         ),
         const SizedBox(height: 12),
         Center(
-          child: Text(name,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text(
+            name,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
         ),
         Center(
-          child: Text('Farmer ID: $id',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+          child: Text(
+            'Farmer ID: $id',
+            style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
+          ),
         ),
         const SizedBox(height: 24),
         Card(
@@ -1106,13 +657,60 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _profileRow('Mobile Phone', user?.phone ?? '9876543210'),
+                _profileRow('Mobile Phone', '9876543210'),
                 const Divider(),
-                _profileRow('Center', user?.center ?? 'Central Valley Center'),
+                _profileRow('Village', 'Jaipur Rural'),
                 const Divider(),
                 _profileRow('Associated Collector', collector),
                 const Divider(),
-                _profileRow('Status', 'Active Cooperative Member'),
+                _profileRow('Animal Type', 'Buffalo & Cow'),
+                const Divider(),
+                _profileRow('Status', 'Active Member'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.palette_outlined, size: 20, color: AppTheme.brandGreen),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Theme & Appearance',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                      ],
+                    ),
+                    const ThemeModeButton(showLabel: true),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Switch between Light (crisp day) and Dark (OLED midnight) mode.',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.tune, size: 16),
+                    label: const Text('Change Appearance (Light / Dark / Auto)'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppTheme.creamBorder),
+                      foregroundColor: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
+                    ),
+                    onPressed: () => showThemeSelectionDialog(context),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1130,7 +728,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
           ),
           const SizedBox(width: 8),
@@ -1138,57 +736,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
             ),
           ),
         ],
       ),
     );
-  }
-
-  List<MilkEntry> _getFarmerDemoEntries(String farmerId, String name) {
-    final now = DateTime.now();
-    final List<MilkEntry> list = [];
-    for (int i = 0; i < 7; i++) {
-      final d = now.subtract(Duration(days: i));
-      list.add(
-        MilkEntry(
-          id: 'DEMO-$farmerId-$i-AM',
-          farmerId: farmerId,
-          farmerName: name,
-          farmerCode: farmerId,
-          collectorId: 'C-BHN-001',
-          shift: 'Morning (AM)',
-          date: d,
-          quantityLitres: 12.5 + (i % 2 == 0 ? 0.5 : -0.5),
-          fatPercentage: 4.2,
-          snfPercentage: 8.5,
-          temperature: 4.2,
-          ratePerLitre: 44.0,
-          totalAmount: (12.5 + (i % 2 == 0 ? 0.5 : -0.5)) * 44.0,
-          qualityStatus: 'ACCEPTED',
-        ),
-      );
-      list.add(
-        MilkEntry(
-          id: 'DEMO-$farmerId-$i-PM',
-          farmerId: farmerId,
-          farmerName: name,
-          farmerCode: farmerId,
-          collectorId: 'C-BHN-001',
-          shift: 'Evening (PM)',
-          date: d,
-          quantityLitres: 11.0,
-          fatPercentage: 4.1,
-          snfPercentage: 8.4,
-          temperature: 4.5,
-          ratePerLitre: 43.5,
-          totalAmount: 11.0 * 43.5,
-          qualityStatus: 'ACCEPTED',
-        ),
-      );
-    }
-    return list;
   }
 }
 
@@ -1197,27 +750,31 @@ class _ShiftSellCard extends StatelessWidget {
   final IconData icon;
   final Color headerColor;
   final Color accentColor;
-  final MilkEntry? entry;
-  final ValueChanged<MilkEntry>? onDispute;
+  final String litres;
+  final String fat;
+  final String snf;
+  final String rate;
+  final String total;
 
   const _ShiftSellCard({
     required this.shiftTitle,
     required this.icon,
     required this.headerColor,
     required this.accentColor,
-    this.entry,
-    this.onDispute,
+    required this.litres,
+    required this.fat,
+    required this.snf,
+    required this.rate,
+    required this.total,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasEntry = entry != null;
-
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -1260,19 +817,19 @@ class _ShiftSellCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  hasEntry ? '${entry!.quantityLitres} L' : '-- L',
-                  style: const TextStyle(
+                  litres,
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
-                _statRow('Fat', hasEntry ? '${entry!.fatPercentage}%' : '--'),
+                _statRow('Fat', fat),
                 const SizedBox(height: 3),
-                _statRow('SNF', hasEntry ? '${entry!.snfPercentage}%' : '--'),
+                _statRow('SNF', snf),
                 const SizedBox(height: 3),
-                _statRow('Rate', hasEntry ? '₹ ${entry!.ratePerLitre.toStringAsFixed(1)}/L' : '--'),
+                _statRow('Rate', rate),
                 const Divider(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1287,48 +844,17 @@ class _ShiftSellCard extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          hasEntry ? '₹ ${entry!.totalAmount.toStringAsFixed(2)}' : 'Not recorded',
-                          style: TextStyle(
+                          total,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
-                            color: hasEntry ? AppTheme.brandGreen : Colors.grey,
+                            color: AppTheme.brandGreen,
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                if (hasEntry) ...[
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: () => onDispute?.call(entry!),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF7ED),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFFEDD5)),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.gavel, size: 11, color: Color(0xFFC2410C)),
-                          SizedBox(width: 4),
-                          Text(
-                            'Contest Reading',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFC2410C),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -1341,9 +867,9 @@ class _ShiftSellCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         Text(value,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
       ],
     );
   }

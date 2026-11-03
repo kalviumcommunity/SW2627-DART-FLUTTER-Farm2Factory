@@ -31,18 +31,18 @@ class DairyStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: cardBgColor ?? Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          color: cardBgColor ?? AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppTheme.creamBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.025),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -54,19 +54,23 @@ class DairyStatCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(7),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+                    color: AppTheme.creamSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
-                  child: Icon(icon, color: iconColor, size: 18),
+                  child: Icon(icon, color: iconColor, size: 16),
                 ),
                 if (badgeText != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (badgeColor ?? AppTheme.brandGreen).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      color: (badgeColor ?? AppTheme.brandGreen).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: (badgeColor ?? AppTheme.brandGreen).withOpacity(0.2),
+                      ),
                     ),
                     child: Text(
                       badgeText!,
@@ -74,6 +78,7 @@ class DairyStatCard extends StatelessWidget {
                         fontSize: 9.5,
                         fontWeight: FontWeight.bold,
                         color: badgeColor ?? AppTheme.brandGreenDark,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ),
@@ -86,7 +91,7 @@ class DairyStatCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11.5,
-                color: Colors.grey.shade600,
+                color: AppTheme.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -96,11 +101,11 @@ class DairyStatCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.4,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                  letterSpacing: -0.5,
                 ),
               ),
             ),
@@ -112,7 +117,7 @@ class DairyStatCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10.5,
-                  color: Colors.grey.shade500,
+                  color: AppTheme.textMuted,
                 ),
               ),
             ],

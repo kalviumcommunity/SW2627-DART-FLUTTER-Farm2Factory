@@ -40,11 +40,11 @@ class ReportService {
       buffer.writeln('C-SKR-004,Vikram Singh,Sikar Center,95,1180.0,33040.0,Active,Paid');
       buffer.writeln('C-TNK-005,Kailash Choudhary,Tonk Center,54,650.0,18200.0,Offline,Pending');
     } else if (reportType.contains('Dispatch')) {
-      buffer.writeln('Dispatch ID,Vehicle No,Driver Name,From,To,Capacity (L),Loaded (L),Temp (C),Status');
-      buffer.writeln('DSP-101,RJ-14-GA-1022,Vikram Singh,Behror Center,Jaipur Plant,5000,4650,4.0,En Route');
-      buffer.writeln('DSP-102,RJ-01-EA-4520,Harish Chandra,Ajmer Center,Jaipur Plant,4500,4100,3.9,Dispatched');
-      buffer.writeln('DSP-103,RJ-23-MA-8819,Dharmendra Yadav,Sikar Center,Jaipur Plant,6000,5850,4.2,Delivered');
-      buffer.writeln('DSP-104,RJ-26-PA-3211,Mukesh Gujjar,Tonk Center,Jaipur Plant,3500,3200,4.1,Loading');
+      buffer.writeln('Dispatch ID,Date & Time,Vehicle No,Driver Name,From,To,Capacity (L),Loaded (L),Temp (C),Status');
+      buffer.writeln('DSP-101,2026-10-26 06:30,RJ-14-GA-1022,Vikram Singh,Behror Center,Jaipur Plant,5000,4650,4.0,En Route');
+      buffer.writeln('DSP-102,2026-10-26 07:15,RJ-01-EA-4520,Harish Chandra,Ajmer Center,Jaipur Plant,4500,4100,3.9,Dispatched');
+      buffer.writeln('DSP-103,2026-10-26 08:00,RJ-23-MA-8819,Dharmendra Yadav,Sikar Center,Jaipur Plant,6000,5850,4.2,Delivered');
+      buffer.writeln('DSP-104,2026-10-26 09:10,RJ-26-PA-3211,Mukesh Gujjar,Tonk Center,Jaipur Plant,3500,3200,4.1,Loading');
     } else if (reportType.contains('Payment')) {
       buffer.writeln('Payment ID,Recipient,Type,Center/Location,Litres (L),Rate (INR),Final Payout (INR),Cycle,Status');
       buffer.writeln('PAY-COL-001,Ramesh Kumar,Collector,Behror Center,14000.0,48.5,681500.0,10 Days,Pending');
@@ -58,6 +58,22 @@ class ReportService {
       buffer.writeln('GEN-03,Commercial,Green Valley Farm,2000.0,Grade A,Verified,2026-10-07');
     }
 
+    return buffer.toString();
+  }
+
+  /// Generates a real-time CSV for the active filtered dispatch register with Date & Time columns.
+  static String generateDispatchRegisterCsv(List<dynamic> records) {
+    final buffer = StringBuffer();
+    final generatedAt = DateTime.now().toIso8601String();
+    buffer.writeln('# Farm2Factory Dairy Operations - Tanker Dispatch Register');
+    buffer.writeln('# Generated At: $generatedAt | Total Records: ${records.length}');
+    buffer.writeln('');
+    buffer.writeln('Dispatch ID,Date,Time,Vehicle No,Driver Name,Driver Phone,Origin Center,Destination Plant,Capacity (L),Loaded (L),Temp (C),Status');
+    for (final d in records) {
+      final dateStr = '${d.dispatchedAt.day.toString().padLeft(2, '0')}/${d.dispatchedAt.month.toString().padLeft(2, '0')}/${d.dispatchedAt.year}';
+      final timeStr = '${d.dispatchedAt.hour.toString().padLeft(2, '0')}:${d.dispatchedAt.minute.toString().padLeft(2, '0')}';
+      buffer.writeln('${d.id},$dateStr,$timeStr,${d.vehicleNo},"${d.driverName}",${d.driverPhone},"${d.fromLocation}","${d.toDestination}",${d.capacityLitres},${d.loadedLitres},${d.temperature.toStringAsFixed(1)},${d.status}');
+    }
     return buffer.toString();
   }
 }

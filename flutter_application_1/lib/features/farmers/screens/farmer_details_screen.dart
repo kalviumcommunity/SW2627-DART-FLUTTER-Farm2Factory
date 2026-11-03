@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/call_helper.dart';
 import '../../../core/widgets/error_message.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../collector/data/milk_entry_repository.dart';
 import '../data/farmer_repository.dart';
 
@@ -22,23 +24,24 @@ class FarmerDetailsScreen extends StatelessWidget {
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => context.canPop()
               ? context.pop()
               : context.go(AppRoutes.farmers),
         ),
-        title: const Text(
+        title: Text(
           'Farmer Profile',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+            color: AppTheme.textPrimary,
           ),
         ),
         actions: [
+          const ThemeModeButton(),
           IconButton(
             tooltip: 'Share Details',
-            icon: const Icon(Icons.share_outlined, color: Color(0xFF64748B)),
+            icon: Icon(Icons.share_outlined, color: AppTheme.textSecondary),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -116,10 +119,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   farmer.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
+                                    color: AppTheme.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
@@ -209,11 +212,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                             icon: const Icon(Icons.call, size: 18, color: AppTheme.brandTeal),
                             label: const Text('Call'),
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Dialing ${farmer.phone}...'),
-                                  backgroundColor: AppTheme.brandTeal,
-                                ),
+                              CallHelper.showCallChooser(
+                                context,
+                                name: farmer.name,
+                                phone: farmer.phone,
                               );
                             },
                           ),
@@ -260,9 +262,9 @@ class FarmerDetailsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.cardSurface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: AppTheme.creamBorder),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.02),
@@ -274,18 +276,27 @@ class FarmerDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Farmer & Center Details',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
+                              color: AppTheme.textPrimary,
                             ),
                           ),
-                          const Divider(height: 18),
+                          Divider(height: 18, color: AppTheme.creamBorder),
                           _detailRow(Icons.person_outline, 'Farmer Name', farmer.name),
                           _detailRow(Icons.badge_outlined, 'Farmer Code', farmer.id),
-                          _detailRow(Icons.phone_outlined, 'Mobile Number', farmer.phone),
+                          _detailRow(
+                            Icons.phone_outlined,
+                            'Mobile Number',
+                            farmer.phone,
+                            onTap: () => CallHelper.showCallChooser(
+                              context,
+                              name: farmer.name,
+                              phone: farmer.phone,
+                            ),
+                          ),
                           _detailRow(Icons.holiday_village_outlined, 'Village / Area', farmer.village),
                           _detailRow(Icons.business_outlined, 'Collection Center', farmer.center),
                           _detailRow(Icons.support_agent_outlined, 'Connected Collector', farmer.collectorId),
@@ -302,19 +313,19 @@ class FarmerDetailsScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Recent Milk Entries',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         Text(
                           '${entries.length} Entries',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: AppTheme.textMuted,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -326,19 +337,19 @@ class FarmerDetailsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppTheme.cardSurface,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(color: AppTheme.creamBorder),
                         ),
                         child: Column(
                           children: [
                             Icon(Icons.water_drop_outlined,
-                                size: 36, color: Colors.grey.shade400),
+                                size: 36, color: AppTheme.textMuted),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'No milk entries recorded today for this farmer',
                               style: TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w500),
+                                  fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
                             ),
                             const SizedBox(height: 12),
                             OutlinedButton.icon(
@@ -358,9 +369,9 @@ class FarmerDetailsScreen extends StatelessWidget {
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppTheme.cardSurface,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: AppTheme.creamBorder),
                           ),
                           child: Row(
                             children: [
@@ -390,9 +401,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       '${e.shift} • ${e.quantityLitres} L',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -400,7 +412,7 @@ class FarmerDetailsScreen extends StatelessWidget {
                                       'Fat: ${e.fatPercentage}%  |  SNF: ${e.snfPercentage}%  |  ₹${e.ratePerLitre.toStringAsFixed(1)}/L',
                                       style: TextStyle(
                                         fontSize: 11.5,
-                                        color: Colors.grey.shade600,
+                                        color: AppTheme.textMuted,
                                       ),
                                     ),
                                   ],
@@ -437,9 +449,9 @@ class FarmerDetailsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: AppTheme.creamBorder),
         ),
         child: Column(
           children: [
@@ -451,16 +463,16 @@ class FarmerDetailsScreen extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
+                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               title,
-              style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 10.5, color: AppTheme.textMuted),
             ),
           ],
         ),
@@ -468,17 +480,22 @@ class FarmerDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value,
-      {bool highlight = false}) {
-    return Padding(
+  Widget _detailRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool highlight = false,
+    VoidCallback? onTap,
+  }) {
+    final rowContent = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade500),
+          Icon(icon, size: 16, color: onTap != null ? AppTheme.brandGreen : AppTheme.textMuted),
           const SizedBox(width: 10),
           Text(
             label,
-            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12.5, color: AppTheme.textMuted),
           ),
           const Spacer(),
           Text(
@@ -486,11 +503,26 @@ class FarmerDetailsScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: highlight ? AppTheme.brandGreen : const Color(0xFF1E293B),
+              color: highlight
+                  ? AppTheme.brandGreen
+                  : (onTap != null ? AppTheme.brandTeal : AppTheme.textPrimary),
             ),
           ),
+          if (onTap != null) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.call_outlined, size: 14, color: AppTheme.brandTeal),
+          ],
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: rowContent,
+      );
+    }
+    return rowContent;
   }
 }
