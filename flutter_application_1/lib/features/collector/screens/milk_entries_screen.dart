@@ -304,10 +304,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           ),
                           child: Text(
                             _rateRepo.getActiveChartFor(_selectedMilkType).title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.brandGreenDark,
+                              color: AppTheme.accentGreen,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -331,10 +331,12 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                             decoration: BoxDecoration(
-                              color: _selectedMilkType == MilkType.cow ? AppTheme.cardMint : AppTheme.creamSurface,
+                              color: _selectedMilkType == MilkType.cow
+                                  ? (AppTheme.isDark ? AppTheme.surfaceHighlight : AppTheme.cardMint)
+                                  : AppTheme.creamSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _selectedMilkType == MilkType.cow ? AppTheme.brandGreen : AppTheme.creamBorder,
+                                color: _selectedMilkType == MilkType.cow ? AppTheme.accentGreen : AppTheme.creamBorder,
                                 width: _selectedMilkType == MilkType.cow ? 1.5 : 1,
                               ),
                             ),
@@ -347,7 +349,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                   'Cow Milk',
                                   style: TextStyle(
                                     fontWeight: _selectedMilkType == MilkType.cow ? FontWeight.bold : FontWeight.w500,
-                                    color: _selectedMilkType == MilkType.cow ? AppTheme.brandGreenDark : AppTheme.textSecondary,
+                                    color: _selectedMilkType == MilkType.cow ? AppTheme.accentGreen : AppTheme.textSecondary,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -367,10 +369,12 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                             decoration: BoxDecoration(
-                              color: _selectedMilkType == MilkType.buffalo ? AppTheme.cardMint : AppTheme.creamSurface,
+                              color: _selectedMilkType == MilkType.buffalo
+                                  ? (AppTheme.isDark ? AppTheme.surfaceHighlight : AppTheme.cardMint)
+                                  : AppTheme.creamSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _selectedMilkType == MilkType.buffalo ? AppTheme.brandGreen : AppTheme.creamBorder,
+                                color: _selectedMilkType == MilkType.buffalo ? AppTheme.accentGreen : AppTheme.creamBorder,
                                 width: _selectedMilkType == MilkType.buffalo ? 1.5 : 1,
                               ),
                             ),
@@ -383,7 +387,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                   'Buffalo Milk',
                                   style: TextStyle(
                                     fontWeight: _selectedMilkType == MilkType.buffalo ? FontWeight.bold : FontWeight.w500,
-                                    color: _selectedMilkType == MilkType.buffalo ? AppTheme.brandGreenDark : AppTheme.textSecondary,
+                                    color: _selectedMilkType == MilkType.buffalo ? AppTheme.accentGreen : AppTheme.textSecondary,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -403,7 +407,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                     decoration: InputDecoration(
                       labelText: 'Select Farmer',
                       prefixIcon: Icon(Icons.person_outline,
-                          color: Colors.grey.shade600, size: 20),
+                          color: AppTheme.textMuted, size: 20),
                     ),
                     items: _farmerRepo.farmers.map((f) {
                       return DropdownMenuItem(
@@ -428,7 +432,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                       labelText: 'Quantity (Litres)',
                       hintText: 'e.g. 15.5',
                       prefixIcon: Icon(Icons.water_drop_outlined,
-                          color: Colors.grey.shade600, size: 20),
+                          color: AppTheme.textMuted, size: 20),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -446,7 +450,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                             labelText: 'Fat %',
                             hintText: 'e.g. 4.2',
                             prefixIcon: Icon(Icons.opacity,
-                                color: Colors.grey.shade600, size: 20),
+                                color: AppTheme.textMuted, size: 20),
                           ),
                         ),
                       ),
@@ -461,7 +465,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                             labelText: 'SNF %',
                             hintText: 'e.g. 8.5',
                             prefixIcon: Icon(Icons.science_outlined,
-                                color: Colors.grey.shade600, size: 20),
+                                color: AppTheme.textMuted, size: 20),
                           ),
                         ),
                       ),
@@ -475,7 +479,7 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.cardMint,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.brandGreen.withOpacity(0.2)),
+                      border: Border.all(color: AppTheme.accentGreen.withOpacity(0.25)),
                     ),
                     child: Column(
                       children: [
@@ -494,10 +498,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       '₹ ${_calculatedRate.toStringAsFixed(2)} / L',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: AppTheme.brandGreenDark,
+                                        color: AppTheme.accentGreen,
                                       ),
                                     ),
                                   ),
@@ -510,8 +514,8 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _calcResult.isQualityAcceptable
-                                      ? Colors.green.shade100
-                                      : Colors.orange.shade100,
+                                      ? (AppTheme.isDark ? const Color(0xFF064E3B) : Colors.green.shade100)
+                                      : (AppTheme.isDark ? const Color(0xFF78350F) : Colors.orange.shade100),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -520,8 +524,8 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.bold,
                                     color: _calcResult.isQualityAcceptable
-                                        ? Colors.green.shade800
-                                        : Colors.orange.shade900,
+                                        ? (AppTheme.isDark ? const Color(0xFF4ADE80) : Colors.green.shade800)
+                                        : (AppTheme.isDark ? const Color(0xFFFBBF24) : Colors.orange.shade900),
                                   ),
                                 ),
                               ),
@@ -539,10 +543,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       '₹ ${_calculatedAmount.toStringAsFixed(2)}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w900,
-                                        color: AppTheme.brandGreen,
+                                        color: AppTheme.accentGreen,
                                       ),
                                     ),
                                   ),
@@ -675,10 +679,10 @@ class _MilkEntriesScreenState extends State<MilkEntriesScreen> {
                               ),
                               Text(
                                 '₹ ${entry.totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.brandGreen,
+                                  color: AppTheme.accentGreen,
                                 ),
                               ),
                             ],

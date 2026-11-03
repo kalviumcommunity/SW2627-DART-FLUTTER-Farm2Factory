@@ -15,13 +15,14 @@ class Farm2FactoryApp extends StatelessWidget {
       builder: (context, _) {
         final mode = ThemeController.instance.themeMode;
         final isDark = ThemeController.instance.isDark;
+        final isPeach = ThemeController.instance.isPeach;
         return MaterialApp.router(
-          key: ValueKey('f2f_theme_${mode.name}_$isDark'),
+          key: ValueKey('f2f_theme_${ThemeController.instance.themePreference}_$isDark'),
           title: 'Farm2Factory',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
+          theme: isPeach ? AppTheme.peachTheme : AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: mode,
+          themeMode: isPeach ? ThemeMode.light : mode,
           routerConfig: AppRouter.router,
         );
       },

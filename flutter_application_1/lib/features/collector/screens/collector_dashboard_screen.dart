@@ -145,7 +145,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
           // Share Invite Button in AppBar
           IconButton(
             tooltip: 'Share invite link',
-            icon: const Icon(Icons.share_outlined, color: AppTheme.brandGreen),
+            icon: Icon(Icons.share_outlined, color: AppTheme.accentGreen),
             onPressed: () => _showShareInviteDialog(context),
           ),
           // Notification Bell
@@ -154,8 +154,8 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             children: [
               IconButton(
                 tooltip: 'Notifications',
-                icon: const Icon(Icons.notifications_none_outlined,
-                    color: Color(0xFF334155)),
+                icon: Icon(Icons.notifications_none_outlined,
+                    color: AppTheme.textSecondary),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('No new notifications')),
@@ -179,7 +179,7 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
           // Logout
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout, color: Color(0xFF64748B), size: 20),
+            icon: Icon(Icons.logout, color: AppTheme.textMuted, size: 20),
             onPressed: () {
               AuthRepository.instance.logout();
               context.go(AppRoutes.login);
@@ -195,23 +195,23 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             // Greeting & Center Location
             Text(
               'Hello, $userName',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
+                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 3),
             Row(
               children: [
-                const Icon(Icons.location_on, size: 14, color: AppTheme.brandGreen),
+                Icon(Icons.location_on, size: 14, color: AppTheme.accentGreen),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     userCenter,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: AppTheme.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -387,32 +387,32 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Quick Stats',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: AppTheme.cardSurface,
+                    border: Border.all(color: AppTheme.creamBorder),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.calendar_today,
-                          size: 12, color: Colors.grey.shade700),
+                          size: 12, color: AppTheme.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         'Today ⌄',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade800,
+                          color: AppTheme.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -460,9 +460,9 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: Row(
                 children: [
@@ -472,8 +472,8 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                       color: AppTheme.cardMint,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.share,
-                        color: AppTheme.brandGreen, size: 22),
+                    child: Icon(Icons.share,
+                        color: AppTheme.accentGreen, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -488,9 +488,9 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        const Text(
+                        Text(
                           'Share link to download & login to dashboard',
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -542,25 +542,25 @@ class _CollectorDashboardScreenState extends State<CollectorDashboardScreen> {
           backgroundColor: AppTheme.scaffoldBg,
           indicatorColor: AppTheme.brandGreen.withOpacity(0.15),
           elevation: 0,
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home, color: AppTheme.accentGreen),
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people, color: AppTheme.accentGreen),
               label: 'Farmers',
             ),
             NavigationDestination(
-              icon: Icon(Icons.water_drop_outlined),
-              selectedIcon: Icon(Icons.water_drop, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.water_drop_outlined),
+              selectedIcon: Icon(Icons.water_drop, color: AppTheme.accentGreen),
               label: 'Entries',
             ),
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              selectedIcon: Icon(Icons.bar_chart, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart, color: AppTheme.accentGreen),
               label: 'Reports',
             ),
           ],

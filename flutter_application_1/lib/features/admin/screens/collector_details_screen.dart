@@ -60,14 +60,14 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
 
           // 6 Tab Bar Navigation
           Container(
-            color: Colors.white,
+            color: AppTheme.cardSurface,
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor: AppTheme.brandGreen,
-              unselectedLabelColor: Colors.grey.shade600,
-              indicatorColor: AppTheme.brandGreen,
+              labelColor: AppTheme.accentGreen,
+              unselectedLabelColor: AppTheme.textSecondary,
+              indicatorColor: AppTheme.accentGreen,
               indicatorWeight: 3,
               labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               tabs: const [
@@ -80,7 +80,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: AppTheme.creamBorder),
 
           // Tab Views
           Expanded(
@@ -109,9 +109,9 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           padding: const EdgeInsets.all(14),
           margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.cardSurface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(color: AppTheme.creamBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -151,14 +151,14 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                     const SizedBox(height: 3),
                     Text(
                       'ID: ${c.id}  •  ${c.center}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Phone: +91 ${c.phone}  •  Joined: ${c.joiningDate.day}/${c.joiningDate.month}/${c.joiningDate.year}',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                      style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -171,8 +171,8 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                   icon: const Icon(Icons.edit_outlined, size: 14),
                   label: const Text('Edit', style: TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.brandGreen,
-                    side: const BorderSide(color: AppTheme.brandGreen),
+                    foregroundColor: AppTheme.accentGreen,
+                    side: BorderSide(color: AppTheme.accentGreen),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
@@ -184,7 +184,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 ),
               ] else ...[
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.brandGreen),
+                  icon: Icon(Icons.edit_outlined, size: 18, color: AppTheme.accentGreen),
                   tooltip: 'Edit Profile',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -213,7 +213,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Performance Highlights', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('Performance Highlights', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 12),
               GridView.count(
                 crossAxisCount: crossAxisCount,
@@ -225,7 +225,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 children: [
                   _overviewCard('Today Morning', '${c.morningLitresToday.toInt()} L', AppTheme.cardPeach, const Color(0xFFF57C00)),
                   _overviewCard('Today Evening', '${c.eveningLitresToday.toInt()} L', AppTheme.cardLavender, const Color(0xFF5C6BC0)),
-                  _overviewCard('Today Total', '${c.todayTotalLitres.toInt()} L', AppTheme.cardMint, AppTheme.brandGreen),
+                  _overviewCard('Today Total', '${c.todayTotalLitres.toInt()} L', AppTheme.cardMint, AppTheme.accentGreen),
                   _overviewCard('Monthly Total', '${c.monthlyTotalLitres.toInt()} L', AppTheme.cardSky, const Color(0xFF0288D1)),
                   _overviewCard('Daily Average', '${c.avgDailyLitres.toInt()} L/day', AppTheme.cardMint, AppTheme.accentGreen),
                   _overviewCard('Active Farmers', '${c.farmersHandled} Farmers', AppTheme.cardPeach, const Color(0xFFE65100)),
@@ -240,11 +240,11 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                   decoration: BoxDecoration(
                     color: AppTheme.cardMint,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.brandGreen.withValues(alpha: 0.2)),
+                    border: Border.all(color: AppTheme.accentGreen.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.ac_unit, size: 16, color: AppTheme.brandGreen),
+                      Icon(Icons.ac_unit, size: 16, color: AppTheme.accentGreen),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -260,20 +260,20 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Current Payment Status', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                          SizedBox(height: 4),
-                          Text('Settled for Current Cycle', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                          Text('Current Payment Status', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                          const SizedBox(height: 4),
+                          Text('Settled for Current Cycle', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                         ],
                       ),
                     ),
@@ -293,9 +293,9 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -308,7 +308,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+          Text(title, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -330,26 +330,26 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppTheme.creamBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Collection Shift Trend (Last 7 Days)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text('Collection Shift Trend (Last 7 Days)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                     Row(
                       children: [
-                        Icon(Icons.circle, size: 10, color: Color(0xFFF57C00)),
-                        SizedBox(width: 4),
-                        Text('Morning', style: TextStyle(fontSize: 11)),
-                        SizedBox(width: 12),
-                        Icon(Icons.circle, size: 10, color: Color(0xFF5C6BC0)),
-                        SizedBox(width: 4),
-                        Text('Evening', style: TextStyle(fontSize: 11)),
+                        const Icon(Icons.circle, size: 10, color: Color(0xFFF57C00)),
+                        const SizedBox(width: 4),
+                        Text('Morning', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.circle, size: 10, color: Color(0xFF5C6BC0)),
+                        const SizedBox(width: 4),
+                        Text('Evening', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                       ],
                     ),
                   ],
@@ -374,7 +374,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Text('${rec.date.day}/${rec.date.month}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text('${rec.date.day}/${rec.date.month}', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
                       ],
                     );
                   }),
@@ -384,7 +384,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           ),
           const SizedBox(height: 16),
 
-          const Text('Daily Milk Log Records', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Text('Daily Milk Log Records', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
           const SizedBox(height: 8),
 
           ListView.builder(
@@ -397,9 +397,9 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -409,16 +409,16 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                       children: [
                         Text(
                           '${r.date.day}/${r.date.month}/${r.date.year}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
                         ),
-                        Text('AM: ${r.morningLitres.toInt()}L  •  PM: ${r.eveningLitres.toInt()}L', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        Text('AM: ${r.morningLitres.toInt()}L  •  PM: ${r.eveningLitres.toInt()}L', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text('${r.totalLitres.toInt()} Litres', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
-                        Text('FAT: ${r.fat}%  •  SNF: ${r.snf}%', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        Text('FAT: ${r.fat}%  •  SNF: ${r.snf}%', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       ],
                     ),
                   ],
@@ -441,12 +441,12 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Last 10 Payout Transactions', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              Text('Last 10 Payout Transactions', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               TextButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Showing all 24 past payment transactions')));
                 },
-                child: const Text('View All Payments', style: TextStyle(fontSize: 12, color: AppTheme.brandGreen, fontWeight: FontWeight.bold)),
+                child: Text('View All Payments', style: TextStyle(fontSize: 12, color: AppTheme.accentGreen, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -461,9 +461,9 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -471,10 +471,10 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(p.period, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(p.period, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
                         const SizedBox(height: 2),
-                        Text('${p.method} • Ref: ${p.referenceId}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                        Text(p.timestamp, style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                        Text('${p.method} • Ref: ${p.referenceId}', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                        Text(p.timestamp, style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
                       ],
                     ),
                     Column(
@@ -507,8 +507,8 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Assigned Farmers (${assignedFarmers.length})', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-              Text('Active Center: ${c.center}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text('Assigned Farmers (${assignedFarmers.length})', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              Text('Active Center: ${c.center}', style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -522,9 +522,9 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardSurface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -535,15 +535,15 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                           CircleAvatar(
                             radius: 18,
                             backgroundColor: AppTheme.brandGreen.withValues(alpha: 0.1),
-                            child: Text(f.name[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.brandGreen)),
+                            child: Text(f.name[0], style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(f.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                Text('${f.id} • ${f.village}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(f.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text('${f.id} • ${f.village}', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
                               ],
                             ),
                           ),
@@ -555,7 +555,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text('16.5 L / day', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
-                        const Text('Grade A (4.2% FAT)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text('Grade A (4.2% FAT)', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       ],
                     ),
                   ],
@@ -592,7 +592,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
                   Container(
                     width: 2,
                     height: 50,
-                    color: Colors.grey.shade300,
+                    color: AppTheme.creamBorder,
                   ),
               ],
             ),
@@ -601,13 +601,13 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(act.action, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                  Text(act.action, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppTheme.textPrimary)),
                   const SizedBox(height: 2),
-                  Text(act.description, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                  Text(act.description, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 2),
                   Text(
                     '${act.timestamp.hour.toString().padLeft(2, '0')}:${act.timestamp.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(fontSize: 10.5, color: Colors.grey.shade500),
+                    style: TextStyle(fontSize: 10.5, color: AppTheme.textMuted),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -656,7 +656,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.creamBorder),
       ),
@@ -664,7 +664,7 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
-          const Divider(height: 20),
+          Divider(height: 20, color: AppTheme.creamBorder),
           ...children,
         ],
       ),
@@ -677,13 +677,13 @@ class _CollectorDetailsScreenState extends State<CollectorDetailsScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600))),
+          Expanded(child: Text(label, style: TextStyle(fontSize: 12.5, color: AppTheme.textSecondary))),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
           ),
         ],
