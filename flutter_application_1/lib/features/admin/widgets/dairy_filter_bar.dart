@@ -50,17 +50,19 @@ class DairyFilterBar extends StatelessWidget {
         if (onSearchChanged != null) ...[
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: AppTheme.cardSurface,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppTheme.creamBorder),
             ),
             child: TextField(
               onChanged: onSearchChanged,
+              style: TextStyle(fontSize: 13, color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 hintText: searchHint,
-                prefixIcon: const Icon(Icons.search, color: AppTheme.brandGreen, size: 20),
+                hintStyle: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                prefixIcon: Icon(Icons.search, color: AppTheme.textSecondary, size: 18),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
           ),
@@ -77,19 +79,20 @@ class DairyFilterBar extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.brandGreen.withValues(alpha: 0.3)),
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.creamBorder),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedCenter,
+                    dropdownColor: AppTheme.cardSurface,
                     isDense: true,
-                    icon: const Icon(Icons.arrow_drop_down, color: AppTheme.brandGreen, size: 18),
-                    style: const TextStyle(
+                    icon: Icon(Icons.arrow_drop_down, color: AppTheme.textSecondary, size: 18),
+                    style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.brandGreenDark,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
                     ),
                     items: centerOptions.map((c) {
                       return DropdownMenuItem(value: c, child: Text(c));
@@ -104,23 +107,24 @@ class DairyFilterBar extends StatelessWidget {
               // Date Pills
               ...dateOptions.map((opt) {
                 final isSelected = selectedDateFilter == opt;
+                final activeColor = AppTheme.isDark ? AppTheme.brandGreen : const Color(0xFF0F172A);
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     selected: isSelected,
+                    showCheckmark: false,
                     label: Text(opt),
                     labelStyle: TextStyle(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.grey.shade700,
+                      color: isSelected ? Colors.white : AppTheme.textSecondary,
                     ),
-                    backgroundColor: Colors.white,
-                    selectedColor: AppTheme.brandGreen,
-                    checkmarkColor: Colors.white,
+                    backgroundColor: AppTheme.cardSurface,
+                    selectedColor: activeColor,
                     side: BorderSide(
-                      color: isSelected ? AppTheme.brandGreen : AppTheme.creamBorder,
+                      color: isSelected ? activeColor : AppTheme.creamBorder,
                     ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onSelected: (_) => onDateFilterChanged(opt),
                   ),
                 );

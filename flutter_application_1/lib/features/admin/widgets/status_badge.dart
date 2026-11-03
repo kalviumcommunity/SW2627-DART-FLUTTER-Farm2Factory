@@ -23,17 +23,17 @@ class StatusBadge extends StatelessWidget {
       case 'completed':
       case 'grade a':
       case 'operating 24/7':
-        return AppTheme.cardMint;
+        return AppTheme.badgeMintBg;
       case 'collecting':
       case 'en route':
       case 'dispatched':
       case 'processing':
-        return AppTheme.cardSky;
+        return AppTheme.badgeSkyBg;
       case 'on duty':
       case 'loading':
       case 'warning':
       case 'grade b':
-        return AppTheme.cardPeach;
+        return AppTheme.badgeAmberBg;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -41,9 +41,9 @@ class StatusBadge extends StatelessWidget {
       case 'high':
       case 'grade c':
       case 'rejected':
-        return const Color(0xFFFFEBEE);
+        return AppTheme.badgeRoseBg;
       default:
-        return Colors.grey.shade100;
+        return AppTheme.badgeNeutralBg;
     }
   }
 
@@ -55,17 +55,17 @@ class StatusBadge extends StatelessWidget {
       case 'completed':
       case 'grade a':
       case 'operating 24/7':
-        return AppTheme.brandGreenDark;
+        return AppTheme.badgeMintText;
       case 'collecting':
       case 'en route':
       case 'dispatched':
       case 'processing':
-        return const Color(0xFF0277BD);
+        return AppTheme.badgeSkyText;
       case 'on duty':
       case 'loading':
       case 'warning':
       case 'grade b':
-        return const Color(0xFFE65100);
+        return AppTheme.badgeAmberText;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -73,9 +73,41 @@ class StatusBadge extends StatelessWidget {
       case 'high':
       case 'grade c':
       case 'rejected':
-        return const Color(0xFFC62828);
+        return AppTheme.badgeRoseText;
       default:
-        return Colors.grey.shade700;
+        return AppTheme.badgeNeutralText;
+    }
+  }
+
+  Color _getBorderColor() {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'paid':
+      case 'delivered':
+      case 'completed':
+      case 'grade a':
+      case 'operating 24/7':
+        return AppTheme.badgeMintBorder;
+      case 'collecting':
+      case 'en route':
+      case 'dispatched':
+      case 'processing':
+        return AppTheme.badgeSkyBorder;
+      case 'on duty':
+      case 'loading':
+      case 'warning':
+      case 'grade b':
+        return AppTheme.badgeAmberBorder;
+      case 'pending':
+      case 'delayed':
+      case 'offline':
+      case 'inactive':
+      case 'high':
+      case 'grade c':
+      case 'rejected':
+        return AppTheme.badgeRoseBorder;
+      default:
+        return AppTheme.badgeNeutralBorder;
     }
   }
 
@@ -83,20 +115,21 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = _getBgColor();
     final fg = _getTextColor();
+    final border = _getBorderColor();
 
     return Container(
       padding: padding,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: fg.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: border),
       ),
       child: Text(
         status,
         style: TextStyle(
           color: fg,
           fontSize: fontSize,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
         ),
       ),

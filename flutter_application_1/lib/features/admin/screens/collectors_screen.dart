@@ -216,10 +216,10 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                                   c.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
+                                    color: AppTheme.textPrimary,
                                   ),
                                 ),
                               ),
@@ -232,7 +232,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                             '${c.id}  •  ${c.center}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppTheme.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -248,8 +248,9 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardMint,
+                    color: AppTheme.isDark ? AppTheme.surfaceHighlight : AppTheme.cardMint,
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.creamBorder),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -277,7 +278,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                               c.location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                              style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
                             ),
                           ),
                         ],
@@ -316,7 +317,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
         ),
         const SizedBox(height: 2),
         Text(
@@ -324,7 +325,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
-            color: isBold ? AppTheme.brandGreenDark : const Color(0xFF0F172A),
+            color: isBold ? AppTheme.accentGreen : AppTheme.textPrimary,
           ),
         ),
       ],

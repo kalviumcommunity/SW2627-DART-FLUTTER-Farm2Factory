@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/farmer_repository.dart';
 
@@ -88,17 +89,21 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.farmers),
         ),
-        title: const Text(
+        title: Text(
           'Add Farmer',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+            color: AppTheme.textPrimary,
           ),
         ),
+        actions: const [
+          ThemeModeButton(),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -266,29 +271,37 @@ class _AddFarmerScreenState extends State<AddFarmerScreen> {
                       borderRadius: BorderRadius.circular(16),
                       onTap: _saving ? null : _save,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const SizedBox(width: 32),
-                            _saving
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Save Farmer',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+                            Expanded(
+                              child: Center(
+                                child: _saving
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                    : const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'Save Farmer',
+                                          maxLines: 1,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ),
                             Container(
                               width: 32,
                               height: 32,

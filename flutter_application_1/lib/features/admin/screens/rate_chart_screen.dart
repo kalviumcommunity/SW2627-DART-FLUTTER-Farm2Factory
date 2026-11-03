@@ -83,7 +83,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                     child: const Icon(Icons.calculate_outlined, color: AppTheme.brandGreen),
                   ),
                   const SizedBox(width: 10),
-                  const Text('Configure Rate Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Configure Rate Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 ],
               ),
               content: SingleChildScrollView(
@@ -94,14 +94,14 @@ class _RateChartScreenState extends State<RateChartScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Updates will immediately apply to all collector milk entries with this effective date.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                       ),
                       const SizedBox(height: 14),
 
                       // Milk Type Selector
-                      const Text('Milk Type', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      Text('Milk Type', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -245,10 +245,10 @@ class _RateChartScreenState extends State<RateChartScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Effective Date', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                  Text('Effective Date', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                                   Text(
                                     '${effectiveDate.day}/${effectiveDate.month}/${effectiveDate.year}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
                                   ),
                                 ],
                               ),
@@ -325,38 +325,28 @@ class _RateChartScreenState extends State<RateChartScreen> {
       milkType: _simMilkType,
     );
 
+    final isNarrowScreen = MediaQuery.of(context).size.width < 500;
+
     return DairyPortalScaffold(
       activeRoute: AppRoutes.dairyRates,
-      title: 'Rate Charts & Pricing',
+      title: isNarrowScreen ? 'Rate Charts' : 'Rate Charts & Pricing',
       actions: [
-        Builder(
-          builder: (context) {
-            final isMobile = MediaQuery.of(context).size.width < 500;
-            if (isMobile) {
-              return FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.brandGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Revision', style: TextStyle(fontSize: 12)),
-                onPressed: () => _showUpdateRatesDialog(context),
-              );
-            }
-            return FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.brandGreen,
-                foregroundColor: Colors.white,
-              ),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('New Rate Revision'),
-              onPressed: () => _showUpdateRatesDialog(context),
-            );
-          },
-        ),
+        if (isNarrowScreen)
+          IconButton(
+            tooltip: 'New Rate Revision',
+            icon: Icon(Icons.add_circle, color: AppTheme.accentGreen),
+            onPressed: () => _showUpdateRatesDialog(context),
+          )
+        else
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.brandGreen,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('New Rate Revision'),
+            onPressed: () => _showUpdateRatesDialog(context),
+          ),
         const SizedBox(width: 8),
       ],
       body: SingleChildScrollView(
@@ -464,9 +454,9 @@ class _RateChartScreenState extends State<RateChartScreen> {
             const SizedBox(height: 24),
 
             // Active Charts Side-by-Side (Cow & Buffalo)
-            const Text(
+            Text(
               'Active Pricing Policies',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 12),
             LayoutBuilder(
@@ -501,9 +491,9 @@ class _RateChartScreenState extends State<RateChartScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: AppTheme.creamBorder),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.03),
@@ -518,15 +508,15 @@ class _RateChartScreenState extends State<RateChartScreen> {
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isNarrow = constraints.maxWidth < 550;
-                      final titleRow = const Row(
+                      final titleRow = Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.tune, color: AppTheme.brandGreen, size: 20),
-                          SizedBox(width: 8),
+                          const Icon(Icons.tune, color: AppTheme.brandGreen, size: 20),
+                          const SizedBox(width: 8),
                           Flexible(
                             child: Text(
                               'Interactive Rate Simulator',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -584,9 +574,9 @@ class _RateChartScreenState extends State<RateChartScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Simulate how farmer rates and total earnings are computed under active pricing coefficients:',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 20),
 
@@ -659,17 +649,17 @@ class _RateChartScreenState extends State<RateChartScreen> {
                         final computedRateBlock = Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Computed Milk Rate', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                            Text('Computed Milk Rate', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                             const SizedBox(height: 2),
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 '₹ ${simResult.ratePerLitre.toStringAsFixed(2)} / L',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w900,
-                                  color: AppTheme.brandGreenDark,
+                                  color: AppTheme.accentGreen,
                                 ),
                               ),
                             ),
@@ -706,17 +696,17 @@ class _RateChartScreenState extends State<RateChartScreen> {
                         final totalPayoutBlock = Column(
                           crossAxisAlignment: isNarrow ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                           children: [
-                            const Text('Total Farmer Payout', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                            Text('Total Farmer Payout', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                             const SizedBox(height: 2),
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: isNarrow ? Alignment.centerLeft : Alignment.centerRight,
                               child: Text(
                                 '₹ ${simResult.totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w900,
-                                  color: AppTheme.brandGreen,
+                                  color: AppTheme.accentGreen,
                                 ),
                               ),
                             ),
@@ -740,19 +730,20 @@ class _RateChartScreenState extends State<RateChartScreen> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.65),
+                                  color: AppTheme.creamSurface,
                                   borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppTheme.creamBorder),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('Total Farmer Payout:', style: TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w500)),
+                                    Text('Total Farmer Payout:', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
                                     Text(
                                       '₹ ${simResult.totalAmount.toStringAsFixed(2)}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w900,
-                                        color: AppTheme.brandGreen,
+                                        color: AppTheme.accentGreen,
                                       ),
                                     ),
                                   ],
@@ -778,12 +769,12 @@ class _RateChartScreenState extends State<RateChartScreen> {
                             children: [
                               Text(
                                 '• Fat: ₹${simResult.fatComponent.toStringAsFixed(2)} (${_simFat.toStringAsFixed(1)}% × ₹${(_simMilkType == MilkType.cow ? cowChart : buffaloChart).fatRate})',
-                                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '• SNF: ₹${simResult.snfComponent.toStringAsFixed(2)} (${_simSnf.toStringAsFixed(1)}% × ₹${(_simMilkType == MilkType.cow ? cowChart : buffaloChart).snfRate})',
-                                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                               ),
                             ],
                           );
@@ -794,7 +785,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                               Flexible(
                                 child: Text(
                                   'Fat Component: ₹${simResult.fatComponent.toStringAsFixed(2)} (${_simFat.toStringAsFixed(1)}% × ₹${(_simMilkType == MilkType.cow ? cowChart : buffaloChart).fatRate})',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -802,7 +793,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                               Flexible(
                                 child: Text(
                                   'SNF Component: ₹${simResult.snfComponent.toStringAsFixed(2)} (${_simSnf.toStringAsFixed(1)}% × ₹${(_simMilkType == MilkType.cow ? cowChart : buffaloChart).snfRate})',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -833,28 +824,28 @@ class _RateChartScreenState extends State<RateChartScreen> {
             const SizedBox(height: 28),
 
             // Historical Revisions Table
-            const Text(
+            Text(
               'Rate Chart Revisions & History',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: AppTheme.creamBorder),
               ),
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: allCharts.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade100),
+                separatorBuilder: (context, index) => Divider(height: 1, color: AppTheme.creamBorder),
                 itemBuilder: (context, index) {
                   final c = allCharts[index];
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                     leading: CircleAvatar(
-                      backgroundColor: c.isActive ? AppTheme.cardMint : Colors.grey.shade100,
+                      backgroundColor: c.isActive ? AppTheme.cardMint : AppTheme.creamSurface,
                       child: Text(c.milkType.emoji, style: const TextStyle(fontSize: 18)),
                     ),
                     title: Row(
@@ -862,7 +853,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                         Expanded(
                           child: Text(
                             c.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppTheme.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -884,7 +875,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         'Effective: ${c.effectiveFrom.day}/${c.effectiveFrom.month}/${c.effectiveFrom.year} • Fat: ₹${c.fatRate.toStringAsFixed(2)} • SNF: ₹${c.snfRate.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -908,7 +899,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppTheme.brandGreen.withOpacity(0.2)),
         boxShadow: [
@@ -933,7 +924,7 @@ class _RateChartScreenState extends State<RateChartScreen> {
                     Flexible(
                       child: Text(
                         chart.milkType.displayName,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -945,15 +936,16 @@ class _RateChartScreenState extends State<RateChartScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardMint,
+                  color: AppTheme.badgeMintBg,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.badgeMintBorder),
                 ),
-                child: const Text('LIVE IN APP', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
+                child: Text('LIVE IN APP', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.badgeMintText)),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(chart.title, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
+          Text(chart.title, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -998,11 +990,11 @@ class _RateChartScreenState extends State<RateChartScreen> {
             children: [
               Text(
                 'Effective: ${chart.effectiveFrom.day}/${chart.effectiveFrom.month}/${chart.effectiveFrom.year}',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
               ),
               TextButton(
                 onPressed: () => _showUpdateRatesDialog(context, initialChart: chart),
-                child: const Text('Adjust Rate', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('Adjust Rate', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
               ),
             ],
           ),
@@ -1015,10 +1007,10 @@ class _RateChartScreenState extends State<RateChartScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-        Text(sub, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        Text(sub, style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
       ],
     );
   }
@@ -1034,9 +1026,9 @@ class _RateChartScreenState extends State<RateChartScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppTheme.creamSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1044,16 +1036,16 @@ class _RateChartScreenState extends State<RateChartScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              Text(valueText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark)),
+              Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              Text(valueText, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentGreen)),
             ],
           ),
           Slider(
             value: value.clamp(min, max),
             min: min,
             max: max,
-            activeColor: AppTheme.brandGreen,
-            inactiveColor: Colors.grey.shade300,
+            activeColor: AppTheme.accentGreen,
+            inactiveColor: AppTheme.creamBorder,
             onChanged: onChanged,
           ),
         ],

@@ -7,6 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/brand_footer.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/password_field.dart';
+import '../../../core/widgets/theme_mode_button.dart';
 import '../data/auth_repository.dart';
 import 'login_screen.dart';
 
@@ -52,6 +53,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           break;
         case UserRole.collector:
           _centerController.text = 'Central Valley Collection Center';
+          break;
+        case UserRole.manager:
+          _centerController.text = 'Tonk Chilling Center #3';
           break;
         case UserRole.admin:
           _centerController.text = 'Jaipur Cooperative Dairy Plant';
@@ -100,6 +104,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           location: _locationController.text.trim().isNotEmpty
               ? _locationController.text.trim()
               : null,
+        );
+        break;
+
+      case UserRole.manager:
+        matchingLoginRole = LoginRole.manager;
+        error = await AuthRepository.instance.registerManager(
+          name: _nameController.text.trim(),
+          identifier: phoneOrId,
+          password: _passwordController.text,
+          centerName: _centerController.text.trim().isNotEmpty
+              ? _centerController.text.trim()
+              : 'Tonk Chilling Center #3',
+          phone: phoneOrId.length == 10 ? phoneOrId : null,
         );
         break;
 
@@ -157,6 +174,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return AppTheme.brandGreen;
       case UserRole.collector:
         return const Color(0xFF0284C7);
+      case UserRole.manager:
+        return const Color(0xFF0D9488);
       case UserRole.admin:
         return const Color(0xFF0F766E);
     }
@@ -169,6 +188,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       case UserRole.collector:
         return const LinearGradient(
           colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case UserRole.manager:
+        return const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -187,6 +212,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return AppTheme.brandGreen;
       case UserRole.collector:
         return const Color(0xFF0284C7);
+      case UserRole.manager:
+        return const Color(0xFF0D9488);
       case UserRole.admin:
         return const Color(0xFF0F766E);
     }
@@ -198,6 +225,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Create Farmer Account';
       case UserRole.collector:
         return 'Create Collector Account';
+      case UserRole.manager:
+        return 'Create Center Manager Account';
       case UserRole.admin:
         return 'Create Dairy Admin Account';
     }
@@ -209,6 +238,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Track your milk records, daily rates & instant payments';
       case UserRole.collector:
         return 'Record daily milk collections, manage routes & farmers';
+      case UserRole.manager:
+        return 'Manage your center collection, dispatches & quality logs';
       case UserRole.admin:
         return 'Oversee dairy processing operations, dispatches & analytics';
     }
@@ -220,7 +251,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ? AppTheme.brandGreen
         : role == UserRole.collector
             ? const Color(0xFF0284C7)
-            : const Color(0xFF0F766E);
+            : role == UserRole.manager
+                ? const Color(0xFF0D9488)
+                : const Color(0xFF0F766E);
 
     return Expanded(
       child: GestureDetector(
@@ -229,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? AppTheme.cardSurface : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
@@ -248,7 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? primaryColor : Colors.grey.shade600,
+                color: isSelected ? primaryColor : AppTheme.textMuted,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -261,7 +294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       fontSize: 12.5,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? primaryColor : Colors.grey.shade600,
+                      color: isSelected ? primaryColor : AppTheme.textMuted,
                     ),
                   ),
                 ),
@@ -282,6 +315,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: const Text('Create account'),
         backgroundColor: AppTheme.scaffoldBg,
         elevation: 0,
+        actions: const [
+          ThemeModeButton(),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -303,7 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white,
+                              color: AppTheme.cardSurface,
                               border: Border.all(color: AppTheme.creamBorder, width: 2),
                               boxShadow: [
                                 BoxShadow(
@@ -321,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Join Farm2Factory',
                             style: TextStyle(
                               fontSize: 22,
@@ -333,7 +370,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Text(
                             _roleSubtitle,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               color: AppTheme.textSecondary,
                             ),
@@ -344,21 +381,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: AppTheme.creamSurface,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.grey.shade300.withOpacity(0.6),
+                                color: AppTheme.creamBorder,
                               ),
                             ),
                             child: Row(
                               children: [
                                 _buildRoleTab(
                                     UserRole.farmer, 'Farmer', Icons.agriculture),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 3),
                                 _buildRoleTab(UserRole.collector, 'Collector',
-                                    Icons.local_shipping_outlined),
-                                const SizedBox(width: 4),
-                                _buildRoleTab(UserRole.admin, 'Dairy Admin',
+                                    Icons.badge_outlined),
+                                const SizedBox(width: 3),
+                                _buildRoleTab(UserRole.manager, 'Manager',
+                                    Icons.storefront_outlined),
+                                const SizedBox(width: 3),
+                                _buildRoleTab(UserRole.admin, 'Admin',
                                     Icons.business_outlined),
                               ],
                             ),
@@ -502,30 +542,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 onTap: _loading ? null : _register,
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const SizedBox(width: 28),
-                                      _loading
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2.5,
-                                              ),
-                                            )
-                                          : Text(
-                                              _buttonText,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.3,
-                                              ),
-                                            ),
+                                      const SizedBox(width: 32),
+                                      Expanded(
+                                        child: Center(
+                                          child: _loading
+                                              ? const SizedBox(
+                                                  width: 22,
+                                                  height: 22,
+                                                  child: CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 2.5,
+                                                  ),
+                                                )
+                                              : FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    _buttonText,
+                                                    maxLines: 1,
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
+                                                      letterSpacing: 0.3,
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
                                       Container(
                                         width: 32,
                                         height: 32,
