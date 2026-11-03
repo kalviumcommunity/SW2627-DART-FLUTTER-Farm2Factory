@@ -34,12 +34,20 @@ class _DisputeManagementScreenState extends State<DisputeManagementScreen> {
 
   Future<void> _loadDisputes() async {
     setState(() => _isLoading = true);
-    final list = await _disputeService.getAllDisputes();
-    if (mounted) {
-      setState(() {
-        _disputes = list;
-        _isLoading = false;
-      });
+    try {
+      final list = await _disputeService.getAllDisputes();
+      if (mounted) {
+        setState(() {
+          _disputes = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

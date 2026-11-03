@@ -68,7 +68,7 @@ class MilkEntryRepository extends ChangeNotifier {
   List<MilkEntry> get entries => List.unmodifiable(_entries);
 
   double get todayTotalLitres {
-    return _entries.fold(1248.0, (sum, e) => sum); // baseline 1,248 L from design
+    return _entries.fold(1248.0, (sum, e) => sum + e.quantityLitres); // baseline 1,248 L + local collections
   }
 
   int get activeFarmersCount => 84;

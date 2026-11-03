@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Milk collection record for Morning / Evening shift with Quality & Batch Traceability.
 class MilkEntry {
   final String id;
@@ -118,6 +120,18 @@ class MilkEntry {
     };
   }
 
+  static DateTime _parseDate(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    try {
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
   factory MilkEntry.fromMap(String documentId, Map<String, dynamic> map) {
     return MilkEntry(
       id: documentId,
@@ -127,9 +141,7 @@ class MilkEntry {
       collectorId: map['collectorId'] ?? '',
       centerId: map['centerId'] ?? 'Jaipur Center',
       shift: map['shift'] ?? '',
-      date: map['date'] != null
-          ? (map['date'] as dynamic).toDate()
-          : DateTime.now(),
+      date: _parseDate(map['date']),
       milkType: map['milkType'] ?? 'cow',
       quantityLitres: (map['quantityLitres'] ?? 0).toDouble(),
       fatPercentage: (map['fatPercentage'] ?? 0).toDouble(),

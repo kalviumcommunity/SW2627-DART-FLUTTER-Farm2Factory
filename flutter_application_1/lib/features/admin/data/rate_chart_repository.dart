@@ -95,8 +95,10 @@ class RateChartRepository extends ChangeNotifier {
     required DateTime effectiveFrom,
   }) async {
     // 1. Deactivate current active chart for this milk type
+    final deactivatedIds = <String>[];
     for (int i = 0; i < _rateCharts.length; i++) {
       if (_rateCharts[i].milkType == milkType && _rateCharts[i].isActive) {
+        deactivatedIds.add(_rateCharts[i].id);
         _rateCharts[i] = _rateCharts[i].copyWith(isActive: false);
       }
     }
@@ -121,6 +123,9 @@ class RateChartRepository extends ChangeNotifier {
 
     // 3. Persist to Firestore if online
     try {
+      for (final oldId in deactivatedIds) {
+        await _firestore.collection('rate_charts').doc(oldId).update({'isActive': false});
+      }
       await _firestore.collection('rate_charts').doc(newId).set(newChart.toMap());
     } catch (e) {
       debugPrint('Firestore rate chart sync skipped/failed: $e');

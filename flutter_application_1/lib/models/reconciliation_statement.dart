@@ -77,6 +77,7 @@ class FarmerReconciliationStatement {
   }) {
     DateTime parseDate(dynamic val) {
       if (val is Timestamp) return val.toDate();
+      if (val is DateTime) return val;
       if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
       return DateTime.now();
     }
