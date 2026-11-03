@@ -97,18 +97,18 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
               children: [
                 Text(
                   'Connected Collectors (${list.length})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 Text(
                   'Total Volume: ${list.fold(0.0, (sum, c) => sum + c.todayTotalLitres).toInt()} L',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.brandGreenDark,
+                    color: AppTheme.accentGreen,
                   ),
                 ),
               ],
@@ -138,9 +138,9 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppTheme.creamBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -169,10 +169,10 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                       backgroundColor: AppTheme.brandGreen.withValues(alpha: 0.12),
                       child: Text(
                         c.name[0],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
-                          color: AppTheme.brandGreenDark,
+                          color: AppTheme.accentGreen,
                         ),
                       ),
                     ),
@@ -211,7 +211,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textMuted),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -243,7 +243,7 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                     Expanded(
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
+                          Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textMuted),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -260,11 +260,11 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.access_time, size: 13, color: Colors.grey),
+                        Icon(Icons.access_time, size: 13, color: AppTheme.textMuted),
                         const SizedBox(width: 4),
                         Text(
                           'Active ${c.lastActiveTime}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
                         ),
                         const SizedBox(width: 8),
                         StatusBadge(
@@ -309,22 +309,22 @@ class _CollectorsScreenState extends State<CollectorsScreen> {
       padding: const EdgeInsets.all(32),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.creamBorder),
       ),
       child: Column(
         children: [
-          const Icon(Icons.search_off_outlined, size: 48, color: Colors.grey),
+          Icon(Icons.search_off_outlined, size: 48, color: AppTheme.textMuted),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No collectors found',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
           ),
           const SizedBox(height: 4),
           Text(
             'Try adjusting your search query or center filter.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
         ],
       ),

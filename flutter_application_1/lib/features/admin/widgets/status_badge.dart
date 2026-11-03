@@ -34,6 +34,12 @@ class StatusBadge extends StatelessWidget {
       case 'warning':
       case 'grade b':
         return AppTheme.badgeAmberBg;
+      case 'scheduled':
+      case 'transit':
+      case 'in transit':
+      case 'review':
+      case 'peach':
+        return AppTheme.badgePeachBg;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -66,6 +72,12 @@ class StatusBadge extends StatelessWidget {
       case 'warning':
       case 'grade b':
         return AppTheme.badgeAmberText;
+      case 'scheduled':
+      case 'transit':
+      case 'in transit':
+      case 'review':
+      case 'peach':
+        return AppTheme.badgePeachText;
       case 'pending':
       case 'delayed':
       case 'offline':
@@ -98,6 +110,12 @@ class StatusBadge extends StatelessWidget {
       case 'warning':
       case 'grade b':
         return AppTheme.badgeAmberBorder;
+      case 'scheduled':
+      case 'transit':
+      case 'in transit':
+      case 'review':
+      case 'peach':
+        return AppTheme.badgePeachBorder;
       case 'pending':
       case 'delayed':
       case 'offline':

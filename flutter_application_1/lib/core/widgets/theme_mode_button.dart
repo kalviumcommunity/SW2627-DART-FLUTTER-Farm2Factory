@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_controller.dart';
 
-/// Interactive button for switching themes with support for Light, Dark, and System Auto.
+/// Interactive button for switching themes with support for Light, Dark, System Auto, and Warm Peach.
 class ThemeModeButton extends StatelessWidget {
   final bool compact;
   final bool showLabel;
@@ -19,20 +19,31 @@ class ThemeModeButton extends StatelessWidget {
     return ListenableBuilder(
       listenable: ThemeController.instance,
       builder: (context, _) {
-        final mode = ThemeController.instance.themeMode;
+        final pref = ThemeController.instance.themePreference;
         final isDark = ThemeController.instance.isDark;
+        final isPeach = ThemeController.instance.isPeach;
 
-        final IconData icon = mode == ThemeMode.system
-            ? (isDark ? Icons.brightness_auto : Icons.brightness_auto_outlined)
-            : (isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded);
+        final IconData icon = isPeach
+            ? Icons.palette_rounded
+            : (pref == 'system'
+                ? (isDark ? Icons.brightness_auto : Icons.brightness_auto_outlined)
+                : (isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded));
 
-        final Color iconColor = isDark
-            ? const Color(0xFFFBBF24) // Warm amber moonlight
-            : const Color(0xFF0F5132); // Deep emerald sunlight
+        final Color iconColor = isPeach
+            ? AppTheme.brandPeachDark
+            : (isDark
+                ? const Color(0xFFFBBF24) // Warm amber moonlight
+                : const Color(0xFF0F5132)); // Deep emerald sunlight
 
-        final String tooltip = mode == ThemeMode.system
-            ? 'Theme: System (${isDark ? "Dark" : "Light"})'
-            : (isDark ? 'Theme: Dark Mode' : 'Theme: Light Mode');
+        final String label = isPeach
+            ? 'Peach'
+            : (pref == 'system' ? 'Auto' : (isDark ? 'Dark' : 'Light'));
+
+        final String tooltip = isPeach
+            ? 'Theme: Warm Peach'
+            : (pref == 'system'
+                ? 'Theme: System (${isDark ? "Dark" : "Light"})'
+                : (isDark ? 'Theme: Dark Mode' : 'Theme: Light Mode'));
 
         if (!showLabel) {
           return IconButton(
@@ -45,7 +56,7 @@ class ThemeModeButton extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                key: ValueKey(mode),
+                key: ValueKey(pref),
                 color: iconColor,
                 size: compact ? 20 : 22,
               ),
@@ -72,9 +83,7 @@ class ThemeModeButton extends StatelessWidget {
                 Icon(icon, color: iconColor, size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  mode == ThemeMode.system
-                      ? 'Auto'
-                      : (isDark ? 'Dark' : 'Light'),
+                  label,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -90,10 +99,11 @@ class ThemeModeButton extends StatelessWidget {
   }
 }
 
-/// Dialog / BottomSheet for explicitly selecting Light, Dark, or System mode.
+/// Dialog / BottomSheet for explicitly selecting Light, Dark, System, or Warm Peach mode.
 void showThemeSelectionDialog(BuildContext context) {
   showModalBottomSheet(
     context: context,
+    isScrollControlled: true,
     backgroundColor: AppTheme.cardSurface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -102,11 +112,11 @@ void showThemeSelectionDialog(BuildContext context) {
       return ListenableBuilder(
         listenable: ThemeController.instance,
         builder: (ctx, _) {
-          final currentMode = ThemeController.instance.themeMode;
+          final currentPref = ThemeController.instance.themePreference;
 
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,45 +139,57 @@ void showThemeSelectionDialog(BuildContext context) {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     'Choose your visual preference for the entire application.',
-                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   _themeOptionTile(
                     title: 'System Default',
                     subtitle: 'Automatically match your device appearance settings',
                     icon: Icons.brightness_auto,
-                    selected: currentMode == ThemeMode.system,
+                    selected: currentPref == 'system',
                     onTap: () {
-                      ThemeController.instance.setThemeMode(ThemeMode.system);
+                      ThemeController.instance.setThemePreference('system');
                       Navigator.pop(ctx);
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _themeOptionTile(
                     title: 'Light Mode',
-                    subtitle: 'Clean executive canvas with crisp emerald accents',
+                    subtitle: 'Clean executive canvas with crisp emerald & peach accents',
                     icon: Icons.wb_sunny_rounded,
-                    selected: currentMode == ThemeMode.light,
+                    selected: currentPref == 'light',
                     onTap: () {
-                      ThemeController.instance.setThemeMode(ThemeMode.light);
+                      ThemeController.instance.setThemePreference('light');
                       Navigator.pop(ctx);
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _themeOptionTile(
                     title: 'Dark Mode',
                     subtitle: 'Midnight Obsidian theme with high contrast OLED surfaces',
                     icon: Icons.dark_mode_rounded,
-                    selected: currentMode == ThemeMode.dark,
+                    selected: currentPref == 'dark',
                     onTap: () {
-                      ThemeController.instance.setThemeMode(ThemeMode.dark);
+                      ThemeController.instance.setThemePreference('dark');
                       Navigator.pop(ctx);
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  _themeOptionTile(
+                    title: 'Warm Peach Mode',
+                    subtitle: 'Cozy harvest peach canvas with warm terracotta accents',
+                    icon: Icons.palette_rounded,
+                    selected: currentPref == 'peach',
+                    accentColor: AppTheme.brandPeachDark,
+                    onTap: () {
+                      ThemeController.instance.setThemePreference('peach');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -184,7 +206,11 @@ Widget _themeOptionTile({
   required IconData icon,
   required bool selected,
   required VoidCallback onTap,
+  Color? accentColor,
 }) {
+  final primaryAccent = accentColor ??
+      (AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen);
+
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),
@@ -193,11 +219,11 @@ Widget _themeOptionTile({
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: selected
-            ? AppTheme.brandGreen.withOpacity(0.12)
+            ? primaryAccent.withOpacity(0.12)
             : AppTheme.creamSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: selected ? AppTheme.brandGreen : AppTheme.creamBorder,
+          color: selected ? primaryAccent : AppTheme.creamBorder,
           width: selected ? 1.5 : 1,
         ),
       ),
@@ -207,7 +233,7 @@ Widget _themeOptionTile({
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: selected
-                  ? AppTheme.brandGreen
+                  ? primaryAccent
                   : AppTheme.subtleBorder.withOpacity(0.4),
               shape: BoxShape.circle,
             ),
@@ -227,9 +253,7 @@ Widget _themeOptionTile({
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: selected
-                        ? (AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen)
-                        : AppTheme.textPrimary,
+                    color: selected ? primaryAccent : AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -246,7 +270,7 @@ Widget _themeOptionTile({
           if (selected)
             Icon(
               Icons.check_circle_rounded,
-              color: AppTheme.isDark ? AppTheme.brandGreenLight : AppTheme.brandGreen,
+              color: primaryAccent,
               size: 20,
             ),
         ],

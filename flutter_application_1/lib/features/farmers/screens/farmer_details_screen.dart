@@ -80,8 +80,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+                        gradient: LinearGradient(
+                          colors: AppTheme.isDark
+                              ? [const Color(0xFF0F291E), const Color(0xFF1B3D2B)]
+                              : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -149,7 +151,7 @@ class FarmerDetailsScreen extends StatelessWidget {
                                       farmer.phone,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade700,
+                                        color: AppTheme.textSecondary,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -160,7 +162,7 @@ class FarmerDetailsScreen extends StatelessWidget {
                                   '${farmer.village} • ${farmer.center}',
                                   style: TextStyle(
                                     fontSize: 11.5,
-                                    color: Colors.grey.shade600,
+                                    color: AppTheme.textSecondary,
                                   ),
                                 ),
                               ],
@@ -420,10 +422,10 @@ class FarmerDetailsScreen extends StatelessWidget {
                               ),
                               Text(
                                 '₹ ${e.totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w900,
-                                  color: AppTheme.brandGreenDark,
+                                  color: AppTheme.accentGreen,
                                 ),
                               ),
                             ],

@@ -66,10 +66,10 @@ class DairyStatCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (badgeColor ?? AppTheme.brandGreen).withOpacity(0.08),
+                      color: (badgeColor ?? AppTheme.accentGreen).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: (badgeColor ?? AppTheme.brandGreen).withOpacity(0.2),
+                        color: (badgeColor ?? AppTheme.accentGreen).withOpacity(0.2),
                       ),
                     ),
                     child: Text(
@@ -77,7 +77,7 @@ class DairyStatCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.bold,
-                        color: badgeColor ?? AppTheme.brandGreenDark,
+                        color: badgeColor ?? AppTheme.accentGreen,
                         letterSpacing: 0.2,
                       ),
                     ),

@@ -829,9 +829,9 @@ class DairyPortalScaffold extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Farm2Factory',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.brandGreenDark),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.accentGreen),
                         ),
                         Text(
                           centerName,
@@ -856,13 +856,13 @@ class DairyPortalScaffold extends StatelessWidget {
                     tileColor: isSelected ? AppTheme.cardMint : null,
                     leading: Icon(
                       isSelected ? item.activeIcon : item.icon,
-                      color: isSelected ? AppTheme.brandGreenDark : AppTheme.textSecondary,
+                      color: isSelected ? AppTheme.accentGreen : AppTheme.textSecondary,
                     ),
                     title: Text(
                       item.title,
                       style: TextStyle(
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppTheme.brandGreenDark : AppTheme.textPrimary,
+                        color: isSelected ? AppTheme.accentGreen : AppTheme.textPrimary,
                       ),
                     ),
                     onTap: () {
@@ -937,7 +937,7 @@ class DairyPortalScaffold extends StatelessWidget {
               : it.title.split(' ').first;
           return NavigationDestination(
             icon: Icon(it.icon, size: 20),
-            selectedIcon: Icon(it.activeIcon, color: AppTheme.brandGreen, size: 20),
+            selectedIcon: Icon(it.activeIcon, color: AppTheme.accentGreen, size: 20),
             label: label,
           );
         }).toList(),

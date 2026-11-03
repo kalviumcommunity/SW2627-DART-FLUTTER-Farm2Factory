@@ -76,25 +76,25 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
           onDestinationSelected: (idx) => setState(() => _currentTab = idx),
           backgroundColor: AppTheme.scaffoldBg,
           indicatorColor: AppTheme.brandGreen.withOpacity(0.15),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.today_outlined),
-              selectedIcon: Icon(Icons.today, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.today_outlined),
+              selectedIcon: Icon(Icons.today, color: AppTheme.accentGreen),
               label: 'Daily Records',
             ),
             NavigationDestination(
-              icon: Icon(Icons.payments_outlined),
-              selectedIcon: Icon(Icons.payments, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.payments_outlined),
+              selectedIcon: Icon(Icons.payments, color: AppTheme.accentGreen),
               label: 'Payment',
             ),
             NavigationDestination(
-              icon: Icon(Icons.science_outlined),
-              selectedIcon: Icon(Icons.science, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.science_outlined),
+              selectedIcon: Icon(Icons.science, color: AppTheme.accentGreen),
               label: 'Quality',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppTheme.brandGreen),
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person, color: AppTheme.accentGreen),
               label: 'Profile',
             ),
           ],
